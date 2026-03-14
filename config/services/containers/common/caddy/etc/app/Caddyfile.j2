@@ -23,8 +23,14 @@ app.ilnmors.internal {
         import private_tls
         metrics
 }
-test.app.ilnmors.internal {
-         import private_tls
-         root * /usr/share/caddy
-         file_server
+# test.app.ilnmors.internal {
+#         import private_tls
+#         root * /usr/share/caddy
+#         file_server
+# }
+vault.app.ilnmors.internal {
+        import private_tls
+        reverse_proxy host.containers.internal:8000 {
+               header_up Host {http.request.header.X-Forwarded-Host}
+        }
 }

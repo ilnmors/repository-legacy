@@ -1,0 +1,34 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Vaultwarden
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/vaultwarden/server:{{ version['containers']['vaultwarden'] }}
+
+ContainerName=vaultwarden
+HostName=vaultwarden
+
+PublishPort=8000:80/tcp
+
+Volume=%h/data/containers/vaultwarden:/data:rw
+Volume=%h/containers/vaultwarden/ssl:/etc/ssl/vaultwarden:ro
+
+Environment="TZ=Asia/Seoul"
+Environment="DOMAIN=https://vault.ilnmors.com"
+Environment="SIGNUPS_ALLOWED=false"
+Secret=VW_ADMIN_TOKEN,type=env,target=ADMIN_TOKEN
+Secret=VW_DATABASE_URL,type=env,target=DATABASE_URL
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

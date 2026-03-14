@@ -1,0 +1,56 @@
+---
+- name: Create vaultwarden directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/vaultwarden"
+    - "containers/vaultwarden"
+    - "containers/vaultwarden/ssl"
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/vaultwarden/ssl/ilnmors_root_ca.crt"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_vaultwarden"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "VW_ADMIN_TOKEN"
+      value: "{{ hostvars['console']['vaultwarden']['admin']['hash'] }}"
+    - name: "VW_DATABASE_URL"
+      value: "postgresql://vaultwarden:{{ hostvars['console']['postgresql']['password']['vaultwarden'] | urlencode | replace('/', '%2F') }}\
+        @{{ infra_uri['postgresql']['domain'] }}/vaultwarden_db?sslmode=verify-full&sslrootcert=/etc/ssl/vaultwarden/ilnmors_root_ca.crt"
+  notify: "notification_restart_vaultwarden"
+  no_log: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/vaultwarden/vaultwarden.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/vaultwarden.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_vaultwarden"
+
+- name: Enable vaultwarden.service
+  ansible.builtin.systemd:
+    name: "vaultwarden.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

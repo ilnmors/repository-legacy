@@ -41,24 +41,33 @@ authelia.ilnmors.com {
                 reverse_proxy host.containers.internal:9091
         }
 }
-test.ilnmors.com {
+# test.ilnmors.com {
+#         import crowdsec_log
+#         route {
+#                 crowdsec
+#                 forward_auth host.containers.internal:9091 {
+#                         # Authelia Forward Auth endpoint URI
+#                         uri /api/authz/forward-auth
+#                         copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+#                 }
+#                 root * /usr/share/caddy
+#                 file_server
+#         }
+# }
+# test.app.ilnmors.com {
+#         import crowdsec_log
+#         route {
+#                 crowdsec
+#                 reverse_proxy https://test.app.ilnmors.internal {
+#                         header_up Host {http.reverse_proxy.upstream.host}
+#                 }
+#         }
+# }
+vault.ilnmors.com {
         import crowdsec_log
         route {
                 crowdsec
-                forward_auth host.containers.internal:9091 {
-                        # Authelia Forward Auth endpoint URI
-                        uri /api/authz/forward-auth
-                        copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
-                }
-                root * /usr/share/caddy
-                file_server
-        }
-}
-test.app.ilnmors.com {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://test.app.ilnmors.internal {
+                reverse_proxy https://vault.app.ilnmors.internal {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }

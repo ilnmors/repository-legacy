@@ -161,6 +161,14 @@
           tags: ["site", "caddy"]
       tags: ["site", "caddy"]
 
+    - name: Set vaultwarden
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_vaultwarden"
+        apply:
+          tags: ["site", "vaultwarden"]
+      tags: ["site", "vaultwarden"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

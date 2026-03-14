@@ -1,0 +1,11 @@
+---
+- name: Restart vaultwarden
+  ansible.builtin.systemd:
+    name: "vaultwarden.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_vaultwarden"
+  ignore_errors: true # noqa: ignore-errors
