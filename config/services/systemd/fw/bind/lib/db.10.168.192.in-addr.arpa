@@ -1,0 +1,17 @@
+$TTL    86400
+
+@           IN SOA bind.ilnmors.internal. mail.ilnmors.internal. (
+                2026021201 ; serial
+                3600       ; refresh (1 hour)
+                1800       ; retry (30 minutes)
+                604800     ; expire (1 week)
+                86400      ; minimum (1 day)
+            )
+            IN      NS      bind.ilnmors.internal.
+1           IN      PTR     fw.ilnmors.internal.
+2           IN      PTR     blocky.ilnmors.internal.
+3           IN      PTR     bind.ilnmors.internal.
+10          IN      PTR     vmm.ilnmors.internal.
+11          IN      PTR     infra.ilnmors.internal.
+12          IN      PTR     auth.ilnmors.internal.
+13          IN      PTR     app.ilnmors.internal.

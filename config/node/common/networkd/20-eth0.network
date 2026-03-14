@@ -1,0 +1,13 @@
+[Match]
+Name=eth0
+
+[Network]
+# IPv4
+Address={{ hostvars['fw']['network4'][target_vm]['server'] }}/24
+Gateway={{ hostvars['fw']['network4']['firewall']['server'] }}
+DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+# IPv6
+IPv6AcceptRA=false
+Address={{ hostvars['fw']['network6'][target_vm]['server'] }}/64
+Gateway={{ hostvars['fw']['network6']['firewall']['server'] }}
+DNS={{ hostvars['fw']['network6']['blocky']['server'] }}

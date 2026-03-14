@@ -1,0 +1,5 @@
+[Match]
+MACAddress={{ hostvars['fw']['vm']['lan_mac'] }}
+
+[Link]
+Name=client

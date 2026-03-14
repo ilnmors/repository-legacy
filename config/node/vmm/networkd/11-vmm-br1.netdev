@@ -1,0 +1,7 @@
+[NetDev]
+Name=br1
+Kind=bridge
+
+[Bridge]
+VLANFiltering=true
+DefaultPVID=1

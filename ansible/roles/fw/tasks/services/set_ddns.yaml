@@ -1,0 +1,41 @@
+---
+- name: Create ddns secret env file
+  ansible.builtin.copy:
+    content: |
+      ZONE_ID={{ hostvars['console']['ddns']['zone_id'] }}
+      API_KEY={{ hostvars['console']['ddns']['api_key'] }}
+    dest: "/etc/secrets/{{ node['uid'] }}/ddns.env"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0400"
+  become: true
+  no_log: true
+
+- name: Deploy ddns script
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/ddns/ddns.sh"
+    dest: "/usr/local/bin"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0711"
+  become: true
+
+- name: Deploy ddns service files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/ddns/{{ item }}"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"
+    validate: "/usr/bin/systemd-analyze verify %s"
+  loop:
+    - "ddns.service"
+    - "ddns.timer"
+
+- name: Register ddns timer
+  ansible.builtin.systemd:
+    name: "ddns.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

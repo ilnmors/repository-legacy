@@ -277,7 +277,7 @@ Exec=worker
 WantedBy=default.target
 ```
 
-> All configurations, except DB connection information will be saved in postgresql. Do not set Environment Variables. It has the first priority, it will override all configuration from web UI.
+> All configurations, except DB connection information will be saved in postgresql. Do not set Environment varibles. It has the first priority, it will override all configuration from web UI.
 #### Create systemd `.service` file
 
 ```bash

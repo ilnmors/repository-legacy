@@ -1,0 +1,67 @@
+certFile: "/etc/blocky/ssl/blocky.crt"
+keyFile: "/etc/blocky/ssl/blocky.key"
+minTlsServeVersion: 1.2
+connectIPVersion: dual
+
+ports:
+  dns:
+    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:53"
+    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:53"
+  tls:
+    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:853"
+    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:853"
+  https:
+    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:443"
+    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:443"
+
+log:
+  level: info
+  format: text
+  timestamp: true
+  privacy: false
+
+upstreams:
+  groups:
+    default:
+      - "tcp-tls:1.1.1.1:853"
+      - "tcp-tls:1.0.0.1:853"
+      - "tcp-tls:[2606:4700:4700::1111]:853"
+      - "tcp-tls:[2606:4700:4700::1001]:853"
+
+conditional:
+  fallbackUpstream: false
+  mapping:
+    ilnmors.internal: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    ilnmors.com: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    1.168.192.in-addr.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    10.168.192.in-addr.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    0.0.0.0.0.0.0.0.1.0.0.0.0.0.d.f.ip6.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    0.0.0.0.0.0.0.0.0.1.0.0.0.0.d.f.ip6.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    vpn.ilnmors.com: "tcp-tls:1.1.1.1:853, tcp-tls:1.0.0.1:853, tcp-tls:[2606:4700:4700::1111]:853, tcp-tls:[2606:4700:4700::1001]:853"
+
+blocking:
+  blockType: nxDomain
+  denylists:
+    ads:
+      # [ General ]
+      - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+      - https://big.oisd.nl
+      - https://o0.pages.dev/Lite/domains.txt
+      # [ Korean regional ]
+      - https://raw.githubusercontent.com/yous/YousList/master/hosts.txt
+      # [ Telemetry ]
+      - https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt
+      - https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt
+  clientGroupsBlock:
+    default:
+      - ads
+
+caching:
+  minTime: 5m
+  maxTime: 30m
+  cacheTimeNegative: 0m
+  prefetching: true
+
+prometheus:
+  enable: false
+  path: /metrics

@@ -1,0 +1,49 @@
+[Unit]
+Description=Kopia backup service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=kopia
+Group=kopia
+
+Type=oneshot
+
+# logging
+StandardOutput=journal
+StandardError=journal
+
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+
+ProtectSystem=strict
+ProtectHome=tmpfs
+InaccessiblePaths=/boot /root
+
+{% if node['name'] == 'infra' %}
+BindReadOnlyPaths=/home/infra/containers/postgresql/backups
+{% elif node['name'] == 'app' %}
+BindReadOnlyPaths=/home/app/data
+{% endif %}
+# In root namescope, %u always bring 0
+BindPaths=/etc/kopia
+BindPaths=/etc/secrets/{{ kopia_uid }}
+BindPaths=/var/cache/kopia
+EnvironmentFile=/etc/secrets/{{ kopia_uid }}/kopia.env
+
+ExecStartPre=/usr/bin/kopia repository connect server \
+    --url=https://{{ infra_uri['kopia']['domain'] }}:{{ infra_uri['kopia']['ports']['https'] }} \
+    --override-username={{ node['name'] }} \
+    --override-hostname={{ node['name'] }}.ilnmors.internal
+
+{% if node['name'] == 'infra' %}
+ExecStart=/usr/bin/kopia snapshot create \
+    /home/infra/containers/postgresql/backups
+{% elif node['name'] == 'app' %}
+ExecStart=/usr/bin/kopia snapshot create \
+    /home/app/data
+{% endif %}
+
+
+[Install]
+WantedBy=multi-user.target

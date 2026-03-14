@@ -1,0 +1,31 @@
+---
+- name: Check chromium installation
+  ansible.builtin.shell: |
+    command -v chromium
+  changed_when: false
+  failed_when: false
+  register: "is_chromium_installed"
+  ignore_errors: true
+
+- name: Check korean font installation
+  ansible.builtin.shell: |
+    fc-list | grep -i "nanum"
+  changed_when: false
+  failed_when: false
+  register: "is_font_installed"
+  ignore_errors: true
+
+- name: Install chromium
+  ansible.builtin.apt:
+    name: "chromium"
+    state: "present"
+  become: true
+  when: is_chromium_installed.rc != 0
+
+- name: Install font
+  ansible.builtin.apt:
+    name: "fonts-nanum"
+    state: "present"
+  become: true
+  when: is_font_installed.rc != 0
+  notify: "notification_update_font"

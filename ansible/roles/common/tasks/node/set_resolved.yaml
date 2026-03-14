@@ -1,0 +1,39 @@
+---
+- name: Enable systemd-resolved.service
+  ansible.builtin.systemd:
+    name: "systemd-resolved.service"
+    state: "started"
+    enabled: true
+  become: true
+
+- name: Check global.conf
+  ansible.builtin.stat:
+    path: "/etc/systemd/resolved.conf.d/global.conf"
+  register: "is_global_conf"
+
+- name: Create resolved directory
+  ansible.builtin.file:
+    path: "/etc/systemd/resolved.conf.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Deploy global conf file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/node/common/resolved/global.conf.j2"
+    dest: "/etc/systemd/resolved.conf.d/global.conf"
+    owner: "root"
+    group: "systemd-resolve"
+    mode: "0640"
+  become: true
+  notify: "notification_reload_resolved"
+
+- name: Restart systemd-resolved.service when it is initiated
+  ansible.builtin.systemd:
+    name: "systemd-resolved.service"
+    state: "restarted"
+    enabled: true
+  become: true
+  when: not is_global_conf.stat.exists

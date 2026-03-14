@@ -1,0 +1,19 @@
+<!-- LAN network for Hypervisor -->
+<!-- lan-net.xml -->
+<network>
+  <name>lan-net</name>
+  <forward mode='bridge'/>
+  <bridge name='br1'/>
+  <portgroup name='vlan-trunk'>
+    <vlan trunk='yes'>
+      <tag id='1' nativeMode='untagged'/>
+      <tag id='10'/>
+      <tag id='20'/>
+    </vlan>
+  </portgroup>
+  <portgroup name='vlan10-access'>
+    <vlan>
+      <tag id='10'/>
+    </vlan>
+  </portgroup>
+</network>

@@ -1,0 +1,20 @@
+---
+- name: Checking linger
+  ansible.builtin.stat:
+    path: "/var/lib/systemd/linger/{{ ansible_user }}"
+  register: "is_linger_file"
+
+- name: Activate linger
+  when: not is_linger_file.stat.exists
+  block:
+    - name: Enable linger
+      ansible.builtin.command: |
+        loginctl enable-linger {{ ansible_user }}
+      become: true
+      changed_when: true
+
+    - name: Reboot system to ensure DBUS socket activation
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+        post_reboot_delay: 3
+      become: true

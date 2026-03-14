@@ -1,0 +1,26 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=x509-Exporter
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/enix/x509-certificate-exporter:{{ version['containers']['x509-exporter'] }}
+ContainerName=x509-exporter
+HostName=X509-exporter
+
+Volume=%h/containers/x509-exporter/certs:/certs:ro
+
+PublishPort=9793:9793
+
+Exec=--listen-address :9793 --watch-dir=/certs
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

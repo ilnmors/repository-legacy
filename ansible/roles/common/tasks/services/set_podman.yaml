@@ -1,0 +1,46 @@
+---
+- name: Check podman installation
+  ansible.builtin.shell: |
+    command -v podman
+  changed_when: false
+  failed_when: false
+  register: "is_podman_installed"
+  ignore_errors: true
+
+- name: Create container directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    state: "directory"
+    mode: "0700"
+
+- name: Create contaienr data directory for app
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/data/containers"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    state: "directory"
+    mode: "0770"
+  when: node['name'] == "app"
+
+- name: Install podman and reset ssh connection for initiating
+  when: is_podman_installed.rc != 0
+  become: true
+  block:
+    - name: Set subid scope (Overwrite)
+      ansible.builtin.copy:
+        content: |
+          {{ ansible_user }}:100000:65536
+        dest: "/etc/sub{{ item }}"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      loop:
+        - "uid"
+        - "gid"
+    - name: Install podman
+      ansible.builtin.apt:
+        name:
+          - "podman"
+        state: "present"

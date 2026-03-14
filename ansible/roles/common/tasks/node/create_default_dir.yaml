@@ -1,0 +1,34 @@
+---
+- name: Create common secret directory
+  ansible.builtin.file:
+    path: "/etc/secrets"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0711"
+  become: true
+
+- name: Create user secret directory
+  ansible.builtin.file:
+    path: "/etc/secrets/{{ node['uid'] }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "root"
+    mode: "0500"
+  become: true
+
+- name: Create user systemd directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/.config/systemd/user"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0700"
+
+- name: Create quadlet directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/.config/containers/systemd"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0700"

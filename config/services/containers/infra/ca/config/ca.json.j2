@@ -1,0 +1,61 @@
+{
+	"root": "/home/step/certs/ilnmors_root_ca.crt",
+	"federatedRoots": null,
+	"crt": "/home/step/certs/ilnmors_intermediate_ca.crt",
+	"key": "/home/step/secrets/ilnmors_intermediate_ca.key",
+	"address": ":9000",
+	"insecureAddress": "",
+	"dnsNames": [
+		"{{ infra_uri['ca']['domain'] }}"
+	],
+	"logger": {
+		"format": "text"
+	},
+	"db": {
+		"type": "badgerv2",
+		"dataSource": "/home/step/db",
+		"badgerFileLoadingMode": ""
+	},
+	"authority": {
+		"policy": {
+			"x509": {
+				"allow": {
+					"dns": [
+						"ilnmors.internal",
+						"*.ilnmors.internal"
+					]
+				},
+				"allowWildcardNames": true
+			}
+		},
+		"provisioners": [
+			{
+				"type": "ACME",
+				"name": "acme@ilnmors.internal",
+				"claims": {
+					"defaultTLSCertDuration": "2160h0m0s",
+					"enableSSHCA": true,
+					"disableRenewal": false,
+					"allowRenewalAfterExpiry": false,
+					"disableSmallstepExtensions": false
+				},
+				"options": {
+					"x509": {},
+					"ssh": {}
+				}
+			}
+		],
+		"template": {},
+		"backdate": "1m0s"
+	},
+	"tls": {
+		"cipherSuites": [
+			"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+			"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+		],
+		"minVersion": 1.2,
+		"maxVersion": 1.3,
+		"renegotiation": false
+	},
+	"commonName": "ilnmors Online CA"
+}

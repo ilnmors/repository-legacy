@@ -1,0 +1,165 @@
+---
+- name: Set host and load secret values
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Set host as vmm
+      ansible.builtin.set_fact:
+        vmm_host: "vmm"
+      when: "'init' is not in ansible_run_tags"
+      tags: ["always"]
+
+    - name: Load secret from secrets.yaml
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/load_secret_vars"
+        apply:
+          tags: ["always"]
+      tags: ["always"]
+
+
+- name: Site vmm
+  hosts: "{{ hostvars['console']['vmm_host'] | default('vmm_init') }}"
+  gather_facts: false
+  become: false
+  pre_tasks:
+    - name: Set become password
+      ansible.builtin.set_fact:
+        ansible_become_pass: "{{ hostvars['console']['sudo']['password']['vmm'] }}"
+      tags: ["always"]
+  tasks:
+    # init
+    - name: Set timezone to Asia/Seoul
+      community.general.timezone:
+        name: Asia/Seoul
+      become: true
+      tags: ["init", "timezone"]
+
+    - name: Deploy root_ca certificate
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_root_ca"
+        apply:
+          tags: ["init", "root_crt"]
+      tags: ["init", "root_crt"]
+
+    - name: Deploy hosts file
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_hosts"
+        apply:
+          tags: ["init", "hosts"]
+      tags: ["init", "hosts"]
+
+    - name: Create default directory
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/create_default_dir"
+        apply:
+          tags: ["init", "default_dir"]
+      tags: ["init", "default_dir"]
+
+    - name: Set ssh host
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_ssh_host"
+        apply:
+          tags: ["init", "ssh_host"]
+      tags: ["init", "ssh_host"]
+
+    - name: Set networkd
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_networkd"
+        apply:
+          tags: ["init", "networkd"]
+      tags: ["init", "networkd"]
+
+    - name: Set resolved
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_resolved"
+        apply:
+          tags: ["init", "resolved"]
+      tags: ["init", "resolved"]
+
+    - name: Set timesyncd
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_timesyncd"
+        apply:
+          tags: ["init", "timesyncd"]
+      tags: ["init", "timesyncd"]
+
+    - name: Set linger # vmm has dbus-user-session in it
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_linger"
+        apply:
+          tags: ["init", "linger"]
+      tags: ["init", "linger"]
+
+    - name: Set libvirt
+      ansible.builtin.include_role:
+        name: "vmm"
+        tasks_from: "node/set_libvirt"
+        apply:
+          tags: ["init", "libvirt"]
+      tags: ["init", "libvirt"]
+
+    - name: Set nftables
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_nftables"
+        apply:
+          tags: ["init", "site", "nftables"]
+      tags: ["init", "site", "nftables"]
+
+    - name: Update and upgrade apt # init roles has no internet (airgap statement)
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "dist"
+        cache_valid_time: 3600
+      when: inventory_hostname != "vmm_init"
+      become: true
+      tags: ["site", "upgrade-packages"]
+
+    - name: Set crowdsec
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_crowdsec"
+        apply:
+          tags: ["site", "crowdsec"]
+      when: inventory_hostname != "vmm_init"
+      tags: ["site", "crowdsec"]
+
+    - name: Set alloy
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_alloy"
+        apply:
+          tags: ["site", "alloy"]
+      when: inventory_hostname != "vmm_init"
+      tags: ["site", "alloy"]
+
+    - name: Install packages # they are already installed in prerequisite step
+      ansible.builtin.apt:
+        name:
+          - acl
+          - curl
+          - jq
+          - crowdsec
+          - systemd-resolved
+          - qemu-system-x86
+          - ksmtuned
+          - libvirt-daemon-system
+          - virt-top
+          - python3
+          - python3-apt
+          - python3-libvirt
+          - python3-lxml
+        state: "present"
+      become: true
+      when: "'init' is not in ansible_run_tags"
+      tags: ["never", "install-packages"]

@@ -1,0 +1,24 @@
+[Match]
+Name=server
+
+[Network]
+IPForward=true
+IPv6SendRA=false
+IPv6AcceptRA=false
+# IPv4
+Address={{ hostvars['fw']['network4']['firewall']['server'] }}/24
+DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+# IPv6
+Address={{ hostvars['fw']['network6']['firewall']['server'] }}/64
+DNS={{ hostvars['fw']['network6']['blocky']['server'] }}
+
+[Address]
+Address={{ hostvars['fw']['network4']['blocky']['server'] }}/24
+[Address]
+Address={{ hostvars['fw']['network4']['bind']['server'] }}/24
+[Address]
+Address={{ hostvars['fw']['network6']['blocky']['server'] }}/64
+PreferredLifetime=0
+[Address]
+Address={{ hostvars['fw']['network6']['bind']['server'] }}/64
+PreferredLifetime=0

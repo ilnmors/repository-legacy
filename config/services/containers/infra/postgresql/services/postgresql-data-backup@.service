@@ -1,0 +1,19 @@
+[Unit]
+Description=PostgreSQL Data %i Backup Service
+After=postgresql.service
+BindsTo=postgresql.service
+
+[Service]
+Type=oneshot
+
+# logging
+StandardOutput=journal
+StandardError=journal
+
+ExecStartPre=/usr/bin/podman exec postgresql sh -c "mkdir -p /backups/%i && chown postgres:root /backups/%i && chmod 770 /backups/%i"
+
+# Run the script
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'printf "\\connect %i_db\n" > /backups/%i/pg_%i_$(date "+%%Y-%%m-%%d").sql'
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'pg_dump -U postgres -d %i_db --data-only >> /backups/%i/pg_%i_$(date "+%%Y-%%m-%%d").sql'
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c "find /backups/%i -maxdepth 1 -type f -mtime +7 -delete"
+ExecStart=/usr/bin/podman exec postgresql sh -c "chown -R postgres:root /backups/%i && chmod 660 /backups/%i/*"

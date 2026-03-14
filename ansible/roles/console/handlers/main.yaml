@@ -1,0 +1,8 @@
+---
+- name: Register font
+  ansible.builtin.shell: |
+    fc-cache -f -v
+  become: true
+  changed_when: false
+  listen: "notification_update_font"
+  ignore_errors: true # noqa: ignore-errors

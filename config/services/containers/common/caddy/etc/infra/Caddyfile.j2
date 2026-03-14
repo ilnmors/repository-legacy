@@ -1,0 +1,40 @@
+# Private TLS ACME with DNS-01-challenge
+(private_tls) {
+        tls {
+                issuer acme {
+                        dir https://{{ infra_uri['ca']['domain'] }}:{{ infra_uri['ca']['ports']['https'] }}/acme/acme@ilnmors.internal/directory
+                        dns rfc2136 {
+                                server {{ infra_uri['bind']['domain'] }}:{{ infra_uri['bind']['ports']['dns'] }}
+                                key_name acme-key
+                                key_alg hmac-sha256
+                                key "{file./run/secrets/CADDY_ACME_KEY}"
+                        }
+                }
+        }
+}
+
+infra.ilnmors.internal {
+        import private_tls
+        metrics
+}
+
+{{ infra_uri['ldap']['domain'] }} {
+        import private_tls
+        route {
+            reverse_proxy host.containers.internal:{{ infra_uri['ldap']['ports']['http'] }}
+        }
+}
+
+{{ infra_uri['prometheus']['domain'] }} {
+        import private_tls
+        route {
+                reverse_proxy https://{{ infra_uri['prometheus']['domain'] }}:{{ infra_uri['prometheus']['ports']['https'] }}
+        }
+}
+
+grafana.ilnmors.internal {
+        import private_tls
+        route {
+                reverse_proxy host.containers.internal:3000
+        }
+}

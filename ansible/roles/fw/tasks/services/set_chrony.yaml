@@ -1,0 +1,55 @@
+---
+- name: Check chrnoy installation
+  ansible.builtin.shell: |
+    command -v chronyc
+  changed_when: false
+  failed_when: false
+  register: "is_chrony_installed"
+  ignore_errors: true
+
+- name: Install chrony
+  ansible.builtin.apt:
+    name: "chrony"
+    state: "present"
+  become: true
+  when: is_chrony_installed.rc != 0
+
+- name: Deploy local acl file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/chrony/local-acl.conf.j2"
+    dest: "/etc/chrony/conf.d/local-acl.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify: "notification_restart_chrony"
+
+- name: Create chrony.service.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/chrony.service.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Set chrony.service.d/override.conf
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/chrony.service.d/override.conf"
+    content: |
+      [Service]
+      Restart=always
+      RestartSec=60
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify: "notification_restart_chrony"
+
+- name: Enable chrony service
+  ansible.builtin.systemd:
+    name: "chrony.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+  become: true

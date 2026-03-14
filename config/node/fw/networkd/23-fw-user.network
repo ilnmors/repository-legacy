@@ -1,0 +1,25 @@
+[Match]
+Name=user
+
+[Network]
+IPForward=true
+IPv6PrefixDelegation=true
+IPv6SendRA=true
+IPv6SendRAExtension=false
+# IPv4
+Address={{ hostvars['fw']['network4']['firewall']['user'] }}/24
+DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+
+[IPv6PrefixDelegation]
+SubnetId=20
+# A-Flag: Enable SLAAC
+AddressAutoconfiguration=true
+OnLink=true
+
+[IPv6SendRA]
+# M-Flag: Client IP from DHCPv6
+Managed=false
+# O-Flag: Other information form DHCPv6
+OtherInformation=false
+EmitDNS=true
+DNS={{ hostvars['fw']['network6']['blocky']['server'] }}

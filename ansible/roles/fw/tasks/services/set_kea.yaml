@@ -1,0 +1,57 @@
+---
+- name: Check Kea dhcp4 installation
+  ansible.builtin.shell: |
+    command -v kea-dhcp4
+  become: true # kea-dhcp4 is located in /usr/sbin, which means root permission is needed.
+  changed_when: false
+  failed_when: false
+  register: "is_kea4_installed"
+  ignore_errors: true
+
+- name: Install kea dhcp 4
+  ansible.builtin.apt:
+    name:
+      - "kea-dhcp4-server"
+    state: "present"
+  become: true
+  when: is_kea4_installed.rc != 0
+
+- name: Deploy kea dhcp4 conf
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/kea/kea-dhcp4.conf.j2"
+    dest: "/etc/kea/kea-dhcp4.conf"
+    owner: "_kea"
+    group: "_kea"
+    mode: "0600"
+  become: true
+  notify: "notification_restart_kea4"
+
+- name: Create kea-dhcp-server.service.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/kea-dhcp4-server.service.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Set kea-dhcp-server.service.d/override.conf
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/kea-dhcp4-server.service.d/override.conf"
+    content: |
+      [Service]
+      Restart=always
+      RestartSec=60
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify:
+    - "notification_restart_kea4"
+
+- name: Enable kea service
+  ansible.builtin.systemd:
+    name: "kea-dhcp4-server.service"
+    state: "started"
+    enabled: true
+  become: true

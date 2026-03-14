@@ -1,0 +1,18 @@
+---
+# Node Factors
+node:
+  name: "auth"
+  uid: 2003
+  home_path: "/home/auth"
+  ssh_san: "auth,auth.ilnmors.internal"
+  local_san: "localhost auth.ilnmors.internal"
+# VM Factors
+vm:
+  name: "auth"
+  cpu: 2
+  shares: 512
+  memory: 2
+  storage: 64
+  lan_mac: "0a:49:6e:4d:02:00"
+  lan_net: "lan-net"
+  lan_group: "vlan10-access"

@@ -1,0 +1,61 @@
+---
+- name: Load secret values
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Load secret from secrets.yaml
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/load_secret_vars"
+        apply:
+          tags: ["always"]
+      tags: ["always"]
+
+- name: Create vm
+  hosts: vmm_init
+  gather_facts: false
+  become: false
+  vars:
+    valid_vm_names:
+      - "fw"
+      - "infra"
+      - "auth"
+      - "app"
+  tasks:
+    - name: Set vm name depends on tags
+      ansible.builtin.set_fact:
+        target_vm: "{{ ansible_run_tags[0] }}"
+      when: (ansible_run_tags | length) == 1
+
+    - name: Check VM name
+      ansible.builtin.fail:
+        msg: "invalid vm name. vm name should be included in \"{{ valid_vm_names | join(', ') }}\""
+      when: (target_vm | default("none")) not in valid_vm_names
+
+    - name: Set become password
+      ansible.builtin.set_fact:
+        ansible_become_pass: "{{ hostvars['console']['sudo']['password']['vmm'] }}"
+
+    - name: Create seed file
+      ansible.builtin.include_role:
+        name: "vmm"
+        tasks_from: "vm/create_seed"
+        apply:
+          delegate_to: "console"
+          tags: ["always"]
+
+    - name: Deploy vm init files
+      ansible.builtin.include_role:
+        name: "vmm"
+        tasks_from: "vm/deploy_vm_init"
+        apply:
+          tags: ["always"]
+
+    - name: Register vm
+      ansible.builtin.include_role:
+        name: "vmm"
+        tasks_from: "vm/register_vm"
+        apply:
+          tags: ["always"]
+  tags: ["always"]

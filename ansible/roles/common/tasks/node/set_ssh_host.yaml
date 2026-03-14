@@ -1,0 +1,119 @@
+---
+- name: Deploy /etc/ssh/local_ssh_ca.pub
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ssh']['ca']['pub'] }}
+    dest: "/etc/ssh/local_ssh_ca.pub"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  no_log: true
+
+- name: Check ssh_host_key-cert.pub
+  ansible.builtin.stat:
+    path: "/etc/ssh/ssh_host_ed25519_key-cert.pub"
+  register: "is_signed_ca_key"
+
+- name: Get current ssh_host_key-cert.pub Key ID
+  ansible.builtin.shell: |
+    set -o pipefail
+    ssh-keygen -L -f /etc/ssh/ssh_host_ed25519_key-cert.pub | \
+    grep "Key ID" | \
+    sed -E 's/.*Key ID: "(.*)"/\1/'
+  when: is_signed_ca_key.stat.exists
+  changed_when: false
+  register: "current_key_id"
+  no_log: true
+
+- name: Get current ssh_host_key-cert.pub san
+  ansible.builtin.shell: |
+    set -o pipefail
+    ssh-keygen -L -f /etc/ssh/ssh_host_ed25519_key-cert.pub | \
+    sed -n '/Principals:/,/Critical Options:/p' | \
+    sed '1d;$d' | \
+    sed 's/^[[:space:]]*//'
+  when: is_signed_ca_key.stat.exists
+  changed_when: false
+  register: "current_san_id"
+  no_log: true
+
+- name: Set current key informations
+  ansible.builtin.set_fact:
+    current_id_key: "{{ current_key_id.stdout }}"
+    current_san_list: "{{ current_san_id.stdout_lines }}"
+  when: is_signed_ca_key.stat.exists
+  no_log: true
+
+- name: Compare key values between current information and defined information
+  ansible.builtin.set_fact:
+    is_certificate_info_different: true
+  when: (current_id_key | default("")) != node['name'] or (current_san_list | default([])) != (node['ssh_san'].split(',') | map('trim') | list)
+
+- name: Get SSH CA and signing
+  when: not is_signed_ca_key.stat.exists or (is_certificate_info_different | default(false))
+  block:
+    - name: Get ssh_host_key.pub from remote server
+      ansible.builtin.fetch:
+        src: "/etc/ssh/ssh_host_ed25519_key.pub"
+        dest: "/run/user/{{ hostvars['console']['node']['uid'] }}/{{ node['name'] }}_ssh_host_ed25519_key.pub"
+        flat: true
+      become: true
+
+    - name: Get SSH CA
+      delegate_to: "console"
+      ansible.builtin.copy:
+        content: |
+          {{ hostvars['console']['ssh']['ca']['key'] }}
+        dest: "/run/user/{{ hostvars['console']['node']['uid'] }}/local_ssh_ca_private_key"
+        owner: "console"
+        group: "svadmins"
+        mode: "0400"
+      no_log: true
+
+    - name: Sign on ssh host keys (pub file)
+      delegate_to: "console"
+      ansible.builtin.command: |
+        ssh-keygen -s /run/user/{{ hostvars['console']['node']['uid'] }}/local_ssh_ca_private_key \
+        -h \
+        -I "{{ node['name'] }}" \
+        -n "{{ node['ssh_san'] }}" \
+        /run/user/{{ hostvars['console']['node']['uid'] }}/{{ node['name'] }}_ssh_host_ed25519_key.pub
+      changed_when: not is_signed_ca_key.stat.exists or (is_certificate_info_different | default(false))
+      no_log: true
+
+    - name: Deploy signed pub file
+      ansible.builtin.copy:
+        src: "/run/user/{{ hostvars['console']['node']['uid'] }}/{{ node['name'] }}_ssh_host_ed25519_key-cert.pub"
+        dest: "/etc/ssh/ssh_host_ed25519_key-cert.pub"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+      notify: "notification_restart_sshd"
+
+  always:
+    - name: Clean temporary files
+      delegate_to: "console"
+      ansible.builtin.file:
+        path: "/run/user/{{ hostvars['console']['node']['uid'] }}/{{ item }}"
+        state: "absent"
+      loop:
+        - "{{ node['name'] }}_ssh_host_ed25519_key.pub"
+        - "{{ node['name'] }}_ssh_host_ed25519_key-cert.pub"
+        - "local_ssh_ca_private_key"
+      no_log: true
+
+- name: Set sshd_config.d files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/node/common/ssh/{{ item }}"
+    dest: "/etc/ssh/sshd_config.d/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  loop:
+    - "prohibit_root.conf"
+    - "ssh_ca.conf"
+    - "host_certificate.conf"
+  become: true
+  notify: "notification_restart_sshd"

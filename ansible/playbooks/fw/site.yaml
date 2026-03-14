@@ -1,0 +1,190 @@
+---
+- name: Load secret values
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Load secret from secrets.yaml
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/load_secret_vars"
+        apply:
+          tags: ["always"]
+      tags: ["always"]
+
+- name: Site fw
+  hosts: "fw"
+  gather_facts: false
+  become: false
+  pre_tasks:
+    - name: Set become password
+      ansible.builtin.set_fact:
+        ansible_become_pass: "{{ hostvars['console']['sudo']['password']['fw'] }}"
+      tags: ["always"]
+
+  tasks:
+    - name: Set timezone to Asia/Seoul
+      community.general.timezone:
+        name: Asia/Seoul
+      become: true
+      tags: ["init", "timezone"]
+
+    - name: Deploy root_ca certificate
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_root_ca"
+        apply:
+          tags: ["init", "root_crt"]
+      tags: ["init", "root_crt"]
+
+    - name: Deploy hosts file
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_hosts"
+        apply:
+          tags: ["init", "hosts"]
+      tags: ["init", "hosts"]
+
+    - name: Create default directory
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/create_default_dir"
+        apply:
+          tags: ["init", "default_dir"]
+      tags: ["init", "default_dir"]
+
+    - name: Set ssh host
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_ssh_host"
+        apply:
+          tags: ["init", "ssh_host"]
+      tags: ["init", "ssh_host"]
+
+    - name: Set networkd
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_networkd"
+        apply:
+          tags: ["init", "networkd"]
+      tags: ["init", "networkd"]
+
+    - name: Set wireguard
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_wireguard"
+        apply:
+          tags: ["init", "wireguard"]
+      tags: ["init", "wireguard"]
+
+    - name: Set resolved
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_resolved"
+        apply:
+          tags: ["init", "resolved"]
+      tags: ["init", "resolved"]
+
+    - name: Update and upgrade apt
+      ansible.builtin.apt:
+        upgrade: "dist"
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      tags: ["init", "site", "upgrade-packages"]
+
+    - name: Install common packages
+      ansible.builtin.apt:
+        name:
+          - "acl"
+          - "curl"
+          - "jq"
+          - "wireguard-tools"
+          - "dnsutils"
+          - "conntrack"
+          - "logrotate"
+          - "netcat-openbsd"
+          - "dbus-user-session"
+        state: "present"
+      become: true
+      tags: ["init", "site", "install-packages"]
+
+    - name: Set linger
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_linger"
+        apply:
+          tags: ["init", "linger"]
+      tags: ["init", "linger"]
+
+    - name: Set chrony
+      ansible.builtin.include_role:
+        name: "fw"
+        tasks_from: "services/set_chrony"
+        apply:
+          tags: ["init", "chrony"]
+      tags: ["init", "chrony"]
+
+    - name: Set ddns
+      ansible.builtin.include_role:
+        name: "fw"
+        tasks_from: "services/set_ddns"
+        apply:
+          tags: ["init", "ddns"]
+      tags: ["init", "ddns"]
+
+    - name: Set nftables
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_nftables"
+        apply:
+          tags: ["init", "site", "nftables"]
+      tags: ["init", "site", "nftables"]
+
+    - name: Set suricata
+      ansible.builtin.include_role:
+        name: "fw"
+        tasks_from: "services/set_suricata"
+        apply:
+          tags: ["site", "suricata"]
+      tags: ["site", "suricata"]
+
+    - name: Set crowdsec
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_crowdsec"
+        apply:
+          tags: ["site", "crowdsec"]
+      tags: ["site", "crowdsec"]
+
+    - name: Set bind
+      ansible.builtin.include_role:
+        name: "fw"
+        tasks_from: "services/set_bind"
+        apply:
+          tags: ["init", "update", "bind"]
+      tags: ["init", "update", "bind"]
+
+    - name: Set blocky
+      ansible.builtin.include_role:
+        name: "fw"
+        tasks_from: "services/set_blocky"
+        apply:
+          tags: ["site", "blocky"]
+      tags: ["site", "blocky"]
+
+    - name: Set kea
+      ansible.builtin.include_role:
+        name: "fw"
+        tasks_from: "services/set_kea"
+        apply:
+          tags: ["site", "kea"]
+      tags: ["site", "kea"]
+
+    - name: Set alloy
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_alloy"
+        apply:
+          tags: ["site", "alloy"]
+      tags: ["site", "alloy"]

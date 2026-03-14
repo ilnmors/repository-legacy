@@ -1,0 +1,59 @@
+---
+# This task is located in vmm roles because of its attributes,
+# but all process should be run in "console".
+# At the playbook, `delegate_to: "console"` option is applyed by `apply:`.
+- name: Create images directory
+  ansible.builtin.file:
+    path: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}"
+    state: "directory"
+    owner: "console"
+    group: "svadmins"
+    mode: "0700"
+
+- name: Create temp meta-data
+  ansible.builtin.copy:
+    content: |
+      instance-id: vm-{{ target_vm }}
+      local-hostname: {{ target_vm }}
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/meta-data"
+    owner: "console"
+    group: "svadmins"
+    mode: "0600"
+  register: "vm_meta_data"
+  no_log: true
+
+- name: Create temp user-data
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/vmm/libvirt/seeds/user-data.j2"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/user-data"
+    owner: "console"
+    group: "svadmins"
+    mode: "0600"
+  register: "vm_user_data"
+  no_log: true
+
+- name: Create temp network-config
+  ansible.builtin.copy:
+    content: |
+      network: {config: disabled}
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/network-config"
+    owner: "console"
+    group: "svadmins"
+    mode: "0600"
+  register: "vm_network_config"
+  no_log: true
+
+- name: Check seed.iso
+  ansible.builtin.stat:
+    path: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/seed.iso"
+  register: "is_seediso"
+
+- name: Create seed.iso
+  ansible.builtin.shell:
+    cmd: |
+      cloud-localds -N {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/network-config \
+      {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/seed.iso \
+      {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/user-data \
+      {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/meta-data
+  when: vm_meta_data.changed or vm_user_data.changed or vm_network_config.changed or not is_seediso.stat.exists
+  changed_when: true

@@ -1,0 +1,6 @@
+[Match]
+Name=wg0
+[Network]
+Address={{ hostvars['fw']["network4"]["firewall"]["wg"] }}/24
+Address={{ hostvars['fw']["network6"]["firewall"]["wg"] }}/64
+IPForward=yes

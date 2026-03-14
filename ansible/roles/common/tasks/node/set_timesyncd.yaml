@@ -1,0 +1,20 @@
+---
+- name: Create timesyncd.conf.d
+  ansible.builtin.file:
+    path: "/etc/systemd/timesyncd.conf.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Deploy timesyncd.conf.d/local-ntp.conf
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/node/common/timesyncd/local-ntp.conf"
+    dest: "/etc/systemd/timesyncd.conf.d/local-ntp.conf"
+    owner: "root"
+    group: "systemd-timesync"
+    mode: "0640"
+  become: true
+  notify: "notification_restart_timesyncd"
+  no_log: true

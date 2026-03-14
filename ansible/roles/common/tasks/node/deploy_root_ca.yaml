@@ -1,0 +1,10 @@
+---
+- name: Deploy root_ca.crt
+  ansible.builtin.copy:
+    content: "{{ hostvars['console']['ca']['root']['crt'] }}"
+    dest: "/usr/local/share/ca-certificates/ilnmors_root_ca.crt"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify: "notification_update_ca"

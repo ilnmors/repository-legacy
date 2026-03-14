@@ -1,0 +1,78 @@
+<domain type='kvm'>
+    <name>{{ hostvars[target_vm]['vm']['name'] }}</name>
+    <memory unit='GiB'>{{ hostvars[target_vm]['vm']['memory'] }}</memory>
+    <vcpu placement='static'>{{ hostvars[target_vm]['vm']['cpu'] }}</vcpu>
+    <cputune>
+        <shares>{{ hostvars[target_vm]['vm']['shares'] }}</shares>
+    </cputune>
+    <os firmware='efi'>
+        <type arch='x86_64' machine='pc-q35-10.0'>hvm</type>
+        <firmware>
+            <feature enabled='yes' name='enrolled-keys'/>
+            <feature enabled='yes' name='secure-boot'/>
+        </firmware>
+        <loader readonly='yes' secure='yes' type='pflash' format='raw'>/usr/share/OVMF/OVMF_CODE_4M.ms.fd</loader>
+        <nvram template='/usr/share/OVMF/OVMF_VARS_4M.ms.fd' templateFormat='raw' format='raw'>/var/lib/libvirt/qemu/nvram/{{ hostvars[target_vm]['vm']['name'] }}_VARS.fd</nvram>
+        <boot dev='hd'/>
+    </os>
+    <features>
+        <acpi/>
+        <apic/>
+    </features>
+    <cpu mode='host-passthrough' check='none' migratable='on'/>
+    <on_poweroff>destroy</on_poweroff>
+    <on_reboot>restart</on_reboot>
+    <on_crash>destroy</on_crash>
+    <devices>
+        <disk type='file' device='disk'>
+            <driver name='qemu' type='qcow2' discard='unmap' />
+            <source file='/var/lib/libvirt/images/{{ hostvars[target_vm]['vm']['name'] }}.qcow2' />
+            <target dev='vda' bus='virtio' />
+        </disk>
+        <disk type='file' device='cdrom'>
+            <driver name='qemu' type='raw' cache='none' />
+            <source file='/var/lib/libvirt/seeds/{{ hostvars[target_vm]['vm']['name'] }}_seed.iso' />
+            <target dev='sdb' bus='sata' />
+            <readonly/>
+        </disk>
+{% if target_vm == 'fw' %}
+        <interface type='network'>
+            <mac address='{{ hostvars[target_vm]['vm']['wan_mac'] }}' />
+            <source network='{{ hostvars[target_vm]['vm']['wan_net'] }}' />
+            <model type='virtio' />
+        </interface>
+        <interface type='network'>
+            <mac address='{{ hostvars[target_vm]['vm']['lan_mac'] }}' />
+            <source network='{{ hostvars[target_vm]['vm']['lan_net'] }}' portgroup='{{ hostvars[target_vm]['vm']['lan_group'] }}' />
+            <model type='virtio' />
+        </interface>
+{% else %}
+        <interface type='network'>
+            <mac address='{{ hostvars[target_vm]['vm']['lan_mac'] }}' />
+            <source network='{{ hostvars[target_vm]['vm']['lan_net'] }}' portgroup='{{ hostvars[target_vm]['vm']['lan_group'] }}' />
+            <model type='virtio' />
+        </interface>
+{% endif %}
+        <console type='pty'>
+            <target type='serial' port='0' />
+        </console>
+        <channel type='unix'>
+            <target type='virtio' name='org.qemu.guest_agent.0' />
+            <address type='virtio-serial' controller='0' bus='0' port='1' />
+        </channel>
+{% if target_vm == 'app' %}
+{% for device in hostvars[target_vm]['vm']['pass_through'].values() %}
+        <hostdev mode='subsystem' type='pci' managed='yes'>
+            <driver name='vfio'/>
+            <source>
+                <address type='pci' domain='{{ device['domain'] }}' bus='{{ device['bus'] }}' slot='{{ device['slot'] }}' function='{{ device['function'] }}'/>
+            </source>
+            <address type='pci' domain='{{ device['domain'] }}' bus='{{ device['bus'] }}' slot='{{ device['slot'] }}' function='{{ device['function'] }}'/>
+        </hostdev>
+{% endfor %}
+{% endif %} 
+        <tpm model='tpm-crb'>
+            <backend type='emulator' version='2.0'/>
+        </tpm>
+    </devices>
+</domain>

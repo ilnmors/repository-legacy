@@ -1,0 +1,85 @@
+- name: Restart ca
+  ansible.builtin.systemd:
+    name: "ca.service"
+    state: "restarted"
+    enabled: "true"
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_ca"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Reload postgresql
+  ansible.builtin.command:
+    /usr/bin/podman exec -u postgres postgresql sh -c "pg_ctl reload"
+  when: not (is_postgresql_init_run | default(false))
+  changed_when: false
+  listen: "notification_reload_postgresql"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart postgresql
+  ansible.builtin.systemd:
+    name: "postgresql.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: not (is_postgresql_init_run | default(false))
+  changed_when: false
+  listen: "notification_restart_postgresql"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart ldap
+  ansible.builtin.systemd:
+    name: "ldap.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_ldap"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart prometheus
+  ansible.builtin.systemd:
+    name: "prometheus.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_prometheus"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart loki
+  ansible.builtin.systemd:
+    name: "loki.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_loki"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart grafana
+  ansible.builtin.systemd:
+    name: "grafana.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_grafana"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Enable x509-exporter.service
+  ansible.builtin.systemd:
+    name: "x509-exporter.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_x509-exporter"
+  ignore_errors: true # noqa: ignore-errors

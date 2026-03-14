@@ -1,0 +1,108 @@
+---
+- name: Gather system facts (hardware)
+  ansible.builtin.setup:
+    gather_subset:
+      - hardware
+  become: true
+
+- name: Check ansible installation
+  ansible.builtin.shell: |
+    command -v ansible
+  changed_when: false
+  failed_when: false
+  register: "is_ansible_installed"
+  ignore_errors: true
+
+- name: Upgrade ansible module
+  community.general.ansible_galaxy_install:
+    type: "collection"
+    name: "{{ item }}"
+    state: "latest"
+  loop:
+    - "ansible.posix"
+    - "community.libvirt"
+    - "community.general"
+    - "containers.podman"
+  when: is_ansible_installed.rc == 0
+
+- name: Download sops
+  ansible.builtin.get_url:
+    url: "https://github.com/getsops/sops/releases/download/v{{ version['packages']['sops'] }}/\
+      sops_{{ version['packages']['sops'] }}_{{ item }}.deb"
+    dest: "{{ node['data_path'] }}/bin/sops-{{ version['packages']['sops'] }}-{{ item }}.deb"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"
+  loop:
+    - "amd64"
+    - "arm64"
+
+- name: Download step-cli
+  ansible.builtin.get_url:
+    url: "https://dl.smallstep.com/gh-release/cli/gh-release-header/v{{ version['packages']['step'] }}/\
+      step-cli_{{ version['packages']['step'] }}-1_{{ item }}.deb"
+    dest: "{{ node['data_path'] }}/bin/step-{{ version['packages']['step'] }}-{{ item }}.deb"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"
+  loop:
+    - "amd64"
+    - "arm64"
+
+- name: Download kopia
+  ansible.builtin.get_url:
+    url: "https://github.com/kopia/kopia/releases/download/v{{ version['packages']['kopia'] }}/\
+      kopia_{{ version['packages']['kopia'] }}_linux_{{ item }}.deb"
+    dest: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-{{ item }}.deb"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"
+  loop:
+    - "amd64"
+    - "arm64"
+
+- name: Download blocky
+  ansible.builtin.get_url:
+    url: "https://github.com/0xERR0R/blocky/releases/download/v{{ version['packages']['blocky'] }}/\
+      blocky_v{{ version['packages']['blocky'] }}_Linux_{{ item }}.tar.gz"
+    dest: "{{ node['data_path'] }}/bin/blocky-{{ version['packages']['blocky'] }}-{{ item }}.tar.gz"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600" # noqa: line-length
+  loop:
+    - "x86_64"
+    - "arm64"
+
+- name: Download alloy
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/alloy/releases/download/v{{ version['packages']['alloy'] }}/\
+      alloy-{{ version['packages']['alloy'] }}-1.{{ item }}.deb"
+    dest: "{{ node['data_path'] }}/bin/alloy-{{ version['packages']['alloy'] }}-{{ item }}.deb"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"
+  loop:
+    - "amd64"
+    - "arm64"
+
+- name: Apply cli tools (x86_64)
+  ansible.builtin.apt:
+    deb: "{{ node['data_path'] }}/bin/{{ item }}"
+    state: "present"
+  loop:
+    - "sops-{{ version['packages']['sops'] }}-amd64.deb"
+    - "step-{{ version['packages']['step'] }}-amd64.deb"
+    - "kopia-{{ version['packages']['kopia'] }}-amd64.deb"
+  become: true
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Apply cli tools (aarch64)
+  ansible.builtin.apt:
+    deb: "{{ node['data_path'] }}/bin/{{ item }}"
+    state: "present"
+  loop:
+    - "sops-{{ version['packages']['sops'] }}-arm64.deb"
+    - "step-{{ version['packages']['step'] }}-arm64.deb"
+    - "kopia-{{ version['packages']['kopia'] }}-arm64.deb"
+  become: true
+  when: ansible_facts['architecture'] == "aarch64"

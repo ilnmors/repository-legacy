@@ -1,0 +1,17 @@
+[Match]
+Name=br1
+
+[Network]
+VLAN=vlan1
+VLAN=vlan10
+VLAN=vlan20
+LinkLocalAddressing=false
+
+[BridgeVLAN]
+VLAN=1
+PVID=yes
+EgressUntagged=true
+
+[BridgeVLAN]
+VLAN=10
+VLAN=20

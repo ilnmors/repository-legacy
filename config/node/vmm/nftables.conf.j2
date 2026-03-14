@@ -1,0 +1,26 @@
+#!/usr/sbin/nft -f
+# Convention
+# iifname oifname saddr daddr proto dport ct state action / Ellipsis if you can something
+flush ruleset
+
+define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | join(', ') }} }
+define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
+define PORTS_SSH = 22
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+        ct state invalid drop comment "deny invalid connection"
+        ct state established, related accept comment "allow all connection already existing"
+        iifname "lo" accept comment "allow local connection"
+        meta l4proto { icmp, icmpv6 } accept comment "allow icmp connection: > VMM"
+        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv4 ssh connection: CONSOLE > VMM"
+        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv6 ssh connection: CONSOLE > VMM"
+   }
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

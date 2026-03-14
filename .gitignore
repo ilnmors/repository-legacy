@@ -1,0 +1,7 @@
+data/bin/*
+data/volumes/*
+data/images/*
+docs/archives/textfiles/
+docs/notes/*
+*.sql
+!.gitkeep

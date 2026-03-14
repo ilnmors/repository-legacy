@@ -1,0 +1,16 @@
+[Match]
+Name=client
+
+[Network]
+# General
+IPForward=true
+IPv6SendRA=false
+IPv6AcceptRA=false
+VLAN=server
+VLAN=user
+# IPv4
+Address={{ hostvars['fw']['network4']['firewall']['client'] }}/24
+DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+# IPv6
+Address={{ hostvars['fw']['network6']['firewall']['client'] }}/64
+DNS={{ hostvars['fw']['network6']['blocky']['server'] }}

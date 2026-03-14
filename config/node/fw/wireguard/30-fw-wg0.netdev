@@ -1,0 +1,10 @@
+[NetDev]
+Name=wg0
+Kind=wireguard
+[WireGuard]
+ListenPort=11290
+PrivateKey={{ hostvars['console']['wireguard']['server']['private_key'] }}
+[WireGuardPeer]
+PublicKey={{ hostvars['console']['wireguard']['console']['public_key'] }}
+PresharedKey={{ hostvars['console']['wireguard']['console']['preshared_key'] }}
+AllowedIPs={{ hostvars['fw']["network4"]["console"]["wg"] }}/32, {{ hostvars['fw']["network6"]["console"]["wg"] }}/128

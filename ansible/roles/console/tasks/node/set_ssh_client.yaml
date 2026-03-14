@@ -1,0 +1,109 @@
+---
+- name: Create ssh id_console
+  ansible.builtin.copy:
+    content: "{{ hostvars['console']['ssh']['console']['key'] }}"
+    dest: "/etc/secrets/{{ node['uid'] }}/id_console"
+    owner: "{{ ansible_user }}"
+    group: "root"
+    mode: "0400"
+  become: true
+  no_log: true
+
+- name: Create ssh id_console.pub
+  ansible.builtin.copy:
+    content: "{{ hostvars['console']['ssh']['console']['pub'] }}"
+    dest: "/etc/secrets/{{ node['uid'] }}/id_console.pub"
+    owner: "{{ ansible_user }}"
+    group: "root"
+    mode: "0400"
+  become: true
+  no_log: true
+
+- name: Create ssh_known_hosts
+  become: true
+  ansible.builtin.copy:
+    content: |
+      @cert-authority *.ilnmors.internal {{ hostvars['console']['ssh']['ca']['pub'] }}
+    dest: "/etc/ssh/ssh_known_hosts"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  no_log: true
+
+- name: Check id_console-cert.pub
+  ansible.builtin.stat:
+    path: "/etc/secrets/{{ node['uid'] }}/id_console-cert.pub"
+  register: "is_signed_console_key"
+
+- name: Get current id_console-cert.pub allow users
+  ansible.builtin.shell: |
+    set -o pipefail
+    ssh-keygen -L -f /etc/secrets/{{ node['uid'] }}/id_console-cert.pub | \
+    sed -n '/Principals:/,/Critical Options:/p' | \
+    sed '1d;$d' | \
+    sed 's/^[[:space:]]*//'
+  when: is_signed_console_key.stat.exists
+  changed_when: false
+  register: "current_allow_users"
+  no_log: true
+
+- name: Set key informations
+  ansible.builtin.set_fact:
+    current_user_list: "{{ current_allow_users.stdout_lines }}"
+  when: is_signed_console_key.stat.exists
+  no_log: true
+
+- name: Compare key values between current information and defined information
+  ansible.builtin.set_fact:
+    is_certificate_info_different: true
+  when: (current_user_list | default([])) != (node['ssh_users'].split(',') | map('trim') | list)
+
+- name: Get SSH CA and signing
+  when: not is_signed_console_key.stat.exists or (is_certificate_info_different | default(false))
+  block:
+    - name: Get SSH CA
+      ansible.builtin.copy:
+        content: |
+          {{ hostvars['console']['ssh']['ca']['key'] }}
+        dest: "/run/user/{{ node['uid'] }}/local_ssh_ca_private_key"
+        owner: "console"
+        group: "svadmins"
+        mode: "0400"
+      no_log: true
+    - name: Sign on ssh console key (pub file)
+      ansible.builtin.command: |
+        ssh-keygen -s /run/user/{{ node['uid'] }}/local_ssh_ca_private_key \
+        -I "{{ node['name'] }}" \
+        -n "{{ node['ssh_users'] }}" \
+        /etc/secrets/{{ node['uid'] }}/id_console.pub
+      become: true
+      changed_when: not is_signed_console_key.stat.exists or (is_certificate_info_different | default(false))
+      no_log: true
+  always:
+    - name: Clean temporary files
+      ansible.builtin.file:
+        path: "/run/user/{{ node['uid'] }}/local_ssh_ca_private_key"
+        state: "absent"
+      no_log: true
+
+- name: Create .ssh directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/.ssh"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0700"
+
+- name: Create ssh config file
+  ansible.builtin.copy:
+    content: |
+      {% for host in groups['all'] if host != 'console' %}
+      Host {{ host }}
+        HostName {{ hostvars[host]['ansible_host'] }}
+        User {{ hostvars[host]['ansible_user'] }}
+        IdentityFile /etc/secrets/{{ node['uid'] }}/id_console
+      {% endfor %}
+    dest: "{{ node['home_path'] }}/.ssh/config"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"

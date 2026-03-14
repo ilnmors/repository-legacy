@@ -1,0 +1,137 @@
+---
+- name: Gather system facts (hardware)
+  ansible.builtin.setup:
+    gather_subset:
+      - hardware
+  become: true
+
+- name: Check kopia installation
+  ansible.builtin.shell: |
+    command -v kopia
+  changed_when: false
+  failed_when: false
+  register: "is_kopia_installed"
+  ignore_errors: true
+
+- name: Set console kopia
+  when: node['name'] == 'console'
+  block:
+    - name: Apply cli tools (x86_64)
+      ansible.builtin.apt:
+        deb: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-amd64.deb"
+        state: "present"
+      become: true
+      when:
+        - ansible_facts['architecture'] == "x86_64"
+        - is_kopia_installed.rc != 0
+    - name: Apply cli tools (aarch64)
+      ansible.builtin.apt:
+        deb: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-arm64.deb"
+        state: "present"
+      become: true
+      when:
+        - ansible_facts['architecture'] == "aarch64"
+        - is_kopia_installed.rc != 0
+    - name: Connect kopia server
+      environment:
+        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['user']['console'] }}"
+      ansible.builtin.shell: |
+        /usr/bin/kopia repository connect server \
+        --url=https://{{ infra_uri['kopia']['domain'] }}:{{ infra_uri['kopia']['ports']['https'] }} \
+        --override-username=console \
+        --override-hostname=console.ilnmors.internal
+      changed_when: false
+      failed_when: is_kopia_connected.rc != 0
+      register: "is_kopia_connected"
+      no_log: true
+
+- name: Set infra/app kopia
+  when: node['name'] in ['infra', 'app']
+  block:
+    - name: Set kopia uid
+      ansible.builtin.set_fact:
+        kopia_uid: 951
+    - name: Deploy kopia deb file (x86_64)
+      ansible.builtin.copy:
+        src: "{{ hostvars['console']['node']['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-amd64.deb"
+        dest: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+      when: ansible_facts['architecture'] == "x86_64"
+    - name: Deploy kopia deb file (aarch64)
+      ansible.builtin.copy:
+        src: "{{ hostvars['console']['node']['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-arm64.deb"
+        dest: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+      when: ansible_facts['architecture'] == "aarch64"
+    - name: Create kopia group
+      ansible.builtin.group:
+        name: "kopia"
+        gid: "{{ kopia_uid }}"
+        state: "present"
+      become: true
+    - name: Create kopia user
+      ansible.builtin.user:
+        name: "kopia"
+        uid: "{{ kopia_uid }}"
+        group: "kopia"
+        shell: "/usr/sbin/nologin"
+        password_lock: true
+        comment: "Kopia backup User"
+        state: "present"
+      become: true
+    - name: Create kopia directory
+      ansible.builtin.file:
+        path: "{{ item.name }}"
+        state: "directory"
+        owner: "kopia"
+        group: "root"
+        mode: "{{ item.mode }}"
+      loop:
+        - name: "/etc/kopia"
+          mode: "0700"
+        - name: "/etc/secrets/951"
+          mode: "0500"
+        - name: "/var/cache/kopia"
+          mode: "0700"
+      become: true
+      no_log: true
+    - name: Install kopia
+      ansible.builtin.apt:
+        deb: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
+        state: "present"
+      become: true
+      when: is_kopia_installed.rc != 0
+    - name: Deploy kopia env
+      ansible.builtin.template:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/kopia.env.j2"
+        dest: "/etc/secrets/{{ kopia_uid }}/kopia.env"
+        owner: "{{ kopia_uid }}"
+        group: "root"
+        mode: "0400"
+      become: true
+      no_log: true
+    - name: Deploy kopia service files
+      ansible.builtin.template:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+        validate: "/usr/bin/systemd-analyze verify %s"
+      loop:
+        - "kopia-backup.service"
+        - "kopia-backup.timer"
+      become: true
+    - name: Enable auto kopia rules update
+      ansible.builtin.systemd:
+        name: "kopia-backup.timer"
+        state: "started"
+        enabled: true
+        daemon_reload: true
+      become: true

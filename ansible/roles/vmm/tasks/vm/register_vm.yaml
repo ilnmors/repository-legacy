@@ -1,0 +1,24 @@
+---
+- name: Register VM xml file
+  community.libvirt.virt:
+    name: "{{ target_vm }}"
+    xml: |
+      {{ lookup('template', hostvars['console']['node']['config_path'] + '/services/systemd/vmm/libvirt/xml/vms/vms.xml.j2') }}
+    uri: "qemu:///system"
+    command: define
+
+- name: Deploy VM systemd file
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/vmm/libvirt/services/{{ target_vm }}.service"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ target_vm }}.service"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0400"
+
+- name: Register VM service
+  ansible.builtin.systemd:
+    name: "{{ target_vm }}.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

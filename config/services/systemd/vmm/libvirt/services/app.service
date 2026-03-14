@@ -1,0 +1,23 @@
+[Unit]
+Description=app vm
+After=network-online.target libvirtd.service fw.service infra.service auth.service
+Wants=fw.service infra.service auth.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=360
+
+ExecStart=/usr/bin/virsh -c qemu:///system start app
+
+ExecStartPost=/bin/sleep 30
+
+ExecStop=/bin/bash -c '\
+  /usr/bin/virsh -c qemu:///system shutdown app; \
+  while /usr/bin/virsh -c qemu:///system list --state-running --name | grep -q "app"; do \
+    echo "Waiting for app to shutdown..."; \
+    sleep 2; \
+  done'
+
+[Install]
+WantedBy=default.target

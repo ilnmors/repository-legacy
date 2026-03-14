@@ -1,0 +1,15 @@
+[Match]
+Name=eth1
+
+[Network]
+Bridge=br1
+LinkLocalAddressing=false
+
+[BridgeVLAN]
+VLAN=1
+PVID=true
+EgressUntagged=true
+
+[BridgeVLAN]
+VLAN=10
+VLAN=20

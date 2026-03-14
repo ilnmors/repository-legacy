@@ -1,0 +1,49 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Caddy
+
+{% if node['name'] == "infra" %}
+After=ca.service
+Requires=ca.service
+{% else %}
+After=network-online.target
+Wants=network-online.target
+{% endif %}
+
+
+[Container]
+Image=ilnmors.internal/{{ node['name'] }}/caddy:{{ version['containers']['caddy'] }}
+
+ContainerName=caddy_{{ node['name'] }}
+HostName=caddy_{{ node['name'] }}
+{% if node['name'] == 'infra' %}
+AddHost={{ infra_uri['ca']['domain'] }}:host-gateway
+AddHost={{ infra_uri['prometheus']['domain'] }}:host-gateway
+AddHost={{ infra_uri['loki']['domain'] }}:host-gateway
+{% endif %}
+
+PublishPort=2080:80/tcp
+PublishPort=2443:443/tcp
+
+Volume=%h/containers/caddy/etc:/etc/caddy:ro
+Volume=%h/containers/caddy/data:/data:rw
+{% if node['name'] == 'auth' %}
+Volume=/var/log/caddy:/log:rw
+{% endif %}
+
+Environment="TZ=Asia/Seoul"
+
+Secret=CADDY_ACME_KEY,target=/run/secrets/CADDY_ACME_KEY
+{% if node['name'] == 'auth' %}
+Secret=CADDY_CROWDSEC_KEY,target=/run/secrets/CADDY_CROWDSEC_KEY
+{% endif %}
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

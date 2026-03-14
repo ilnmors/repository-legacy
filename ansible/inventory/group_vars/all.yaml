@@ -1,0 +1,74 @@
+---
+# Global vars
+ansible_ssh_private_key_file: "/etc/secrets/{{ hostvars['console']['node']['uid'] }}/id_console"
+
+# URL infromation, you can use {{ infra_uri['services'] | split(':') | first|last }} to seperate domain and ports
+infra_uri:
+  crowdsec:
+    domain: "crowdsec.ilnmors.internal"
+    ports:
+      https: "8080"
+  bind:
+    domain: "bind.ilnmors.internal"
+    ports:
+      dns: "53"
+  blocky:
+    domain: "blocky.ilnmors.internal"
+    ports:
+      https: "443"
+      dns: "53"
+  postgresql:
+    domain: "postgresql.ilnmors.internal"
+    ports:
+      tcp: "5432" # postgresql db connection port
+  ldap:
+    domain: "ldap.ilnmors.internal"
+    ports:
+      http: "17170"
+      ldaps: "636"
+  ca:
+    domain: "ca.ilnmors.internal"
+    ports:
+      https: "9000"
+  prometheus:
+    domain: "prometheus.ilnmors.internal"
+    ports:
+      https: "9090"
+  loki:
+    domain: "loki.ilnmors.internal"
+    ports:
+      https: "3100"
+  nas:
+    domain: "nas.ilnmors.internal"
+    ports:
+      https: "5001"
+  kopia:
+    domain: "nas.ilnmors.internal"
+    ports:
+      https: "51515"
+
+version:
+  packages:
+    sops: "3.12.1"
+    step: "0.29.0"
+    kopia: "0.22.3"
+    blocky: "0.28.2"
+    alloy: "1.13.0"
+    # telegraf: "1.37.1"
+  containers:
+    # common
+    caddy: "2.10.2"
+    # infra
+    step: "0.29.0"
+    ldap: "v0.6.2"
+    x509-exporter: "3.19.1"
+    prometheus: "v3.9.1"
+    loki: "3.6.5"
+    grafana: "12.3.3"
+    ## Postgresql
+    postgresql: "18.2"
+    # For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
+#    pgvector: "v0.8.1"
+    vectorchord: "0.5.3"
+    # Auth
+    authelia: "4.39.15"

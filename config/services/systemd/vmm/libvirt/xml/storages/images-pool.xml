@@ -1,0 +1,8 @@
+<!-- Storage pool define -->
+<!-- images.xml -->
+<pool type='dir'>
+  <name>images-pool</name>
+  <target>
+    <path>/var/lib/libvirt/images</path>
+  </target>    
+</pool>

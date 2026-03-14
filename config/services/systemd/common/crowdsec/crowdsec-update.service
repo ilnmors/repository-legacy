@@ -1,0 +1,10 @@
+[Unit]
+Description=Crowdsec Rule Update Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cscli hub update
+ExecStart=/usr/bin/cscli hub upgrade
+ExecStartPost=/bin/systemctl restart crowdsec

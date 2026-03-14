@@ -1,0 +1,43 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Grafana
+
+After=postgresql.service ldap.service
+Requires=postgresql.service ldap.service
+
+[Container]
+Image=docker.io/grafana/grafana:{{ version['containers']['grafana'] }}
+
+ContainerName=grafana
+HostName=grafana
+
+AddHost={{ infra_uri['postgresql']['domain'] }}:host-gateway
+AddHost={{ infra_uri['ldap']['domain'] }}:host-gateway
+AddHost={{ infra_uri['prometheus']['domain'] }}:host-gateway
+AddHost={{ infra_uri['loki']['domain'] }}:host-gateway
+
+PublishPort=3000:3000/tcp
+
+Volume=%h/containers/grafana/data:/var/lib/grafana:rw
+Volume=%h/containers/grafana/etc:/etc/grafana:ro
+Volume=%h/containers/grafana/ssl:/etc/ssl/grafana:ro
+
+Environment="TZ=Asia/Seoul"
+Environment="GF_PATHS_CONFIG=/etc/grafana/grafana.ini"
+# plugin
+# Environment="GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource"
+Environment="GF_FEATURE_TOGGLES_EXPAND_ENV_VARS=true"
+
+Secret=GF_DB_PASSWORD,target=/run/secrets/GF_DB_PASSWORD
+Secret=LDAP_BIND_PASSWORD,target=/run/secrets/LDAP_BIND_PASSWORD
+Secret=GF_ADMIN_PASSWORD,target=/run/secrets/GF_ADMIN_PASSWORD
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

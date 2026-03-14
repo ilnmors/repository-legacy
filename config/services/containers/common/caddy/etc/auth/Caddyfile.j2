@@ -1,0 +1,62 @@
+{
+        # CrowdSec LAPI connection
+        crowdsec {
+                api_url https://{{ infra_uri['crowdsec']['domain'] }}:{{ infra_uri['crowdsec']['ports']['https'] }} 
+                api_key "{file./run/secrets/CADDY_CROWDSEC_KEY}"
+        }
+}
+
+# Snippets
+# CrowdSec log for parser
+(crowdsec_log) {
+        log {
+                output file /log/access.log {
+                        mode 0644
+                        roll_size 100MiB
+                        roll_keep 1
+                }
+        format json
+        }
+}
+# Private TLS ACME with DNS-01-challenge
+(private_tls) {
+        tls {
+                issuer acme {
+                        dir https://{{ infra_uri['ca']['domain'] }}:{{ infra_uri['ca']['ports']['https'] }}/acme/acme@ilnmors.internal/directory
+                        dns rfc2136 {
+                                server {{ infra_uri['bind']['domain'] }}:{{ infra_uri['bind']['ports']['dns'] }}
+                                key_name acme-key
+                                key_alg hmac-sha256
+                                key "{file./run/secrets/CADDY_ACME_KEY}"
+                        }
+                }
+        }
+}
+
+# Public domain
+authelia.ilnmors.com {
+        import crowdsec_log
+        route {
+                crowdsec
+                reverse_proxy host.containers.internal:9091
+        }
+}
+test.ilnmors.com {
+        import crowdsec_log
+        route {
+                crowdsec
+                forward_auth host.containers.internal:9091 {
+                        # Authelia Forward Auth endpoint URI
+                        uri /api/authz/forward-auth
+                        copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+                }
+                root * /usr/share/caddy
+                file_server
+        }
+}
+
+# Internal domain
+auth.ilnmors.internal {
+        import private_tls
+        metrics
+}

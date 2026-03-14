@@ -1,0 +1,15 @@
+[Unit]
+Description=DDNS Update Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+
+StandardOutput=journal
+StandardError=journal
+
+EnvironmentFile=/etc/secrets/%U/ddns.env
+
+# Run the script
+ExecStart=/usr/local/bin/ddns.sh -d "ilnmors.com"

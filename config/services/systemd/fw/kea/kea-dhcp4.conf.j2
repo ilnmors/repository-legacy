@@ -1,0 +1,105 @@
+{
+    "Dhcp4": {
+        "subnet4": [
+            {
+                "subnet": "{{ hostvars['fw']['network4']['subnet']['client'] }}",
+                "pools" : [
+                    {
+                        "pool": "192.168.1.254-192.168.1.254"
+                    }
+                ],
+                "option-data": [
+                    {
+                        "name": "routers",
+                        "data": "{{ hostvars['fw']['network4']['firewall']['client'] }}"
+                    },
+                    {
+                        "name": "domain-name-servers",
+                        "data": "{{ hostvars['fw']['network4']['blocky']['server'] }}"
+                    },
+                    {
+                        "name": "domain-name",
+                        "data": "ilnmors.internal."
+                    }
+                ],
+                "reservations": [
+                    {
+                        "hw-address": "58:04:4f:18:6c:5e",
+                        "ip-address": "{{ hostvars['fw']['network4']['switch']['client'] }}",
+                        "hostname": "switch"
+                    },
+                    {
+                        "hw-address": "90:09:d0:65:a9:db",
+                        "ip-address": "{{ hostvars['fw']['network4']['nas']['client'] }}",
+                        "hostname": "nas"
+                    },
+                    {
+                        "hw-address": "d8:e2:df:ff:1b:d5",
+                        "ip-address": "{{ hostvars['fw']['network4']['console']['client'] }}",
+                        "hostname": "surface"
+                    },
+                    {
+                        "hw-address": "38:ca:84:94:5e:06",
+                        "ip-address": "{{ hostvars['fw']['network4']['printer']['client'] }}",
+                        "hostname": "printer"
+                    }
+                ],
+                "id": 1,
+                "interface": "client"
+            },
+            {
+                "subnet": "{{ hostvars['fw']['network4']['subnet']['user'] }}",
+                "pools" : [
+                    {
+                        "pool": "192.168.20.2-192.168.20.254"
+                    }
+                ],
+                "option-data": [
+                    {
+                        "name": "routers",
+                        "data": "{{ hostvars['fw']['network4']['firewall']['user'] }}"
+                    },
+                    {
+                        "name": "domain-name-servers",
+                        "data": "{{ hostvars['fw']['network4']['blocky']['server'] }}"
+                    },
+                    {
+                        "name": "domain-name",
+                        "data": "ilnmors.internal."
+                    }
+                ],
+                "id": 2,
+                "interface": "user"
+            }
+        ],
+        "interfaces-config": {
+            "interfaces": [
+                "client",
+                "user"
+            ],
+            "dhcp-socket-type": "raw",
+            "service-sockets-max-retries": 5,
+            "service-sockets-require-all": true
+        },
+        "renew-timer": 1000,
+        "rebind-timer": 2000,
+        "valid-lifetime": 4000,
+        "loggers": [
+            {
+                "name": "kea-dhcp4",
+                "output_options": [
+                    {
+                        "output": "stdout"
+                    }
+                ],
+                "severity": "INFO"
+            }
+        ],
+        "lease-database": {
+            "type": "memfile",
+            "persist": true,
+            "name": "/var/lib/kea/kea-leases4.csv",
+            "lfc-interval": 3600
+        }
+    }
+}

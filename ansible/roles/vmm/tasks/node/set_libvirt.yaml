@@ -1,0 +1,92 @@
+---
+- name: Add user in libvirt group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    state: "present"
+    groups: "libvirt, kvm, libvirt-qemu"
+    append: true
+  become: true
+
+- name: Check libvirt directory
+  ansible.builtin.stat:
+    path: "/var/lib/libvirt/{{ item }}"
+  loop:
+    - "images"
+    - "seeds"
+  register: "is_libvirt_dir"
+
+- name: Create libvirt directory
+  ansible.builtin.file:
+    path: "/var/lib/libvirt/{{ item.item }}"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0711"
+  loop: "{{ is_libvirt_dir.results }}"
+  when: not item.stat.exists
+  become: true
+  no_log: true
+
+- name: Set LIBVIRT_DEFAULT_URI
+  ansible.builtin.lineinfile:
+    path: "{{ node['home_path'] }}/.bashrc"
+    state: "present"
+    line: "export LIBVIRT_DEFAULT_URI='qemu:///system'"
+    regexp: '^export LIBVIRT_DEFAULT_URI='
+
+- name: Define virtual networks
+  community.libvirt.virt_net:
+    name: "{{ item }}"
+    xml: "{{ lookup('file', hostvars['console']['node']['config_path'] + '/services/systemd/vmm/libvirt/xml/networks/' + item + '.xml') }}"
+    uri: "qemu:///system"
+    command: "define"
+  loop:
+    - "wan-net"
+    - "lan-net"
+
+- name: Start virtual networks
+  community.libvirt.virt_net:
+    name: "{{ item }}"
+    state: "active"
+    uri: "qemu:///system"
+    autostart: true
+  loop:
+    - "wan-net"
+    - "lan-net"
+
+- name: Autostart virtual networks
+  community.libvirt.virt_net:
+    name: "{{ item }}"
+    uri: "qemu:///system"
+    autostart: true
+  loop:
+    - "wan-net"
+    - "lan-net"
+
+- name: Define virtual storage pool
+  community.libvirt.virt_pool:
+    name: "{{ item }}"
+    xml: "{{ lookup('file', hostvars['console']['node']['config_path'] + '/services/systemd/vmm/libvirt/xml/storages/' + item + '.xml') }}"
+    uri: "qemu:///system"
+    command: "define"
+  loop:
+    - "images-pool"
+    - "seeds-pool"
+
+- name: Start virtual storage pool
+  community.libvirt.virt_pool:
+    name: "{{ item }}"
+    state: "active"
+    uri: "qemu:///system"
+  loop:
+    - "images-pool"
+    - "seeds-pool"
+
+- name: Autostart virtual storage pool
+  community.libvirt.virt_pool:
+    name: "{{ item }}"
+    uri: "qemu:///system"
+    autostart: true
+  loop:
+    - "images-pool"
+    - "seeds-pool"

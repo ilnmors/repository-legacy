@@ -166,7 +166,7 @@ podman pull authelia/authelia:4.39.13 # Do not use latest version to management
 # certificates setting
 certificates_directory: '/etc/ssl/authelia/'
 
-# theme setting - light, dark, grey, auto.
+# them setting - light, dark, grey, auto.
 theme: 'auto'
 
 # Server configuration
@@ -184,7 +184,7 @@ totp:
   # issure option is for 2FA app. It works as identifier. "My homelab' or 'ilnmors.internal', 'Authelia - ilnmors'
   issuer: 'ilnmors.internal'
 
-# Identity validation configuration
+# Identity validation confituration
 identity_validation:
   reset_password:
     jwt_secret: '' # $AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE
@@ -195,7 +195,7 @@ authentication_backend:
     # ldaps uses 636 -> NAT automatically change port 636 in output packet -> 6360 which lldap server uses.
     address: 'ldaps://ldap.ilnmors.internal'
     implementation: 'lldap'
-    # tls configuration, it uses certificates_directory's /etc/ssl/authelia/root_ca.crt
+    # tls configruation, it uses certificates_directory's /etc/ssl/authelia/root_ca.crt
     tls:
       server_name: 'ldap.ilnmors.internal'
       skip_verify: false

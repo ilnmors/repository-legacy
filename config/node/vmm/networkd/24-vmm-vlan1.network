@@ -1,0 +1,28 @@
+[Match]
+Name=vlan1
+
+[Network]
+# IPv4
+Address=192.168.1.10/24
+# IPv6
+Address=fd00:1::10/64
+
+[RoutingPolicyRule]
+From=192.168.1.10/32
+Table=1
+Priority=100
+
+[Route]
+Destination=192.168.1.0/24
+Scope=link
+Table=1
+
+[RoutingPolicyRule]
+From=fd00:1::10/128
+Table=61
+Priority=100
+
+[Route]
+Destination=fd00:1::/64
+Scope=link
+Table=61

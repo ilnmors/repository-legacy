@@ -1,0 +1,23 @@
+[Unit]
+Description=infra vm
+After=network-online.target libvirtd.service fw.service
+Wants=fw.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=360
+
+ExecStart=/usr/bin/virsh -c qemu:///system start infra
+
+ExecStartPost=/bin/sleep 30
+
+ExecStop=/bin/bash -c '\
+  /usr/bin/virsh -c qemu:///system shutdown infra; \
+  while /usr/bin/virsh -c qemu:///system list --state-running --name | grep -q "infra"; do \
+    echo "Waiting for infra to shutdown..."; \
+    sleep 2; \
+  done'
+
+[Install]
+WantedBy=default.target

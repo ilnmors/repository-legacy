@@ -1,0 +1,39 @@
+---
+# `""` should be used for every string values
+# except name, boolean, varible(environment) name, number (only for decimal)
+- name: Convention task
+  delegate_to: "host"
+  delegate_facts: true
+  environment:
+    env: "environment"
+  ansible.builtin.file:
+    # Identifier: name:, src, dest, url
+    path: "/path/of/example"
+    # State
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0640"
+    # optional data
+    recurse: true
+  loop:
+    - "list"
+  loop_control:
+    label: "{{ item }}"
+  become: true
+  # become_user: "root"
+  when: condition.stat.exists
+  changed_when: condition.rc != 0
+  failed_when: condition.rc == 0
+  register: "convention_task"
+  notify: "notification_example"
+  listen: "notification_example"
+  no_log: true
+  run_once: true
+  tags:
+    - "always"
+    - "init"
+    - "upgrade"
+    - "update"
+
+# when: "'tags' is not in ansible_run_tags"

@@ -1,0 +1,17 @@
+[Unit]
+Description=Run PostgreSQL Cluster Backup service every day
+
+[Timer]
+# Execute service after 1 min on booting
+OnBootSec=1min
+
+# Execute service every day 00:00
+OnCalendar=*-*-* 00:00:00
+# Random time to postpone the timer
+RandomizedDelaySec=15min
+
+# When timer is activated, Service also starts.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

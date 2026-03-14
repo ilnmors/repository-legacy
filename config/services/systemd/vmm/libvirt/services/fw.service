@@ -1,0 +1,23 @@
+[Unit]
+Description=fw vm
+After=network-online.target libvirtd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=360
+
+ExecStart=/usr/bin/virsh -c qemu:///system start fw
+
+ExecStartPost=/bin/sleep 30
+
+ExecStop=/bin/bash -c '\
+  /usr/bin/virsh -c qemu:///system shutdown fw; \
+  while /usr/bin/virsh -c qemu:///system list --state-running --name | grep -q "fw"; do \
+    echo "Waiting for fw to shutdown..."; \
+    sleep 2; \
+  done'
+
+[Install]
+WantedBy=default.target

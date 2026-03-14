@@ -1,0 +1,185 @@
+---
+- name: Load secret values
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Load secret from secrets.yaml
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/load_secret_vars"
+        apply:
+          tags: ["always"]
+      tags: ["always"]
+
+- name: Site app
+  hosts: "app"
+  gather_facts: false
+  become: false
+  pre_tasks:
+    - name: Set become password
+      ansible.builtin.set_fact:
+        ansible_become_pass: "{{ hostvars['console']['sudo']['password']['app'] }}"
+      tags: ["always"]
+
+  tasks:
+    - name: Set timezone to Asia/Seoul
+      community.general.timezone:
+        name: Asia/Seoul
+      become: true
+      tags: ["init", "timezone"]
+
+    - name: Deploy root_ca certificate
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_root_ca"
+        apply:
+          tags: ["init", "root_crt"]
+      tags: ["init", "root_crt"]
+
+    - name: Deploy hosts file
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_hosts"
+        apply:
+          tags: ["init", "hosts"]
+      tags: ["init", "hosts"]
+
+    - name: Create default directory
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/create_default_dir"
+        apply:
+          tags: ["init", "default_dir"]
+      tags: ["init", "default_dir"]
+
+    - name: Set ssh host
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_ssh_host"
+        apply:
+          tags: ["init", "ssh_host"]
+      tags: ["init", "ssh_host"]
+
+    - name: Set networkd
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_networkd"
+        apply:
+          tags: ["init", "networkd"]
+      tags: ["init", "networkd"]
+
+    - name: Set resolved
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_resolved"
+        apply:
+          tags: ["init", "resolved"]
+      tags: ["init", "resolved"]
+
+    - name: Update and upgrade apt
+      ansible.builtin.apt:
+        upgrade: "dist"
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      tags: ["init", "site", "upgrade-packages"]
+
+    - name: Install common packages
+      ansible.builtin.apt:
+        name:
+          - "acl"
+          - "curl"
+          - "jq"
+          - "netcat-openbsd"
+          - "dbus-user-session"
+        state: "present"
+      become: true
+      tags: ["init", "install-packages"]
+
+    - name: Set raid
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "node/set_raid"
+        apply:
+          tags: ["init", "raid"]
+      tags: ["init", "raid"]
+
+    - name: Set linger
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_linger"
+        apply:
+          tags: ["init", "linger"]
+      tags: ["init", "linger"]
+
+    - name: Set podman
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_podman"
+        apply:
+          tags: ["init", "podman"]
+      tags: ["init", "podman"]
+
+    - name: Set nftables
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_nftables"
+        apply:
+          tags: ["init", "nftables"]
+      tags: ["init", "nftables"]
+
+    - name: Set crowdsec
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_crowdsec"
+        apply:
+          tags: ["site", "crowdsec"]
+      tags: ["site", "crowdsec"]
+
+    - name: Set alloy
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_alloy"
+        apply:
+          tags: ["init", "update", "alloy"]
+      tags: ["init", "update", "alloy"]
+
+    - name: Set kopia
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_kopia"
+        apply:
+          tags: ["site", "kopia"]
+      tags: ["site", "kopia"]
+
+    - name: Flush handlers right now
+      ansible.builtin.meta: "flush_handlers"
+
+    # Only update iGPU firmware
+    - name: Install iGPU Firmware
+      ansible.builtin.apt:
+        name:
+          - "firmware-intel-graphics"
+          - "intel-media-va-driver-non-free"
+        update_cache: true
+        state: "present"
+      become: true
+      notify:
+        - "notification_update_initramfs"
+        - "notification_reboot_app"
+      tags: ["init"]
+  handlers:
+    - name: Update initramfs
+      ansible.builtin.command:
+        update-initramfs -u
+      become: true
+      changed_when: false
+      listen: "notification_update_initramfs"
+      ignore_errors: true # noqa: ignore-errors
+    - name: Reboot app vm
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+      become: true
+      listen: "notification_reboot_app"
+      ignore_errors: true # noqa: ignore-errors

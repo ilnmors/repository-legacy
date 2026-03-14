@@ -1,0 +1,7 @@
+<!-- WAN network for Hypervisor -->
+<!-- wan-net.xml -->
+<network>
+  <name>wan-net</name>
+  <forward mode='bridge'/>
+  <bridge name='br0'/>
+</network>

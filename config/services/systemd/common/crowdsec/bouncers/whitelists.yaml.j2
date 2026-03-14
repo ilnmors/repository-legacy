@@ -1,0 +1,11 @@
+name: crowdsecurity/whitelists
+description: "Whitelist console/admin hosts only"
+whitelist:
+    reason: "trusted admin hosts"
+    ip:
+        - "127.0.0.1"
+        - "::1"
+        - "{{ hostvars['fw']['network4']['console']['client'] }}"
+        - "{{ hostvars['fw']['network4']['console']['wg'] }}"
+        - "{{ hostvars['fw']['network6']['console']['client'] }}"
+        - "{{ hostvars['fw']['network6']['console']['wg'] }}"

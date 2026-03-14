@@ -1,0 +1,23 @@
+[Unit]
+Description=auth vm
+After=network-online.target libvirtd.service fw.service infra.service
+Wants=fw.service infra.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=360
+
+ExecStart=/usr/bin/virsh -c qemu:///system start auth
+
+ExecStartPost=/bin/sleep 30
+
+ExecStop=/bin/bash -c '\
+  /usr/bin/virsh -c qemu:///system shutdown auth; \
+  while /usr/bin/virsh -c qemu:///system list --state-running --name | grep -q "auth"; do \
+    echo "Waiting for auth to shutdown..."; \
+    sleep 2; \
+  done'
+
+[Install]
+WantedBy=default.target

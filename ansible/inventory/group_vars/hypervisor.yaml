@@ -1,0 +1,7 @@
+---
+node:
+  name: "vmm"
+  uid: 2000
+  home_path: "/home/vmm"
+  ssh_san: "vmm,vmm_init,vmm.ilnmors.internal,init.vmm.ilnmors.internal"
+  local_san: "localhost vmm.ilnmors.internal"

@@ -1,0 +1,169 @@
+---
+- name: Set postgresql container subuid
+  ansible.builtin.set_fact:
+    postgresql_subuid: "100998"
+
+- name: Set connected services list
+  ansible.builtin.set_fact:
+    # telegraf has no database
+    connected_services:
+      - "ldap"
+      - "authelia"
+      - "grafana"
+
+- name: Create postgresql directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    state: "directory"
+    owner: "{{ postgresql_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "postgresql"
+    - "postgresql/data"
+    - "postgresql/config"
+    - "postgresql/ssl"
+    - "postgresql/init"
+    - "postgresql/backups"
+    - "postgresql/build"
+  become: true
+
+- name: Deploy containerfile for build
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/build/postgresql.containerfile.j2"
+    dest: "{{ node['home_path'] }}/containers/postgresql/build/Containerfile"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0640"
+
+- name: Build postgresql container image
+  containers.podman.podman_image:
+    name: "ilnmors.internal/{{ node['name'] }}/postgres"
+    # check tags from container file
+    tag: "pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}"
+    state: "build"
+    path: "{{ node['home_path'] }}/containers/postgresql/build"
+
+- name: Prune postgresql dangling images
+  containers.podman.podman_prune:
+    image: true
+
+- name: Deploy postgresql configuration files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/config/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/containers/postgresql/config/{{ item }}"
+    owner: "{{ postgresql_subuid }}"
+    group: "svadmins"
+    mode: "0600"
+  loop:
+    - "postgresql.conf"
+    - "pg_hba.conf"
+  become: true
+  notify: "notification_reload_postgresql"
+  no_log: true
+
+- name: Deploy postgresql certificate and key
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "{{ node['home_path'] }}/containers/postgresql/ssl/{{ item.name }}"
+    owner: "{{ postgresql_subuid }}"
+    group: "svadmins"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "ilnmors_root_ca.crt"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      mode: "0440"
+    - name: "postgresql.crt"
+      value: |
+        {{ hostvars['console']['postgresql']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "postgresql.key"
+      value: "{{ hostvars['console']['postgresql']['key'] }}"
+      mode: "0400"
+  become: true
+  notify: "notification_reload_postgresql"
+  no_log: true
+
+- name: Check data directory empty
+  ansible.builtin.find:
+    paths: "{{ node['home_path'] }}/containers/postgresql/data/"
+    hidden: true
+    file_type: "any"
+  become: true
+  register: "is_data_dir_empty"
+
+- name: Prepare initiating DB
+  when: is_data_dir_empty.matched == 0
+  become: true
+  block:
+    # `init/pg_cluster.sql` should be fetched from postgresql's backup directory before running initiating
+    - name: Deploy init cluster sql file
+      ansible.builtin.copy:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_cluster.sql"
+        dest: "{{ node['home_path'] }}/containers/postgresql/init/0_pg_cluster.sql"
+        owner: "{{ postgresql_subuid }}"
+        group: "svadmins"
+        mode: "0600"
+
+    - name: Deploy resoring data sql files
+      ansible.builtin.copy:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_{{ item }}.sql"
+        dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ index_num + 1 }}_pg_{{ item }}.sql"
+        owner: "{{ postgresql_subuid }}"
+        group: "svadmins"
+        mode: "0600"
+      loop: "{{ connected_services }}"
+      loop_control:
+        index_var: index_num
+    - name: Set is_postgresql_init_run
+      ansible.builtin.set_fact:
+        is_postgresql_init_run: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/postgresql.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/postgresql.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_postgresql"
+
+- name: Deploy backup service files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/services/{{ item }}"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  loop:
+    - "postgresql-cluster-backup.service"
+    - "postgresql-cluster-backup.timer"
+    - "postgresql-data-backup@.service"
+    - "postgresql-data-backup@.timer"
+
+- name: Enable postgresql
+  ansible.builtin.systemd:
+    name: "postgresql.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Enable cluster backup timer
+  ansible.builtin.systemd:
+    name: "postgresql-cluster-backup.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Enable data backup timer
+  ansible.builtin.systemd:
+    name: "postgresql-data-backup@{{ item }}.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  loop: "{{ connected_services }}"

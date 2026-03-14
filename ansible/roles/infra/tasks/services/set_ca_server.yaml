@@ -1,0 +1,84 @@
+---
+- name: Set ca container subuid
+  ansible.builtin.set_fact:
+    ca_subuid: "100999"
+
+- name: Create ca directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    owner: "{{ ca_subuid }}"
+    group: "svadmins"
+    state: "directory"
+    mode: "0770"
+  loop:
+    - "ca"
+    - "ca/certs"
+    - "ca/secrets"
+    - "ca/config"
+    - "ca/db"
+    - "ca/templates"
+  become: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "STEP_CA_PASSWORD"
+    data: "{{ hostvars['console']['ca']['intermediate']['password'] }}"
+    state: "present"
+    force: true
+  notify: "notification_restart_ca"
+  no_log: true
+
+- name: Deploy ca config files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ca/config/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/containers/ca/config/{{ item }}"
+    owner: "{{ ca_subuid }}"
+    group: "svadmins"
+    mode: "0400"
+  loop:
+    - "ca.json"
+    - "defaults.json"
+  become: true
+  notify: "notification_restart_ca"
+
+- name: Deploy ca certificate and key
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "{{ item.path }}/{{ item.name }}"
+    owner: "{{ ca_subuid }}"
+    group: "svadmins"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "ilnmors_root_ca.crt"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      path: "{{ node['home_path'] }}/containers/ca/certs"
+      mode: "0440"
+    - name: "ilnmors_intermediate_ca.crt"
+      value: "{{ hostvars['console']['ca']['intermediate']['crt'] }}"
+      path: "{{ node['home_path'] }}/containers/ca/certs"
+      mode: "0440"
+    - name: "ilnmors_intermediate_ca.key"
+      value: "{{ hostvars['console']['ca']['intermediate']['key'] }}"
+      path: "{{ node['home_path'] }}/containers/ca/secrets"
+      mode: "0400"
+  become: true
+  notify: "notification_restart_ca"
+  no_log: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ca/ca.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/ca.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_ca"
+
+- name: Enable ca
+  ansible.builtin.systemd:
+    name: "ca.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

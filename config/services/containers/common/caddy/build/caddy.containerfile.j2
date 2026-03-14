@@ -1,0 +1,17 @@
+FROM docker.io/library/caddy:{{ version['containers']['caddy'] }}-builder-alpine AS builder
+
+RUN xcaddy build \
+{% if node['name'] == 'auth' %}
+--with github.com/caddy-dns/rfc2136 \
+--with github.com/hslatman/caddy-crowdsec-bouncer/crowdsec \
+--with github.com/hslatman/caddy-crowdsec-bouncer/http
+{% else %}
+--with github.com/caddy-dns/rfc2136
+{% endif %}
+
+FROM docker.io/library/caddy:{{ version['containers']['caddy'] }}
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+COPY ./ilnmors_root_ca.crt /usr/local/share/ca-certificates/ilnmors_root_ca.crt
+
+RUN update-ca-certificates

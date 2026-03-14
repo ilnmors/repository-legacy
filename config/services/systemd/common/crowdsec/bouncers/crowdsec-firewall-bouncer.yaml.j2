@@ -1,0 +1,56 @@
+mode: nftables
+pid_dir: /var/run/
+update_frequency: 10s
+log_mode: file
+log_dir: /var/log/
+log_level: info
+log_compression: true
+log_max_size: 100
+log_max_backups: 3
+log_max_age: 30
+api_url: "https://{{ infra_uri['crowdsec']['domain'] }}:{{ infra_uri['crowdsec']['ports']['https'] }}"
+api_key: "{{ hostvars['console']['crowdsec']['bouncer']['fw'] }}"
+insecure_skip_verify: false
+disable_ipv6: false
+deny_action: DROP
+deny_log: false
+supported_decisions_types:
+  - ban
+#to change log prefix
+#deny_log_prefix: "crowdsec: "
+#to change the blacklists name
+blacklists_ipv4: crowdsec-blacklists
+blacklists_ipv6: crowdsec6-blacklists
+#type of ipset to use
+ipset_type: nethash
+#if present, insert rule in those chains
+#iptables_chains:
+#  - INPUT
+#  - FORWARD
+#  - OUTPUT
+#  - DOCKER-USER
+
+## nftables > table inet filter's set crowddsec-blacklists_ipv4,6 is needed
+nftables:
+  ipv4:
+    enabled: true
+    set-only: true
+    family: inet
+    table: filter
+    chain: global
+  ipv6:
+    enabled: true
+    set-only: true
+    family: inet
+    table: filter
+    chain: global
+# packet filter
+pf:
+  # an empty string disables the anchor
+  anchor_name: ""
+
+# Crowdsec firewall bouncer cannot use "[::]" yet
+prometheus:
+  enabled: true
+  listen_addr: "::"
+  listen_port: 60601

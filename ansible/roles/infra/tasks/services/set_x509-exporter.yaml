@@ -1,0 +1,63 @@
+---
+- name: Set x509-exporter container subuid
+  ansible.builtin.set_fact:
+    x509_exporter_subuid: "165533" # nobody - 65534
+
+- name: Create x509-exporter directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    state: "directory"
+    owner: "{{ x509_exporter_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "x509-exporter"
+    - "x509-exporter/certs"
+  become: true
+
+- name: Deploy certificates
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "{{ node['home_path'] }}/containers/x509-exporter/certs/{{ item.name }}"
+    owner: "{{ x509_exporter_subuid }}"
+    group: "svadmins"
+    mode: "0440"
+  loop:
+    - name: "root.crt"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+    - name: "intermediate.crt"
+      value: "{{ hostvars['console']['ca']['intermediate']['crt'] }}"
+    - name: "crowdsec.crt"
+      value: "{{ hostvars['console']['crowdsec']['crt'] }}"
+    - name: "blocky.crt"
+      value: "{{ hostvars['console']['blocky']['crt'] }}"
+    - name: "postgresql.crt"
+      value: "{{ hostvars['console']['postgresql']['crt'] }}"
+    - name: "ldap.crt"
+      value: "{{ hostvars['console']['ldap']['crt'] }}"
+    - name: "prometheus.crt"
+      value: "{{ hostvars['console']['prometheus']['crt'] }}"
+    - name: "loki.crt"
+      value: "{{ hostvars['console']['loki']['crt'] }}"
+    - name: "dsm.crt"
+      value: "{{ hostvars['console']['dsm']['crt'] }}"
+  become: true
+  no_log: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/x509-exporter/x509-exporter.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/x509-exporter.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_x509-exporter"
+
+- name: Enable x509-exporter.service
+  ansible.builtin.systemd:
+    name: "x509-exporter.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

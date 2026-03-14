@@ -1,0 +1,8 @@
+<!-- Storage pool define -->
+<!-- seeds-pool.xml -->
+<pool type='dir'>
+  <name>seeds-pool</name>
+  <target>
+    <path>/var/lib/libvirt/seeds</path>
+  </target>    
+</pool>

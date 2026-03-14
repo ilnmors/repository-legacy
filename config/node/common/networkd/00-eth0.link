@@ -1,0 +1,5 @@
+[Match]
+MACAddress={{ hostvars[target_vm]['vm']['lan_mac'] }}
+
+[Link]
+Name=eth0

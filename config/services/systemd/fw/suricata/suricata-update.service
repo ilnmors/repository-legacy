@@ -1,0 +1,9 @@
+[Unit]
+Description=Suricata Rule Update Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/suricata-update --disable-conf /etc/suricata/disable.conf --enable-conf /etc/suricata/enable.conf --local /etc/suricata/rules/local.rules
+ExecStartPost=/usr/bin/systemctl reload suricata

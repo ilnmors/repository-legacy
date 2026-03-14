@@ -1,0 +1,19 @@
+---
+# Node Factors
+node:
+  name: "infra"
+  uid: 2002
+  home_path: "/home/infra"
+  ssh_san: "infra,infra.ilnmors.internal"
+  local_san: "localhost infra.ilnmors.internal"
+
+# VM Factors
+vm:
+  name: "infra"
+  cpu: 2
+  shares: 1024
+  memory: 6
+  storage: 256
+  lan_mac: "0a:49:6e:4d:01:00"
+  lan_net: "lan-net"
+  lan_group: "vlan10-access"

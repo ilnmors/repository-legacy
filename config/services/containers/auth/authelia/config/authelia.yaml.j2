@@ -1,0 +1,133 @@
+---
+# https://github.com/lldap/lldap/blob/main/example_configs/authelia.md
+# authelia.yaml
+# certificates setting
+certificates_directory: '/etc/ssl/authelia/'
+
+# them setting - light, dark, grey, auto.
+theme: 'auto'
+
+# Server configuration
+server:
+  # TLS will be applied on caddy
+  address: 'tcp://:9091/'
+
+# Log configuration
+log:
+  level: 'info'
+  #file_path: 'path/of/log/file' - without this option, using stdout
+
+# TOTP configuration
+totp:
+  # issure option is for 2FA app. It works as identifier. "My homelab' or 'ilnmors.internal', 'Authelia - ilnmors'
+  issuer: 'ilnmors.internal'
+
+# Identity validation confituration
+identity_validation:
+  reset_password:
+    jwt_secret: '' # $AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE option is designated in container file
+
+# Authentication backend provider configuration
+authentication_backend:
+  ldap:
+    # ldaps uses 636 -> NAT automatically change port 636 in output packet -> 2636 which lldap server uses.
+    address: 'ldaps://ldap.ilnmors.internal'
+    implementation: 'lldap'
+    # tls configruation, it uses certificates_directory's /etc/ssl/authelia/ilnmors_root_ca.crt
+    tls:
+      server_name: 'ldap.ilnmors.internal'
+      skip_verify: false
+    # LLDAP base DN
+    base_dn: 'dc=ilnmors,dc=internal'
+    additional_users_dn: 'ou=people'
+    additional_groups_dn: 'ou=groups'
+    # LLDAP filters
+    users_filter: '(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person))'
+    groups_filter: '(&(member={dn})(objectClass=groupOfNames))'
+    # LLDAP bind account configuration
+    user: 'uid=authelia,ou=people,dc=ilnmors,dc=internal'
+    password: '' # $AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE option is designated in container file
+
+# Access control configuration
+access_control:
+  default_policy: 'deny'
+  rules:
+    # authelia portal
+    - domain: 'authelia.ilnmors.internal'
+      policy: 'bypass'
+    - domain: 'authelia.ilnmors.com'
+      policy: 'bypass'
+    - domain: 'test.ilnmors.com'
+      policy: 'one_factor'
+      subject:
+        - 'group:admins'
+# Session provider configuration
+session:
+  secret: '' # $AUTHELIA_SESSION_SECRET_FILE  is designated in container file
+  expiration: '24 hours' # Session maintains for 24 hours
+  inactivity: '24 hours' # Session maintains for 24 hours without actions
+  cookies:
+    - name: 'authelia_public_session'
+      domain: 'ilnmors.com'
+      authelia_url: 'https://authelia.ilnmors.com'
+      same_site: 'lax'
+
+# This authelia doesn't use Redis.
+
+# Storage provider configuration
+storage:
+  encryption_key: '' # $AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE is designated in container file
+  postgres:
+    address: 'tcp://{{ infra_uri['postgresql']['domain'] }}:{{ infra_uri['postgresql']['ports']['tcp'] }}'
+    database: 'authelia_db'
+    username: 'authelia'
+    password: '' # $AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE is designated in container file
+    tls:
+      server_name: '{{ infra_uri['postgresql']['domain'] }}'
+      skip_verify: false
+
+# Notification provider
+notifier:
+  filesystem:
+    filename: '/config/notification.txt'
+
+# This part needs the clients to integrate with Authelia in order for it to activate.
+identity_providers:
+  oidc:
+    hmac_secret: '' # $AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
+    jwks:{% raw %}
+      - algorithm: 'RS256'
+        use: 'sig'
+        key: {{ secret "/run/secrets/AUTHELIA_JWKS_RS256" | mindent 10 "|" | msquote }}
+      - algorithm: 'ES256'
+        use: 'sig'
+        key: {{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %}   
+    clients:
+      # https://www.authelia.com/integration/openid-connect/clients/synology-dsm/
+      - client_id: 'dsm'
+        client_name: 'dsm'
+        # It depends on application
+        # hash vaule generate: 
+	      # podman exec -it authelia sh
+	      # authelia crypto hash generate pbkdf2 --password 'password'
+        client_secret: '{{ hostvars['console']['dsm']['oidc']['hash'] }}'
+        # If there were not client secret, public should be `true` [true | false]
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          - 'https://{{ infra_uri['nas']['domain'] }}:{{ infra_uri['nas']['ports']['https'] }}'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'groups'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        # [ client_secret_post | client_secret_basic ]
+        token_endpoint_auth_method: 'client_secret_post'

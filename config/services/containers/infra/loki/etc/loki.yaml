@@ -1,0 +1,46 @@
+---
+server:
+  http_listen_address: "::"
+  http_listen_port: 3100
+  http_tls_config:
+    cert_file: /etc/ssl/loki/loki.crt
+    key_file: /etc/ssl/loki/loki.key
+
+#memberlist:
+#  join_members: ["localhost"]
+#  bind_addr: ['::']
+#  bind_port: 7946
+
+schema_config:
+  configs:
+    - from: "2023-01-01"
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  retention_period: 30d
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+
+common:
+  instance_addr: localhost
+  path_prefix: /loki
+  replication_factor: 1
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  ring:
+    kvstore:
+      store: inmemory
+
+compactor:
+  working_directory: /loki/compactor
+  delete_request_store: filesystem
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h

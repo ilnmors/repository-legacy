@@ -1,0 +1,15 @@
+---
+- name: Create wg0 files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/node/fw/wireguard/{{ item }}"
+    dest: "/etc/systemd/network/{{ item }}"
+    owner: "root"
+    group: "systemd-network"
+    mode: "0640"
+  loop:
+    - "30-fw-wg0.netdev"
+    - "31-fw-wg0.network"
+  become: true
+  when: node['name'] == 'fw'
+  notify: "notification_reload_networkctl"
+  no_log: true

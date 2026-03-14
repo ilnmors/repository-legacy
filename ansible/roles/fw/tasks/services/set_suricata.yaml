@@ -1,0 +1,141 @@
+---
+- name: Check suricata installation
+  ansible.builtin.shell: |
+    command -v suricata
+  changed_when: false
+  failed_when: false
+  register: "is_suricata_installed"
+  ignore_errors: true
+
+- name: Install suricata
+  ansible.builtin.apt:
+    name:
+      - "suricata"
+      - "suricata-update"
+    state: "present"
+  become: true
+  when: is_suricata_installed.rc != 0
+
+- name: Deploy suricata-update service files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/suricata/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    validate: "/usr/bin/systemd-analyze verify %s"
+  loop:
+    - "suricata-update.service"
+    - "suricata-update.timer"
+  become: true
+
+- name: Deploy suricata custom configurations
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/suricata/etc/{{ item }}"
+    dest: "/etc/suricata/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  loop:
+    - "disable.conf"
+    - "enable.conf"
+  become: true
+  notify:
+    - "notification_update_suricata_rules"
+    - "notification_restart_suricata"
+
+- name: Deploy suricata custom rules
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/suricata/etc/local.rules"
+    dest: "/etc/suricata/rules/local.rules"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify:
+    - "notification_update_suricata_rules"
+    - "notification_restart_suricata"
+
+- name: Check suricata rules
+  ansible.builtin.stat:
+    path: "/var/lib/suricata/rules/suricata.rules"
+  register: "is_suricata_rules_file"
+
+- name: Update suricata rules
+  ansible.builtin.command:
+    suricata-update
+  become: true
+  when: not is_suricata_rules_file.stat.exists
+  changed_when: true
+
+- name: Enable auto suricata rules update
+  ansible.builtin.systemd:
+    name: "suricata-update.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+  become: true
+
+- name: Deploy suricata.yaml
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/suricata/etc/suricata.yaml.j2"
+    dest: "/etc/suricata/suricata.yaml"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    validate: "/usr/bin/suricata -T -c %s"
+  become: true
+  notify: "notification_restart_suricata"
+
+- name: Create suricata.service.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/suricata.service.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Set suricata.service.d/override.conf
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/suricata.service.d/override.conf"
+    content: |
+      [Service]
+      Restart=always
+      RestartSec=60
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify:
+    - "notification_restart_suricata"
+
+- name: Enable suricata service
+  ansible.builtin.systemd:
+    name: "suricata.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+  become: true
+
+- name: Set suricata logs logrotate
+  ansible.builtin.copy:
+    content: |
+      /var/log/suricata/*.log /var/log/suricata/*.json {
+          weekly
+          missingok
+          rotate 4
+          compress
+          delaycompress
+          notifempty
+          maxsize 500M
+          sharedscripts
+          postrotate
+              /usr/bin/systemctl reload suricata > /dev/null 2>/dev/null || true
+          endscript
+      }
+    dest: "/etc/logrotate.d/suricata"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true

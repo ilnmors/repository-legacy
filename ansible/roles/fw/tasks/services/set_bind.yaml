@@ -1,0 +1,103 @@
+---
+- name: Check bind9 installation
+  ansible.builtin.shell: |
+    command -v named
+  become: true # named is located in /usr/sbin, which means root permission is needed.
+  changed_when: false
+  failed_when: false
+  register: "is_bind_installed"
+  ignore_errors: true
+
+- name: Set bind9 zone files
+  ansible.builtin.set_fact:
+    bind_zone_files:
+      - "db.ilnmors.internal"
+      - "db.ilnmors.com"
+      - "db.1.168.192.in-addr.arpa"
+      - "db.10.168.192.in-addr.arpa"
+      - "db.1.00df.ip6.arpa"
+      - "db.10.00df.ip6.arpa"
+
+- name: Install bind9
+  ansible.builtin.apt:
+    name: "bind9"
+    state: "present"
+  become: true
+  when: is_bind_installed.rc != 0
+
+- name: Deploy acem.key
+  ansible.builtin.copy:
+    content: "{{ hostvars['console']['bind']['acme_key'] }}"
+    dest: "/etc/bind/acme.key"
+    owner: "bind"
+    group: "bind"
+    mode: "0640"
+  become: true
+  notify: "notification_restart_bind"
+  no_log: true
+
+- name: Deploy db files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/bind/lib/{{ item }}"
+    dest: "/var/lib/bind/{{ item }}"
+    owner: "bind"
+    group: "bind"
+    mode: "0640"
+  loop: "{{ bind_zone_files }}"
+  become: true
+  notify: "notification_restart_bind"
+  no_log: true
+
+- name: Clean BIND journal files
+  ansible.builtin.file:
+    path: "/var/lib/bind/{{ item }}.jnl"
+    state: absent
+  loop: "{{ bind_zone_files }}"
+  become: true
+  notify: "notification_restart_bind"
+  no_log: true
+
+- name: Deploy named.conf
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/bind/etc/named.conf.j2"
+    dest: "/etc/bind/named.conf"
+    owner: "root"
+    group: "bind"
+    mode: "0640"
+    validate: "/usr/bin/named-checkconf -z %s"
+  become: true
+  notify: "notification_restart_bind"
+  no_log: true
+
+- name: Create named.service.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/named.service.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Set named.service.d/override.conf
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/named.service.d/override.conf"
+    content: |
+      [Service]
+      Restart=always
+      RestartSec=60
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify: "notification_restart_bind"
+
+- name: Enable bind9 service
+  ansible.builtin.systemd:
+    name: "named.service"
+    state: "started"
+    enabled: true
+  become: true
+
+# Verify working
+# dig A fw.ilnmors.internal @fd00:10::3
+# dig AAAA fw.ilnmors.internal @fd00:10::3

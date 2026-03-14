@@ -1,0 +1,36 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=PostgreSQL
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ilnmors.internal/{{ node['name'] }}/postgres:pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}
+
+ContainerName=postgresql
+HostName=postgresql
+
+PublishPort=5432:5432/tcp
+
+Volume=%h/containers/postgresql/data:/var/lib/postgresql:rw
+Volume=%h/containers/postgresql/config:/config:ro
+Volume=%h/containers/postgresql/ssl:/etc/ssl/postgresql:ro
+Volume=%h/containers/postgresql/init:/docker-entrypoint-initdb.d/:ro
+Volume=%h/containers/postgresql/backups:/backups:rw
+
+Environment="TZ=Asia/Seoul"
+# This option is only for init process, after init custom config file `pg_hba.conf` will control this option.
+Environment="POSTGRES_HOST_AUTH_METHOD=trust"
+
+Exec=postgres -c 'config_file=/config/postgresql.conf' -c 'hba_file=/config/pg_hba.conf'
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

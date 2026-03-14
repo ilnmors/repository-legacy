@@ -1,0 +1,117 @@
+---
+- name: Gather system facts (hardware)
+  ansible.builtin.setup:
+    gather_subset:
+      - hardware
+  become: true
+
+- name: Create blocky group
+  ansible.builtin.group:
+    name: "blocky"
+    gid: 953
+    state: "present"
+  become: true
+
+- name: Create blocky user
+  ansible.builtin.user:
+    name: "blocky"
+    uid: 953
+    group: "blocky"
+    shell: "/usr/sbin/nologin"
+    password_lock: true
+    comment: "Blocky DNS User"
+    state: "present"
+  become: true
+
+- name: Create blocky etc directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "blocky"
+    group: "blocky"
+    mode: "0750"
+    state: "directory"
+  loop:
+    - "/etc/blocky"
+    - "/etc/blocky/ssl"
+  become: true
+
+- name: Deploy blocky binary file (x86_64)
+  ansible.builtin.unarchive:
+    src: "{{ hostvars['console']['node']['data_path'] }}/bin/blocky-{{ version['packages']['blocky'] }}-x86_64.tar.gz"
+    dest: "/usr/local/bin/"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    extra_opts:
+      - "--strip-components=0"
+      - "--wildcards"
+      - "blocky"
+  become: true
+  when: ansible_facts['architecture'] == "x86_64"
+  notify: "notification_restart_blocky"
+
+- name: Deploy blocky binary file (aarch64)
+  ansible.builtin.unarchive:
+    src: "{{ hostvars['console']['node']['data_path'] }}/bin/blocky-{{ version['packages']['blocky'] }}-arm64.tar.gz"
+    dest: "/usr/local/bin/"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    extra_opts:
+      - "--strip-components=0"
+      - "--wildcards"
+      - "blocky"
+  become: true
+  when: ansible_facts['architecture'] == "aarch64"
+  notify: "notification_restart_blocky"
+
+- name: Deploy blocky config
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/blocky/etc/config.yaml.j2"
+    dest: "/etc/blocky/config.yaml"
+    owner: "blocky"
+    group: "blocky"
+    mode: "0640"
+  become: true
+  notify: "notification_restart_blocky"
+  no_log: true
+
+- name: Deploy blocky certificate and key
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "/etc/blocky/ssl/{{ item.name }}"
+    owner: "blocky"
+    group: "blocky"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "blocky.crt"
+      value: |
+        {{ hostvars['console']['blocky']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "blocky.key"
+      value: "{{ hostvars['console']['blocky']['key'] }}"
+      mode: "0400"
+  become: true
+  notify: "notification_restart_blocky"
+  no_log: true
+
+- name: Deploy blocky service
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/blocky/blocky.service"
+    dest: "/etc/systemd/system/blocky.service"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    validate: "/usr/bin/systemd-analyze verify %s"
+  become: true
+  notify: "notification_restart_blocky"
+
+- name: Enable blocky service
+  ansible.builtin.systemd:
+    name: "blocky.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+  become: true

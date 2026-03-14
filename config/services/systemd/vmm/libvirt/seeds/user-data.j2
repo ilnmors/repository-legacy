@@ -1,0 +1,79 @@
+#cloud-config
+
+bootcmd:
+    - groupadd -g 2000 svadmins || true
+
+hostname: {{ hostvars[target_vm]['vm']['name'] }}
+
+disable_root: true
+
+users:
+    - name: {{ target_vm }}
+      uid: {{ hostvars[target_vm]['node']['uid'] }}
+      gecos: {{ target_vm }}
+      primary_group: svadmins
+      groups: sudo
+      lock_passwd: false
+      passwd: {{ hostvars['console']['sudo']['hash'][target_vm] }}
+      shell: /bin/bash
+
+write_files:
+    - path: /etc/ssh/local_ssh_ca.pub
+      content: |
+        {{ hostvars['console']['ssh']['ca']['pub'] | trim }}
+      owner: "root:root"
+      permissions: "0644"
+    - path: /etc/ssh/sshd_config.d/ssh_ca.conf
+      content: |
+        TrustedUserCAKeys /etc/ssh/local_ssh_ca.pub
+      owner: "root:root"
+      permissions: "0644"
+    - path: /etc/ssh/sshd_config.d/prohibit_root.conf
+      content: |
+        PermitRootLogin no
+      owner: "root:root"
+      permissions: "0644"
+    - path: /etc/apt/sources.list.d/debian.sources
+      content: |
+        Types: deb deb-src
+        URIs: https://deb.debian.org/debian
+        Suites: trixie trixie-updates trixie-backports
+        Components: main contrib non-free non-free-firmware
+        Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+        Types: deb deb-src
+        URIs: https://deb.debian.org/debian-security
+        Suites: trixie-security
+        Components: main contrib non-free non-free-firmware
+        Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+      owner: "root:root"
+      permissions: "0644"
+{% if target_vm == 'fw' %}
+    - path: /etc/sysctl.d/ipforward.conf
+      content: |
+        net.ipv4.ip_forward = 1
+        net.ipv6.conf.all.forwarding = 1
+      owner: "root:root"
+      permissions: "0644"
+{% endif %}
+{% set net_config_dir = 'fw' if target_vm == 'fw' else 'common' %}
+{% for file_path in query('fileglob', hostvars['console']['node']['config_path'] + '/node/' + net_config_dir + '/networkd/' + '/*') | sort %}
+    - path: /etc/systemd/network/{{ file_path | basename}}
+      content: |
+        {{ lookup('template', file_path) | indent(8) | trim }}
+      owner: "root:root"
+      permissions: "0644"
+{% endfor %}
+
+runcmd:
+    - update-initramfs -u
+    - systemctl disable networking
+    - systemctl enable systemd-networkd
+    - systemctl enable getty@ttyS0
+    - sync
+
+power_state:
+    delay: "now"
+    mode: reboot
+    message: "rebooting after cloud-init configuration"
+    timeout: 30

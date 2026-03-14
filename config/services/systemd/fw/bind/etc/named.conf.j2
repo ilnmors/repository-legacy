@@ -1,0 +1,68 @@
+include "/etc/bind/acme.key";
+
+options {
+        directory "/var/cache/bind";
+
+        listen-on port 53 { {{ hostvars['fw']['network4']['bind']['server'] }}; };
+        listen-on-v6 port 53 { {{ hostvars['fw']['network6']['bind']['server'] }}; };
+
+        // Authoritative DNS setting
+        allow-recursion { none; };
+        allow-transfer { none; };
+        allow-update { none; };
+
+        dnssec-validation no;
+
+        check-names master warn;
+};
+
+zone "ilnmors.internal." {
+        type primary;
+        file "/var/lib/bind/db.ilnmors.internal";
+        notify yes;
+        // ACME-01 challenge policy. It allows only TXT record of subdomain update.
+        update-policy {
+                grant acme-key subdomain ilnmors.internal. TXT;
+        };
+};
+
+zone "1.168.192.in-addr.arpa" {
+        type primary;
+        file "/var/lib/bind/db.1.168.192.in-addr.arpa";
+        notify yes;
+};
+
+zone "10.168.192.in-addr.arpa" {
+        type primary;
+        file "/var/lib/bind/db.10.168.192.in-addr.arpa";
+        notify yes;
+};
+
+zone "0.0.0.0.0.0.0.0.1.0.0.0.0.0.d.f.ip6.arpa" {
+    type primary;
+    file "/var/lib/bind/db.1.00df.ip6.arpa";
+    notify yes;
+};
+
+zone "0.0.0.0.0.0.0.0.0.1.0.0.0.0.d.f.ip6.arpa" {
+    type primary;
+    file "/var/lib/bind/db.10.00df.ip6.arpa";
+    notify yes;
+};
+
+zone "ilnmors.com." {
+        //split horizon dns
+        type primary;
+        file "/var/lib/bind/db.ilnmors.com";
+        notify yes;
+};
+
+logging {
+        channel default_log {
+                stderr;
+                severity info;
+        };
+        category default { default_log; };
+        category config { default_log; };
+        category queries { default_log; };
+};

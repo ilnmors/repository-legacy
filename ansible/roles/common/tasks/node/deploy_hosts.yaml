@@ -1,0 +1,9 @@
+---
+- name: Deploy /etc/hosts
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/node/common/hosts.j2"
+    dest: "/etc/hosts"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true

@@ -1,0 +1,70 @@
+#!/usr/sbin/nft -f
+# Convention
+# iifname oifname saddr daddr proto dport ct state action / Ellipsis if you can something
+flush ruleset
+
+define NET4_SERVER = {{ hostvars['fw']['network4']['subnet']['server'] }}
+define NET6_SERVER = {{ hostvars['fw']['network6']['subnet']['server'] }}
+define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | join(', ') }} }
+define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
+define PORTS_SSH = 22
+define PORTS_DB = 5432
+define PORTS_CA = 9000
+define PORTS_LDAPS = 636
+define PORTS_LDAPS_FORWARD = 6360
+define PORTS_HTTP = 80
+define PORTS_HTTP_FORWARD = 2080
+define PORTS_HTTPS = 443
+define PORTS_HTTPS_FORWARD = 2443
+define PORTS_PROMETHEUS = 9090
+define PORTS_LOKI = 3100
+
+table inet nat {
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+        tcp dport $PORTS_HTTP dnat to :$PORTS_HTTP_FORWARD comment "DNAT http ports to $PORTS_HTTP_FORWARD"
+        tcp dport $PORTS_HTTPS dnat to :$PORTS_HTTPS_FORWARD comment "DNAT https ports to $PORTS_HTTPS_FORWARD"
+        tcp dport $PORTS_LDAPS dnat to :$PORTS_LDAPS_FORWARD comment "DNAT ldaps ports to $PORTS_LDAPS_FORWARD"
+    }
+    chain postrouting {
+
+    }
+    chain output {
+        type nat hook output priority dstnat; policy accept;
+        oifname "lo" tcp dport $PORTS_HTTP dnat to :$PORTS_HTTP_FORWARD comment "DNAT http ports to $PORTS_HTTP_FORWARD out of LOCALHOST"
+        oifname "lo" tcp dport $PORTS_HTTPS dnat to :$PORTS_HTTPS_FORWARD comment "DNAT https ports to $PORTS_HTTPS_FORWARD out of LOCALHOST"
+        oifname "lo" tcp dport $PORTS_LDAPS dnat to :$PORTS_LDAPS_FORWARD comment "DNAT ldaps ports to $PORTS_LDAPS_FORWARD out of LOCALHOST"
+    }
+}
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+        ct state invalid drop comment "deny invalid connection"
+        ct state established, related accept comment "allow all connection already existing"
+        iifname "lo" accept comment "allow local connection: INFRA > INFRA"
+        meta l4proto { icmp, icmpv6 } accept comment "allow icmp connection: > INFRA"
+        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv4 ssh connection: CONSOLE > INFRA"
+        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv6 ssh connection: CONSOLE > INFRA"
+        ip saddr $NET4_SERVER tcp dport $PORTS_CA accept comment "allow ipv4 ca connection: SERVER > INFRA"
+        ip6 saddr $NET6_SERVER tcp dport $PORTS_CA accept comment "allow ipv6 ca connection: SERVER > INFRA"
+        ip saddr $NET4_SERVER tcp dport $PORTS_DB accept comment "allow ipv4 db connection: SERVER > INFRA"
+        ip6 saddr $NET6_SERVER tcp dport $PORTS_DB accept comment "allow ipv6 db connection: SERVER > INFRA"
+        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_HTTP_FORWARD ct original proto-dst $PORTS_HTTP accept comment "allow ipv4 http connection: CONSOLE > INFRA"
+        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_HTTP_FORWARD ct original proto-dst $PORTS_HTTP accept comment "allow ipv6 http connection: CONSOLE > INFRA"
+        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_HTTPS_FORWARD ct original proto-dst $PORTS_HTTPS accept comment "allow ipv4 https connection: CONSOLE > INFRA"
+        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_HTTPS_FORWARD ct original proto-dst $PORTS_HTTPS accept comment "allow ipv6 https connection: CONSOLE > INFRA"
+        ip saddr $NET4_SERVER tcp dport $PORTS_LDAPS_FORWARD ct original proto-dst $PORTS_LDAPS accept comment "allow ipv4 ldaps connection: SERVER > INFRA"
+        ip6 saddr $NET6_SERVER tcp dport $PORTS_LDAPS_FORWARD ct original proto-dst $PORTS_LDAPS accept comment "allow ipv6 ldaps connection: SERVER > INFRA"
+        ip saddr $NET4_SERVER tcp dport $PORTS_PROMETHEUS accept comment "allow ipv4 prometheus connection: SERVER > INFRA"
+        ip6 saddr $NET6_SERVER tcp dport $PORTS_PROMETHEUS accept comment "allow ipv6 prometheus connection: SERVER > INFRA"
+        ip saddr $NET4_SERVER tcp dport $PORTS_LOKI accept comment "allow ipv4 loki connection: SERVER > INFRA"
+        ip6 saddr $NET6_SERVER tcp dport $PORTS_LOKI accept comment "allow ipv6 loki connection: SERVER > INFRA"
+    }
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

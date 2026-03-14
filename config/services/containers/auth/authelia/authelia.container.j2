@@ -1,0 +1,67 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Authelia
+
+After=caddy.service
+Wants=caddy.service
+
+[Container]
+
+Image=docker.io/authelia/authelia:{{ version['containers']['authelia'] }}
+
+ContainerName=authelia
+HostName=authelia
+
+# Web UI
+PublishPort=9091:9091/tcp
+
+
+Volume=%h/containers/authelia/config:/config:rw
+Volume=%h/containers/authelia/certs:/etc/ssl/authelia:ro
+
+# Default
+Environment="TZ=Asia/Seoul"
+# Enable Go template engine
+# !CAUTION!
+{% raw %}# If this environment were enabled, you would have to use {{/* ... /*}} for {{ go_filter }} options. Go engine always processes its own grammar first.
+{% endraw %}
+Environment="X_AUTHELIA_CONFIG_FILTERS=template"
+# Encryption
+## JWT
+Environment="AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/AUTHELIA_JWT_SECRET"
+Secret=AUTHELIA_JWT_SECRET,target=/run/secrets/AUTHELIA_JWT_SECRET
+## Session
+Environment="AUTHELIA_SESSION_SECRET_FILE=/run/secrets/AUTHELIA_SESSION_SECRET"
+Secret=AUTHELIA_SESSION_SECRET,target=/run/secrets/AUTHELIA_SESSION_SECRET
+## Storage
+Environment="AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/AUTHELIA_STORAGE_SECRET"
+Secret=AUTHELIA_STORAGE_SECRET,target=/run/secrets/AUTHELIA_STORAGE_SECRET
+# OIDC (HMAC, JWKS), This part needs the clients to integrate with Authelia in order for it to activate.
+Environment="AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE=/run/secrets/AUTHELIA_HMAC_SECRET"
+Secret=AUTHELIA_HMAC_SECRET,target=/run/secrets/AUTHELIA_HMAC_SECRET
+Secret=AUTHELIA_JWKS_RS256,target=/run/secrets/AUTHELIA_JWKS_RS256
+Secret=AUTHELIA_JWKS_ES256,target=/run/secrets/AUTHELIA_JWKS_ES256
+# LDAP
+Environment="AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/AUTHELIA_LDAP_PASSWORD"
+Secret=AUTHELIA_LDAP_PASSWORD,target=/run/secrets/AUTHELIA_LDAP_PASSWORD
+# Database
+Environment="AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_AUTHELIA_PASSWORD"
+Secret=POSTGRES_AUTHELIA_PASSWORD,target=/run/secrets/POSTGRES_AUTHELIA_PASSWORD
+
+Exec=--config /config/authelia.yaml
+
+[Service]
+# Wait for dependency
+# They run as rootless podman container, so their port is not opened until they are normaly running
+# Check their ports with nc command 
+ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ infra_uri['ldap']['domain'] }} {{ infra_uri['ldap']['ports']['ldaps'] }}
+ExecStartPre=sleep 5
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,101 @@
+---
+- name: Restart ca certificate
+  ansible.builtin.command: |
+    update-ca-certificates
+  become: true
+  changed_when: false
+  listen: "notification_update_ca"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart sshd
+  ansible.builtin.systemd:
+    name: "sshd.service"
+    state: "restarted"
+    enabled: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_sshd"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Reload systemd-networkd
+  ansible.builtin.systemd:
+    name: "systemd-networkd.service"
+    state: "reloaded"
+    enabled: true
+  become: true
+  changed_when: false
+  listen: "notification_reload_networkctl"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Reload systemd-resolved.service
+  ansible.builtin.systemd:
+    name: "systemd-resolved.service"
+    state: "reloaded"
+    enabled: true
+  become: true
+  changed_when: false
+  listen: "notification_reload_resolved"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart systemd-timesyncd
+  ansible.builtin.systemd:
+    name: "systemd-timesyncd.service"
+    state: "restarted"
+    enabled: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_timesyncd"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Update nftables
+  ansible.builtin.command: |
+    nft -f /etc/nftables.conf
+  become: true
+  changed_when: false
+  listen: "notification_update_nftables"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart crowdsec
+  ansible.builtin.systemd:
+    name: "crowdsec.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_crowdsec"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart crowdsec bouncer
+  ansible.builtin.systemd:
+    name: "crowdsec-firewall-bouncer.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  when: node['name'] == 'fw'
+  changed_when: false
+  listen: "notification_restart_crowdsec_bouncer"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart caddy
+  ansible.builtin.systemd:
+    name: "caddy.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_caddy"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart alloy
+  ansible.builtin.systemd:
+    name: "alloy.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_alloy"
+  ignore_errors: true # noqa: ignore-errors

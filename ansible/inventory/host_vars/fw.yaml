@@ -1,0 +1,98 @@
+---
+# Node Factors
+node:
+  name: "fw"
+  uid: 2001
+  home_path: "/home/fw"
+  ssh_san: "fw,fw.ilnmors.internal"
+  local_san: "localhost fw.ilnmors.internal"
+
+# VM Factors
+vm:
+  name: "fw"
+  cpu: 2
+  shares: 2048
+  memory: 4
+  storage: 64
+  wan_mac: "0a:49:6e:4d:00:00"
+  lan_mac: "0a:49:6e:4d:00:01"
+  wan_net: "wan-net"
+  lan_net: "lan-net"
+  lan_group: "vlan-trunk"
+
+# Network Factors
+# LLA is like MAC address for L3 (Network layer). Usually, subnet is used to seperate network.
+network4:
+  subnet:
+    client: "192.168.1.0/24"
+    server: "192.168.10.0/24"
+    user: "192.168.20.0/24"
+    wg: "192.168.99.0/24"
+    lla: "169.254.0.0/16"
+  # You can use "{{ hostvars['fw']['network4']['firewall'].values() | join(', ') }}" for all
+  firewall:
+    client: "192.168.1.1"
+    server: "192.168.10.1"
+    user: "192.168.20.1"
+    wg: "192.168.99.1"
+  blocky:
+    server: "192.168.10.2"
+  bind:
+    server: "192.168.10.3"
+  console:
+    client: "192.168.1.20"
+    wg: "192.168.99.20"
+  vmm:
+    client: "192.168.1.10"
+    server: "192.168.10.10"
+  infra:
+    server: "192.168.10.11"
+  auth:
+    server: "192.168.10.12"
+  app:
+    server: "192.168.10.13"
+  switch:
+    client: "192.168.1.2"
+  nas:
+    client: "192.168.1.11"
+  printer:
+    client: "192.168.1.101"
+
+network6:
+  subnet:
+    client: "fd00:1::/64"
+    server: "fd00:10::/64"
+    wg: "fd00:99::/64"
+    lla: "fe80::/10"
+  firewall:
+    client: "fd00:1::1"
+    server: "fd00:10::1"
+    wg: "fd00:99::1"
+  blocky:
+    server: "fd00:10::2"
+  bind:
+    server: "fd00:10::3"
+  console:
+    client: "fd00:1::20"
+    wg: "fd00:99::20"
+  vmm:
+    client: "fd00:1::10"
+    server: "fd00:10::10"
+  infra:
+    server: "fd00:10::11"
+  auth:
+    server: "fd00:10::12"
+  app:
+    server: "fd00:10::13"
+  switch:
+    client: "fd00:1::2"
+  nas:
+    client: "fd00:1::11"
+  printer:
+    client: "fd00:1::101"
+
+# Suricata Factors
+# suricata_home_net: '[10.0.0.0/8,172.16.0.0/12,192.168.0.0/16]'
+suricata:
+  home_net: '[10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8,fe80::/8]'
+  interfaces: ["wan", "client", "server", "user"]

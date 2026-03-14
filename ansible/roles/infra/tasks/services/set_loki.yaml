@@ -1,0 +1,70 @@
+---
+- name: Set loki container subuid
+  ansible.builtin.set_fact:
+    loki_subuid: "110000" # 10001
+
+- name: Create loki directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    state: "directory"
+    owner: "{{ loki_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "loki"
+    - "loki/etc"
+    - "loki/data"
+    - "loki/ssl"
+  become: true
+
+- name: Deploy loki configuration file
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/etc/loki.yaml"
+    dest: "{{ node['home_path'] }}/containers/loki/etc/loki.yaml"
+    owner: "{{ loki_subuid }}"
+    group: "svadmins"
+    mode: "0600"
+  become: true
+  notify: "notification_restart_loki"
+  no_log: true
+
+- name: Deploy loki certificate and key
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "{{ node['home_path'] }}/containers/loki/ssl/{{ item.name }}"
+    owner: "{{ loki_subuid }}"
+    group: "svadmins"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "ilnmors_root_ca.crt"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      mode: "0440"
+    - name: "loki.crt"
+      value: |
+        {{ hostvars['console']['loki']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "loki.key"
+      value: "{{ hostvars['console']['loki']['key'] }}"
+      mode: "0400"
+  become: true
+  notify: "notification_restart_loki"
+  no_log: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/loki.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/loki.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_loki"
+
+- name: Enable loki
+  ansible.builtin.systemd:
+    name: "loki.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

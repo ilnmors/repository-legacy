@@ -1,0 +1,16 @@
+[Match]
+Name=wan
+
+[Network]
+DHCP=true
+IPv6AcceptRA=true
+IPForward=true
+RequiredForOnline=false
+
+[DHCPv4]
+UseDNS=false
+
+[DHCPv6]
+WithoutRA=solicit
+PrefixDelegationHint=yes
+UseDNS=false

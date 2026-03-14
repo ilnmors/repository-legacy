@@ -1,0 +1,5 @@
+[Match]
+MACAddress={{ hostvars['fw']['vm']['wan_mac'] }}
+
+[Link]
+Name=wan

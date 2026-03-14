@@ -1,0 +1,63 @@
+---
+- name: Restart chrony
+  ansible.builtin.systemd:
+    name: "chrony.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_chrony"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Update suricata rules
+  ansible.builtin.command:
+    suricata-update --disable-conf /etc/suricata/disable.conf --enable-conf /etc/suricata/enable.conf --local /etc/suricata/rules/local.rules
+  become: true
+  changed_when: false
+  listen: "notification_update_suricata_rules"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart suricata
+  ansible.builtin.systemd:
+    name: "suricata.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_suricata"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart bind9
+  ansible.builtin.systemd:
+    name: "named.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_bind"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart blocky
+  ansible.builtin.systemd:
+    name: "blocky.service"
+    state: "restarted"
+    enabled: "true"
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_blocky"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart kea-dhcp4
+  ansible.builtin.systemd:
+    name: "kea-dhcp4-server.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+  become: true
+  changed_when: false
+  listen: "notification_restart_kea4"
+  ignore_errors: true # noqa: ignore-errors

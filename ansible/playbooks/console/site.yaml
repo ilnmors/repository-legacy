@@ -1,0 +1,132 @@
+---
+- name: Load secret values
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Load secret from secrets.yaml
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/load_secret_vars"
+        apply:
+          tags: ["always"]
+      tags: ["always"]
+
+- name: Site console
+  hosts: "console"
+  gather_facts: false
+  become: false
+  pre_tasks:
+    - name: Set become password
+      ansible.builtin.set_fact:
+        ansible_become_pass: "{{ hostvars['console']['sudo']['password']['console'] }}"
+      tags: ["always"]
+
+  tasks:
+    # init
+    - name: Set timezone to Asia/Seoul
+      community.general.timezone:
+        name: Asia/Seoul
+      become: true
+      tags: ["init", "timezone"]
+
+    - name: Deploy root_ca certificate
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_root_ca"
+        apply:
+          tags: ["init", "root_crt"]
+      tags: ["init", "root_crt"]
+
+    - name: Deploy hosts file
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/deploy_hosts"
+        apply:
+          tags: ["init", "hosts"]
+      tags: ["init", "hosts"]
+
+    - name: Create default directory
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/create_default_dir"
+        apply:
+          tags: ["init", "default_dir"]
+      tags: ["init", "default_dir"]
+
+    - name: Update and upgrade apt
+      ansible.builtin.apt:
+        upgrade: "dist"
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      tags: ["init", "site", "upgrade-packages"]
+
+    - name: Set ssh client
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/set_ssh_client"
+        apply:
+          tags: ["init", "ssh_client"]
+      tags: ["init", "ssh_client"]
+
+    - name: Check file permissions
+      ansible.builtin.file:
+        path: "{{ node['workspace_path'] }}/{{ item }}"
+        state: "directory"
+        owner: "{{ ansible_user }}"
+        group: "svadmins"
+        mode: "u=rwX,g=,o="
+        recurse: true
+      loop:
+        - "homelab/ansible"
+        - "homelab/config"
+        - "homelab/docs"
+        - "university"
+      tags: ["init", "site", "file_permission"]
+      # kopia snashot is mounted on homelab/data/volumes.
+      # NEVER CHANGE permission and owners
+
+    - name: Download vm cloud-init
+      ansible.builtin.get_url:
+        url: "https://cdimage.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
+        dest: "{{ node['data_path'] }}/images/debian-13-generic-amd64.qcow2"
+        owner: "console"
+        group: "svadmins"
+        mode: "0600"
+      tags: ["init", "site", "cloud-init-image"]
+
+    - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - "git"
+          - "gnupg"
+          - "acl"
+          - "curl"
+          - "jq"
+          - "cloud-image-utils"
+          - "logrotate"
+          - "nftables"
+          - "build-essential"
+          - "g++"
+          - "gcc"
+          - "fuse3"
+        state: "present"
+      become: true
+      tags: ["init", "site", "install-packages"]
+
+    - name: Install CLI tools
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "services/set_cli_tools"
+        apply:
+          tags: ["init", "site", "tools"]
+      tags: ["init", "site", "tools"]
+
+    - name: Install chromium with font
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "services/set_chromium"
+        apply:
+          tags: ["init", "site", "chromium"]
+      tags: ["init", "site", "chromium"]

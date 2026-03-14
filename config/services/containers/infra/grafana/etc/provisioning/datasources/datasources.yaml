@@ -1,0 +1,29 @@
+# https://github.com/grafana/grafana/blob/main/conf/provisioning/datasources/sample.yaml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: https://prometheus.ilnmors.internal:9090
+    access: proxy
+    isDefault: true
+    jsonData:
+      tlsAuth: false
+      tlsAuthWithCACert: true
+      httpMethod: POST
+    secureJsonData:
+      tlsCACert: "$__file{/etc/ssl/grafana/ilnmors_root_ca.crt}"
+
+  - name: Loki
+    type: loki
+    url: https://loki.ilnmors.internal:3100
+    access: proxy
+    jsonData:
+      tlsAuth: false
+      tlsAuthWithCACert: true
+      # Tenent value set "to solve no org id"
+      httpHeaderName1: "X-Scope-OrgID"
+      maxLines: 1000
+    secureJsonData:
+      tlsCACert: "$__file{/etc/ssl/grafana/ilnmors_root_ca.crt}"
+      httpHeaderValue1: "ilnmors.internal"

@@ -1,0 +1,12 @@
+ARG PG_VER={{ version['containers']['postgresql'] }}
+
+FROM docker.io/library/postgres:${PG_VER}
+
+ARG VECTORCHORD_VER={{ version['containers']['vectorchord'] }}
+
+RUN apt update && \
+    apt install -y wget postgresql-${PG_MAJOR}-pgvector && \
+    wget -nv -O /tmp/vchord.deb https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD_VER}/postgresql-${PG_MAJOR}-vchord_${VECTORCHORD_VER}-1_amd64.deb && \
+    apt install -y /tmp/vchord.deb && \
+    apt purge -y wget && apt autoremove -y && \
+    rm -rf /tmp/vchord.deb /var/lib/apt/lists/*

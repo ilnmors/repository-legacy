@@ -1,0 +1,304 @@
+---
+- name: Check crowdsec installed
+  ansible.builtin.shell: |
+    command -v crowdsec
+  changed_when: false
+  failed_when: false
+  register: "is_crowdsec_installed"
+  ignore_errors: true
+
+- name: Check crowdsec bouncer installed
+  ansible.builtin.shell: |
+    command -v crowdsec-firewall-bouncer
+  when: node['name'] == "fw"
+  changed_when: false
+  failed_when: false
+  register: "is_crowdsec_bouncer_installed"
+  ignore_errors: true
+
+- name: Install crowdsec
+  ansible.builtin.apt:
+    name: "crowdsec"
+    state: "present"
+  become: true
+  when: is_crowdsec_installed.rc != 0
+
+- name: Install crowdsec bouncers
+  ansible.builtin.apt:
+    name: "crowdsec-firewall-bouncer"
+    state: "present"
+  become: true
+  when:
+    - node['name'] == "fw"
+    - is_crowdsec_bouncer_installed.rc != 0
+
+- name: Set acquis.d list for bouncer
+  ansible.builtin.set_fact:
+    acquisd_list:
+      fw:
+        collection: "crowdsecurity/suricata"
+        config: "suricata.yaml"
+      auth:
+        collection: "crowdsecurity/caddy"
+        config: "caddy.yaml"
+
+- name: Deploy crowdsec-update service files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/crowdsec/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    validate: "/usr/bin/systemd-analyze verify %s"
+  loop:
+    - "crowdsec-update.service"
+    - "crowdsec-update.timer"
+  become: true
+
+- name: Deploy crowdsec config.yaml
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/crowdsec/etc/config.yaml.j2"
+    dest: "/etc/crowdsec/config.yaml"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify: "notification_restart_crowdsec"
+  no_log: true
+
+- name: Deploy crowdsec local_api_credentials.yaml
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/crowdsec/etc/local_api_credentials.yaml.j2"
+    dest: "/etc/crowdsec/local_api_credentials.yaml"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  become: true
+  notify: "notification_restart_crowdsec"
+  no_log: true
+
+- name: Set Crowdsec LAPI configuration
+  when: node['name'] == "fw"
+  block:
+    - name: Create crowdsec ssl directory
+      ansible.builtin.file:
+        path: "/etc/crowdsec/ssl"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0700"
+      become: true
+
+    - name: Deploy crowdsec lapi ssl certificate
+      ansible.builtin.copy:
+        content: |
+          {{ hostvars['console']['crowdsec']['crt'] | trim }}
+          {{ hostvars['console']['ca']['intermediate']['crt'] }}
+        dest: "/etc/crowdsec/ssl/crowdsec.crt"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+      notify: "notification_restart_crowdsec"
+      no_log: true
+
+    - name: Deploy crowdsec lapi ssl key
+      ansible.builtin.copy:
+        content: |
+          {{ hostvars['console']['crowdsec']['key'] }}
+        dest: "/etc/crowdsec/ssl/crowdsec.key"
+        owner: "root"
+        group: "root"
+        mode: "0400"
+      become: true
+      notify: "notification_restart_crowdsec"
+      no_log: true
+
+    - name: Get existing machines list
+      ansible.builtin.command:
+        cmd: "cscli machines list -o json"
+      become: true
+      changed_when: false
+      register: "existing_crowdsec_machines_list"
+
+    - name: Set existing machines' name
+      ansible.builtin.set_fact:
+        existing_machines_name: "{{ existing_crowdsec_machines_list.stdout | from_json | map(attribute='machineId') | list }}"
+
+    - name: Set goal machines' name
+      ansible.builtin.set_fact:
+        machines_name: ["fw", "vmm", "infra", "auth", "app"]
+      no_log: true
+
+    - name: Prune unknown (random) machines
+      ansible.builtin.command:
+        cmd: "cscli machines delete {{ item }}"
+      loop: "{{ existing_machines_name | difference(machines_name) }}"
+      become: true
+      changed_when: true
+
+    - name: Register crowdsec machines to LAPI server
+      ansible.builtin.command:
+        cmd: "cscli machines add {{ item }} --password {{ hostvars['console']['crowdsec']['machine'][item] }} --force -f /dev/null"
+      loop: "{{ machines_name }}"
+      become: true
+      changed_when: false
+      no_log: true
+
+    - name: Get existing bouncers list
+      ansible.builtin.command:
+        cmd: "cscli bouncers list -o json"
+      become: true
+      register: "existing_crowdsec_bouncers_list"
+      changed_when: false
+
+    - name: Set existing bouncers' name
+      ansible.builtin.set_fact:
+        existing_bouncers_name: "{{ existing_crowdsec_bouncers_list.stdout | from_json | map(attribute='name') | list }}"
+
+    - name: Flush bouncers
+      ansible.builtin.command:
+        cmd: "cscli bouncers delete {{ item }}"
+      loop: "{{ existing_bouncers_name }}"
+      become: true
+      changed_when: true
+
+    - name: Set bouncers' name
+      ansible.builtin.set_fact:
+        bouncers_name: ["fw", "caddy"]
+
+    - name: Register Firewall Bouncer to LAPI
+      ansible.builtin.command:
+        cmd: "cscli bouncers add {{ item }}-bouncer -k {{ hostvars['console']['crowdsec']['bouncer'][item] }}"
+      loop: "{{ bouncers_name }}"
+      become: true
+      changed_when: true
+      notify: "notification_restart_crowdsec_bouncer"
+      no_log: true
+
+- name: Set crowdsec bouncer
+  when: node['name'] in acquisd_list
+  block:
+    - name: Install crowdsec collection
+      ansible.builtin.command:
+        cmd: "cscli collections install {{ acquisd_list[node['name']]['collection'] }}"
+      become: true
+      changed_when: "'overwrite' not in is_collection_installed.stderr"
+      failed_when:
+        - is_collection_installed.rc != 0
+        - "'already installed' not in is_collection_installed.stderr"
+      register: "is_collection_installed"
+
+    - name: Create crowdsec acquis.d directory
+      ansible.builtin.file:
+        path: "/etc/crowdsec/acquis.d"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      become: true
+
+    - name: Create whitelists.yaml
+      ansible.builtin.template:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/crowdsec/bouncers/whitelists.yaml.j2"
+        dest: "/etc/crowdsec/parsers/s02-enrich/whitelists.yaml"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+      notify:
+        - "notification_restart_crowdsec"
+        - "notification_restart_crowdsec_bouncer"
+      no_log: true
+
+    - name: Deploy acquis.d file
+      ansible.builtin.copy:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/crowdsec/acquis.d/{{ acquisd_list[node['name']]['config'] }}"
+        dest: "/etc/crowdsec/acquis.d/{{ acquisd_list[node['name']]['config'] }}"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+      notify: "notification_restart_crowdsec"
+
+    - name: Set Crowdsec-Firewall-Bouncer
+      when: node['name'] == "fw"
+      block:
+        - name: Deploy crowdsec-firewall-bouncer.yaml
+          ansible.builtin.template:
+            src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml.j2"
+            dest: "/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml"
+            owner: "root"
+            group: "root"
+            mode: "0600"
+          become: true
+          notify: "notification_restart_crowdsec_bouncer"
+
+        - name: Delete crowdsec-firewall-bouncer.yaml subfiles (.id, .local)
+          ansible.builtin.file:
+            path: "/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml.{{ item }}"
+            state: "absent"
+          loop:
+            - "local"
+            - "id"
+          become: true
+          notify: "notification_restart_crowdsec_bouncer"
+
+        - name: Create crowdsec-firewall-bouncer.service.d
+          ansible.builtin.file:
+            path: "/etc/systemd/system/crowdsec-firewall-bouncer.service.d"
+            state: "directory"
+            owner: "root"
+            group: "root"
+            mode: "0755"
+          become: true
+
+        - name: Set crowdsec-firewall-bouncer.service.d/override.conf
+          ansible.builtin.copy:
+            dest: "/etc/systemd/system/crowdsec-firewall-bouncer.service.d/override.conf"
+            content: |
+              [Service]
+              Type=simple
+              TimeoutStartSec=600
+              Restart=always
+              RestartSec=60
+            owner: "root"
+            group: "root"
+            mode: "0644"
+          become: true
+          notify: "notification_restart_crowdsec_bouncer"
+
+
+- name: Create crowdsec.service.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/crowdsec.service.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+
+- name: Set crowdsec.service.d/override.conf
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/crowdsec.service.d/override.conf"
+    content: |
+      [Service]
+      Restart=always
+      RestartSec=60
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  notify: "notification_restart_crowdsec"
+
+- name: Enable auto crowdsec rules update
+  ansible.builtin.systemd:
+    name: "crowdsec-update.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+  become: true
+
+# cscli bouncers list
+# cscli machines list
+# cscli metrics

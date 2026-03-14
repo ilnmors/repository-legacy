@@ -1,0 +1,41 @@
+#------------------------------------------------------------------------------
+# CUSTOMIZED OPTIONS
+#------------------------------------------------------------------------------
+
+# Add settings for extensions here
+# Listen_address
+listen_addresses = '*'
+# Max connections
+max_connections = 250
+# listen_port
+port = 5432
+
+# SSL
+ssl = on
+ssl_ca_file = '/etc/ssl/postgresql/ilnmors_root_ca.crt'
+ssl_cert_file = '/etc/ssl/postgresql/postgresql.crt'
+ssl_key_file = '/etc/ssl/postgresql/postgresql.key'
+ssl_ciphers = 'HIGH:!aNULL:!MD5'
+ssl_prefer_server_ciphers = on
+
+# log
+log_destination = 'stderr'
+log_checkpoints = on
+log_temp_files = 0
+log_min_duration_statement = 500
+
+# IO
+track_io_timing = on
+
+## immich_config
+shared_preload_libraries = 'vchord.so'
+search_path = '"$user", public'
+max_wal_size = 5GB
+shared_buffers = 512MB
+wal_compression = on
+work_mem = 16MB
+autovacuum_vacuum_scale_factor = 0.1
+autovacuum_analyze_scale_factor = 0.05
+autovacuum_vacuum_cost_limit = 1000
+effective_io_concurrency = 200
+random_page_cost = 1.2

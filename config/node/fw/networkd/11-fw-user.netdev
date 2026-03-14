@@ -1,0 +1,6 @@
+[NetDev]
+Name=user
+Kind=vlan
+
+[VLAN]
+Id=20

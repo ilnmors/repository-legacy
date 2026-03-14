@@ -1,0 +1,54 @@
+# https://github.com/grafana/grafana/blob/main/conf/defaults.ini
+[paths]
+data = /var/lib/grafana
+logs = /var/log/grafana
+plugins = /var/lib/grafana/plugins
+provisioning = /etc/grafana/provisioning
+
+[server]
+protocol = http
+http_port = 3000
+domain = grafana.ilnmors.internal
+root_url = http://grafana.ilnmors.internal/
+router_logging = false
+
+[database]
+type = postgres
+host = {{ infra_uri['postgresql']['domain'] }}:{{ infra_uri['postgresql']['ports']['tcp'] }}
+name = grafana_db
+user = grafana
+password = $__file{/run/secrets/GF_DB_PASSWORD}
+ssl_mode = verify-full
+ca_cert_path = /etc/ssl/grafana/ilnmors_root_ca.crt
+
+[auth.ldap]
+enabled = true
+config_file = /etc/grafana/ldap.toml
+allow_sign_up = true
+
+[auth]
+disable_login_form = false
+allow_anonymous_device_id_auth = false
+
+[security]
+# local admin
+admin_user = local_admin
+# local password
+admin_password = $__file{/run/secrets/GF_ADMIN_PASSWORD}
+cookie_secure = true
+cookie_samesite = lax
+allow_embedding = false
+
+# [smtp]
+# enabled = true
+# host = localhost:25
+# from_address = alert@ilnmors.internal
+# from_name = Grafana-Infra
+
+[analytics]
+reporting_enabled = false
+check_for_updates = false
+
+[log]
+mode = console
+level = info

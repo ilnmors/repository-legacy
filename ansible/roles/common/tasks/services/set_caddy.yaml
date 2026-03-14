@@ -1,0 +1,99 @@
+---
+# infra, auth, app (vmm, fw has no podman in it)
+- name: Create caddy directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    state: "directory"
+    mode: "0770"
+  loop:
+    - "caddy"
+    - "caddy/etc"
+    - "caddy/data"
+    - "caddy/build"
+  become: true
+
+- name: Create caddy log directory for auth
+  ansible.builtin.file:
+    path: /var/log/caddy
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    state: "directory"
+    mode: "0755"
+  become: true
+  when: node['name'] == "auth"
+
+- name: Register acme key to podman secret
+  containers.podman.podman_secret:
+    name: "CADDY_ACME_KEY"
+    data: "{{ hostvars['console']['ca']['acme_key'] }}"
+    state: "present"
+    force: true
+  notify: "notification_restart_caddy"
+  no_log: true
+
+- name: Register crowdsec bouncer key to podman secret
+  containers.podman.podman_secret:
+    name: "CADDY_CROWDSEC_KEY"
+    data: "{{ hostvars['console']['crowdsec']['bouncer']['caddy'] }}"
+    state: "present"
+    force: true
+  when: node['name'] == "auth"
+  notify: "notification_restart_caddy"
+  no_log: true
+
+- name: Deploy containerfile for build
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/common/caddy/build/caddy.containerfile.j2"
+    dest: "{{ node['home_path'] }}/containers/caddy/build/Containerfile"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0640"
+
+- name: Deploy root crt for build
+  ansible.builtin.copy:
+    content: "{{ hostvars['console']['ca']['root']['crt'] }}"
+    dest: "{{ node['home_path'] }}/containers/caddy/build/ilnmors_root_ca.crt"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0640"
+  no_log: true
+
+- name: Build caddy container image
+  containers.podman.podman_image:
+    name: "ilnmors.internal/{{ node['name'] }}/caddy"
+    # check tags from container file
+    tag: "{{ version['containers']['caddy'] }}"
+    state: "build"
+    path: "{{ node['home_path'] }}/containers/caddy/build"
+
+- name: Prune caddy dangling images
+  containers.podman.podman_prune:
+    image: true
+
+- name: Deploy caddyfile
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/common/caddy/etc/{{ node['name'] }}/Caddyfile.j2"
+    dest: "{{ node['home_path'] }}/containers/caddy/etc/Caddyfile"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0600"
+  notify: "notification_restart_caddy"
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/common/caddy/caddy.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/caddy.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_caddy"
+
+- name: Enable caddy
+  ansible.builtin.systemd:
+    name: "caddy.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
