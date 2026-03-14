@@ -11,6 +11,7 @@
       - "authelia"
       - "grafana"
       - "vaultwarden"
+      - "gitea"
 
 - name: Create postgresql directory
   ansible.builtin.file:

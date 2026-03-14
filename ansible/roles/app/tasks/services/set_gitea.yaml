@@ -1,0 +1,54 @@
+---
+- name: Set gitea container subuid
+  ansible.builtin.set_fact:
+    gitea_subuid: "100999"
+
+- name: Create gitea directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ gitea_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/gitea"
+    - "containers/gitea"
+    - "containers/gitea/ssl"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/gitea/ssl/ilnmors_root_ca.crt"
+    owner: "{{ gitea_subuid }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_gitea"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "GITEA__database__PASSWD"
+    data: "{{ hostvars['console']['postgresql']['password']['gitea'] }}"
+    state: "present"
+    force: true
+  no_log: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/gitea/gitea.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/gitea.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_gitea"
+
+- name: Enable gitea.service
+  ansible.builtin.systemd:
+    name: "gitea.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

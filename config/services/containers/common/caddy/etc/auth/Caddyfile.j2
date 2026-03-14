@@ -72,6 +72,15 @@ vault.ilnmors.com {
                 }
         }
 }
+gitea.ilnmors.com {
+        import crowdsec_log
+        route {
+                crowdsec
+                reverse_proxy https://gitea.app.ilnmors.internal {
+                        header_up Host {http.reverse_proxy.upstream.host}
+                }
+        }
+}
 
 # Internal domain
 auth.ilnmors.internal {

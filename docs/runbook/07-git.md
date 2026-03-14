@@ -69,3 +69,27 @@ git tag -a 0.0.1-caddy-app -m "caddy-app: Start caddy-app branch"
 git switch main
 git merge caddy-app
 ```
+
+## Connect local git and remote git
+
+- Set this after gitea is implemented
+
+```bash
+# Add git remote repository
+git config --global credential.helper store
+git remote add origin https://gitea.ilnmors.com/il/ilnmors-homelab.git
+# For first time to make connection between local and remote git
+git push -u origin main
+# Username for 'https://gitea.ilnmors.com': il
+# Password for 'https://il@gitea.ilnmors.com': gitea.il.token
+git push --tags
+# After first connection, -u origin main option is not needed
+git add $PATH
+git commit -m "comment"
+git tag -a $VERSION -m "comment"
+git push && git push --tags
+# -f and --force-with-lease can be used in commit and tags
+# -f option and --force-with-lease
+# -f: just overwrite forcefully without any condition. it is dangerous, because it doesn't care the changes (commit) from other local git
+# --force-with-lease: overwrite forcefully only when there's no changes (commit) from other local git
+```

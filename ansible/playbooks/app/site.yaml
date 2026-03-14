@@ -169,6 +169,14 @@
           tags: ["site", "vaultwarden"]
       tags: ["site", "vaultwarden"]
 
+    - name: Set gitea
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_gitea"
+        apply:
+          tags: ["site", "gitea"]
+      tags: ["site", "gitea"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

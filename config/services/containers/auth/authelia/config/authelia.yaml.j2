@@ -131,3 +131,24 @@ identity_providers:
         userinfo_signed_response_alg: 'none'
         # [ client_secret_post | client_secret_basic ]
         token_endpoint_auth_method: 'client_secret_post'
+      # https://www.authelia.com/integration/openid-connect/clients/gitea/
+      - client_id: 'gitea'
+        client_name: 'gitea'
+        client_secret: '{{ hostvars['console']['gitea']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          - 'https://gitea.ilnmors.com/user/oauth2/authelia/callback'
+        scopes:
+          - 'openid'
+          - 'email'
+          - 'profile'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'

@@ -74,3 +74,4 @@ version:
     authelia: "4.39.15"
     # App
     vaultwarden: "1.35.4"
+    gitea: "1.25.5"
