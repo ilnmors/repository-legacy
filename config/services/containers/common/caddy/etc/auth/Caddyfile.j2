@@ -54,6 +54,15 @@ test.ilnmors.com {
                 file_server
         }
 }
+test.app.ilnmors.com {
+        import crowdsec_log
+        route {
+                crowdsec
+                reverse_proxy https://test.app.ilnmors.internal {
+                        header_up Host {http.reverse_proxy.upstream.host}
+                }
+        }
+}
 
 # Internal domain
 auth.ilnmors.internal {

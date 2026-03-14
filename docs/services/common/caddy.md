@@ -28,17 +28,23 @@ test.ilnmors.com
     import crowdsec_log
     route {
         crowdsec
-        reverse_proxy https://test.app.ilnmors.internal
+        reverse_proxy https://test.app.ilnmors.internal {
+            header_up Host {http.reverse_proxy.upstream.host}
+        }
     }
 }
 # App server
+{
+    servers {
+        trusted_proxies static {{ hostvars['fw']['network4']['auth']['server'] }} {{ hostvars['fw']['network6']['auth']['server'] }}
+    }
+}
 test.app.ilnmors.internal
 {
      import internal_tls
-     trusted_proxies {{ hostvars['fw']['network4']['auth']['server'] }} {{ hostvars['fw']['network6']['auth']['server'] }}
      route {
         reverse_proxy host.containers.internal:3000 {
-            header_up Host {header.X-Forwarded-Host} {Host}
+            header_up Host {http.request.header.X-Forwarded-Host}
         }
      }
 }

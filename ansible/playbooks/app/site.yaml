@@ -153,6 +153,14 @@
           tags: ["site", "kopia"]
       tags: ["site", "kopia"]
 
+    - name: Set caddy
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_caddy"
+        apply:
+          tags: ["site", "caddy"]
+      tags: ["site", "caddy"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 
