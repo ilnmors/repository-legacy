@@ -1,3 +1,4 @@
+.ansible
 data/bin/*
 data/volumes/*
 data/images/*
