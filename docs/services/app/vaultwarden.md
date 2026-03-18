@@ -33,7 +33,6 @@ ALTER DATABASE vaultwarden_db OWNER TO vaultwarden;
 ```yaml
 - name: Set connected services list
   ansible.builtin.set_fact:
-    # telegraf has no database
     connected_services:
       - ...
       - "vaultwarden"

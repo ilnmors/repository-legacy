@@ -34,7 +34,6 @@ ALTER DATABASE gitea_db OWNER TO gitea;
 ```yaml
 - name: Set connected services list
   ansible.builtin.set_fact:
-    # telegraf has no database
     connected_services:
       - ...
       - "gitea"
