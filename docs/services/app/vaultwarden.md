@@ -5,7 +5,7 @@
 ### Create database
 
 - Create the password with `openssl rand -base64 32`
-  - Save this value in secrets.yaml in `postgres.password.vaultwarden`
+  - Save this value in secrets.yaml in `postgresql.password.vaultwarden`
   - Access infra server to create vaultwarden_db with `podman exec -it postgresql psql -U postgres`
 
 ```SQL
