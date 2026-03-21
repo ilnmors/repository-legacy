@@ -1,0 +1,39 @@
+---
+- name: Set actual budget container subuid
+  ansible.builtin.set_fact:
+    actualbudget_subuid: "101000"
+
+- name: Create actual budget directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/data/containers/actual-budget"
+    state: "directory"
+    owner: "{{ actualbudget_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  become: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "ACTUAL_OPENID_CLIENT_SECRET"
+    data: "{{ hostvars['console']['actualbudget']['oidc']['secret'] }}"
+    state: "present"
+    force: true
+  notify: "notification_restart_actual-budget"
+  no_log: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/actual-budget/actual-budget.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/actual-budget.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_actual-budget"
+
+- name: Enable actual-budget.service
+  ansible.builtin.systemd:
+    name: "actual-budget.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

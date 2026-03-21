@@ -77,3 +77,4 @@ version:
     gitea: "1.25.5"
     redis: "8.6.1"
     immich: "v2.6.1"
+    actualbudget: "26.3.0"

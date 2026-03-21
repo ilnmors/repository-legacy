@@ -42,3 +42,14 @@
   changed_when: false
   listen: "notification_restart_immich-ml"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart actual-budget
+  ansible.builtin.systemd:
+    name: "actual-budget.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_actual-budget"
+  ignore_errors: true # noqa: ignore-errors

@@ -185,6 +185,14 @@
           tags: ["site", "immich"]
       tags: ["site", "immich"]
 
+    - name: Set actual budget
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_actual-budget"
+        apply:
+          tags: ["site", "actual-budget"]
+      tags: ["site", "actual-budget"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

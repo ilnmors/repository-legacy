@@ -1,0 +1,29 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Actual Budget
+
+[Container]
+Image=ghcr.io/actualbudget/actual-server:{{ version['containers']['actualbudget'] }}
+ContainerName=actual-budget
+HostName=actual-budget
+
+PublishPort=5006:5006
+
+Volume=%h/data/containers/actual-budget:/data:rw
+
+Environment="TZ=Asia/Seoul"
+Environment="ACTUAL_OPENID_DISCOVERY_URL=https://authelia.ilnmors.com/.well-known/openid-configuration"
+Environment="ACTUAL_OPENID_CLIENT_ID=actual-budget"
+Environment="ACTUAL_OPENID_SERVER_HOSTNAME=https://budget.ilnmors.com"
+Environment="ACTUAL_OPENID_AUTH_METHOD=oauth2"
+Secret=ACTUAL_OPENID_CLIENT_SECRET,type=env
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
