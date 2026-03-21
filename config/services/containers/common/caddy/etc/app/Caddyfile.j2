@@ -40,3 +40,9 @@ gitea.app.ilnmors.internal {
                header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
+immich.app.ilnmors.internal {
+        import private_tls
+        reverse_proxy host.containers.internal:2283 {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}

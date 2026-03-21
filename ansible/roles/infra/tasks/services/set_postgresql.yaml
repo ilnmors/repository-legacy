@@ -11,6 +11,7 @@
       - "grafana"
       - "vaultwarden"
       - "gitea"
+      - "immich"
 
 - name: Create postgresql directory
   ansible.builtin.file:
@@ -108,7 +109,7 @@
         group: "svadmins"
         mode: "0600"
 
-    - name: Deploy resoring data sql files
+    - name: Deploy restoring data sql files
       ansible.builtin.copy:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_{{ item }}.sql"
         dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ index_num + 1 }}_pg_{{ item }}.sql"

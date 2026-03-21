@@ -39,3 +39,6 @@ storage:
     label: "APP_DATA"
     level: "raid10"
     mount_point: "/home/app/data"
+
+redis:
+  immich: "6379"

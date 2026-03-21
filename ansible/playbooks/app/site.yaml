@@ -177,6 +177,14 @@
           tags: ["site", "gitea"]
       tags: ["site", "gitea"]
 
+    - name: Set immich
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_immich"
+        apply:
+          tags: ["site", "immich"]
+      tags: ["site", "immich"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

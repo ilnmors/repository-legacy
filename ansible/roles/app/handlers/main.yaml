@@ -20,3 +20,25 @@
   changed_when: false
   listen: "notification_restart_gitea"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart immich
+  ansible.builtin.systemd:
+    name: "immich.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_immich"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart immich-ml
+  ansible.builtin.systemd:
+    name: "immich-ml.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_immich-ml"
+  ignore_errors: true # noqa: ignore-errors

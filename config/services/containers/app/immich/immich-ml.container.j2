@@ -1,0 +1,32 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Immich Machine Learning
+
+After=immich.service
+Wants=immich.service
+
+[Container]
+Image=ghcr.io/immich-app/immich-machine-learning:{{ version['containers']['immich'] }}-openvino
+
+ContainerName=immich-ml
+HostName=immich-ml
+
+PublishPort=3003:3003
+
+# iGPU access for OpenVINO
+AddDevice=/dev/dri:/dev/dri
+PodmanArgs=--group-add keep-groups
+
+Volume=%h/containers/immich/ml/cache:/cache:rw
+
+Environment="TZ=Asia/Seoul"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

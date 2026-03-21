@@ -1,0 +1,49 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Immich
+
+After=redis_immich.service
+Wants=redis_immich.service
+
+[Container]
+Image=ghcr.io/immich-app/immich-server:{{ version['containers']['immich'] }}
+
+ContainerName=immich
+HostName=immich
+
+PublishPort=2283:2283
+
+# iGPU access
+AddDevice=/dev/dri:/dev/dri
+PodmanArgs=--group-add keep-groups
+
+# Volumes
+Volume=%h/data/containers/immich:/data:rw
+Volume=%h/containers/immich/ssl:/etc/ssl/immich:ro
+
+# Environment
+Environment="TZ=Asia/Seoul"
+Environment="REDIS_HOSTNAME=host.containers.internal"
+Environment="REDIS_PORT={{ hostvars['app']['redis']['immich'] }}"
+Environment="REDIS_DBINDEX=0"
+
+# Database
+Environment="DB_HOSTNAME={{ infra_uri['postgresql']['domain'] }}"
+Environment="DB_PORT={{ infra_uri['postgresql']['ports']['tcp'] }}"
+Environment="DB_USERNAME=immich"
+Environment="DB_DATABASE_NAME=immich_db"
+Environment="DB_PASSWORD_FILE=/run/secrets/DB_PASSWORD"
+Environment="DB_SSL_MODE=verify-full"
+Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/immich/ilnmors_root_ca.crt"
+Secret=IMMICH_DB_PASSWORD,target=/run/secrets/DB_PASSWORD
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
