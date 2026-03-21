@@ -34,6 +34,7 @@
     data: "{{ hostvars['console']['postgresql']['password']['gitea'] }}"
     state: "present"
     force: true
+  notify: "notification_restart_gitea"
   no_log: true
 
 - name: Deploy container file
