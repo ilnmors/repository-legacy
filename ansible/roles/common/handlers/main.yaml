@@ -27,14 +27,14 @@
   listen: "notification_reload_networkctl"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Reload systemd-resolved.service
+- name: Restart systemd-resolved.service
   ansible.builtin.systemd:
     name: "systemd-resolved.service"
-    state: "reloaded"
+    state: "restarted"
     enabled: true
   become: true
   changed_when: false
-  listen: "notification_reload_resolved"
+  listen: "notification_restart_resolved"
   ignore_errors: true # noqa: ignore-errors
 
 - name: Restart systemd-timesyncd

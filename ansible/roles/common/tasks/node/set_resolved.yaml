@@ -28,7 +28,7 @@
     group: "systemd-resolve"
     mode: "0640"
   become: true
-  notify: "notification_reload_resolved"
+  notify: "notification_restart_resolved"
 
 - name: Restart systemd-resolved.service when it is initiated
   ansible.builtin.systemd:
