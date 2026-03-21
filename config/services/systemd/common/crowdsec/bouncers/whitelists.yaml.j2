@@ -1,11 +1,17 @@
 name: crowdsecurity/whitelists
-description: "Whitelist console/admin hosts only"
+description: "Local whitelist policy"
 whitelist:
-    reason: "trusted admin hosts"
+    reason: "rules"
     ip:
+        # Console IP lists
         - "127.0.0.1"
         - "::1"
         - "{{ hostvars['fw']['network4']['console']['client'] }}"
         - "{{ hostvars['fw']['network4']['console']['wg'] }}"
         - "{{ hostvars['fw']['network6']['console']['client'] }}"
         - "{{ hostvars['fw']['network6']['console']['wg'] }}"
+{% if node['name'] == 'auth' %}
+    expression:
+        # budget local-first sql scrap rule
+        - "evt.Meta.target_fqdn == 'budget.ilnmors.com' && evt.Meta.http_path contains '/data/migrations/'"
+{% endif %}
