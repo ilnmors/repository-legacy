@@ -15,6 +15,7 @@
                                 key_alg hmac-sha256
                                 key "{file./run/secrets/CADDY_ACME_KEY}"
                         }
+                        resolvers {{ infra_uri['bind']['domain'] }}
                 }
         }
 }
