@@ -14,4 +14,6 @@ whitelist:
     expression:
         # budget local-first sql scrap rule
         - "evt.Meta.target_fqdn == 'budget.ilnmors.com' && evt.Meta.http_path contains '/data/migrations/'"
+        # immich thumbnail request 404 error false positive
+        - "evt.Meta.target_fqdn == 'immich.ilnmors.com' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'"
 {% endif %}

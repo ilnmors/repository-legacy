@@ -228,6 +228,11 @@ auth@auth:~$ sudo cscli alerts list
 │ 9  │ Ip:138.68.144.227  │ crowdsecurity/jira_cve-2021-26086 │         │    │ ban:1     │ 2026-03-06 04:18:18.35776077 +0000 UTC  │
 ╰────┴────────────────────┴───────────────────────────────────┴─────────┴────┴───────────┴─────────────────────────────────────────╯
 
+## Log check and inspect
 
+fw@fw:~$ sudo cscli alerts inspect 230 -d
 
+- check the log and analyze and make expression
+  - e.g. immich
+    - evt.Meta.target_fqdn == 'immich.ilnmors.com' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'
 
