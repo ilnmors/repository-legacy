@@ -59,3 +59,48 @@ ALTER DATABASE paperless_db OWNER TO paperless;
 - My Profiles: Connect new social account: Authelia
   - Continue
   - Login with Authelia
+
+## The non-standard pdf file
+
+- Some pdf files doesn't follow the standard, for example korean court or government pdf files.
+- Before upload this kind of non-standard pdf files, convert it first.
+- This process uses ghostscript and powershell in Windows for console
+
+```PowerShell
+# 1. The engine
+$gsPath = "C:\Program Files\gs\gs10.07.0\bin\gswin64c.exe"
+
+# 2. new folder which the converted file will be stored
+$outputDirName = "converted_pdfs"
+$outputDir = Join-Path (Get-Location) $outputDirName
+if (!(Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir }
+
+# 3. Find all pdf files
+$files = Get-ChildItem -Filter *.pdf
+
+foreach ($file in $files) {
+    if ($file.FullName -like "*$outputDirName*") { continue }
+    
+    $inputPath = $file.FullName
+    $outputPath = Join-Path $outputDir $file.Name
+    
+    Write-Host "convert: $($file.Name)" -ForegroundColor Cyan
+    
+    $gsArgs = @(
+        "-sDEVICE=pdfwrite",
+        "-dCompatibilityLevel=1.4",
+        "-dPDFSETTINGS=/default",
+        "-dNOPAUSE",
+        "-dQUIET",
+        "-dBATCH",
+        "-dNoOutputFonts", # Change all text as image
+        "-sOutputFile=$outputPath",
+        "$inputPath"
+    )
+    
+    # 실행
+    & $gsPath @gsArgs
+}
+
+Write-Host "`n[Complete] All file is stored in '$outputDirName'." -ForegroundColor Green
+```
