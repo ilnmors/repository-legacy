@@ -53,3 +53,14 @@
   changed_when: false
   listen: "notification_restart_actual-budget"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart paperless
+  ansible.builtin.systemd:
+    name: "paperless.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_paperless"
+  ignore_errors: true # noqa: ignore-errors

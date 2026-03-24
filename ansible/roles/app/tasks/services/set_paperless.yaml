@@ -1,0 +1,128 @@
+---
+- name: Set redis service name
+  ansible.builtin.set_fact:
+    redis_service: "paperless"
+    redis_subuid: "100998"
+
+- name: Create redis_paperless directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ redis_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "containers/redis"
+    - "containers/redis/{{ redis_service }}"
+    - "containers/redis/{{ redis_service }}/data"
+  become: true
+
+- name: Deploy redis config file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+
+- name: Deploy redis container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  register: "is_redis_conf"
+
+- name: Enable (Restart) redis service
+  ansible.builtin.systemd:
+    name: "redis_{{ redis_service }}.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_redis_conf.changed # noqa: no-handler
+
+- name: Set paperless subuid
+  ansible.builtin.set_fact:
+    paperless_subuid: "100999"
+
+- name: Create paperless directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ paperless_subuid }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/paperless"
+    - "data/containers/paperless/data"
+    - "data/containers/paperless/media"
+    - "data/containers/paperless/consume"
+    - "containers/paperless"
+    - "containers/paperless/ssl"
+  become: true
+
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/paperless/ssl/ilnmors_root_ca.crt"
+    owner: "{{ paperless_subuid }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_paperless"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "PAPERLESS_SECRET_KEY"
+      value: "{{ hostvars['console']['paperless']['session_secret'] }}"
+    - name: "PAPERLESS_DBPASS"
+      value: "{{ hostvars['console']['postgresql']['password']['paperless'] }}"
+    - name: "PAPERLESS_SOCIALACCOUNT_PROVIDERS"
+      value: |-
+        {
+          "openid_connect": {
+            "SCOPE": ["openid", "profile", "email"],
+            "OAUTH_PKCE_ENABLED": true,
+            "APPS": [
+              {
+                "provider_id": "authelia",
+                "name": "Authelia",
+                "client_id": "paperless",
+                "secret": "{{ hostvars['console']['paperless']['oidc']['secret'] }}",
+                "settings": {
+                  "server_url": "https://authelia.ilnmors.com/.well-known/openid-configuration",
+                  "token_auth_method": "client_secret_post"
+                }
+              }
+            ]
+          }
+        }
+  notify: "notification_restart_paperless"
+  no_log: true
+
+- name: Deploy paperless.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/paperless/paperless.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/paperless.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_paperless"
+
+- name: Enable paperless.service
+  ansible.builtin.systemd:
+    name: "paperless.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

@@ -193,6 +193,14 @@
           tags: ["site", "actual-budget"]
       tags: ["site", "actual-budget"]
 
+    - name: Set paperless
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_paperless"
+        apply:
+          tags: ["site", "paperless"]
+      tags: ["site", "paperless"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

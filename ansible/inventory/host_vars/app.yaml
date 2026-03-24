@@ -42,3 +42,4 @@ storage:
 
 redis:
   immich: "6379"
+  paperless: "6380"

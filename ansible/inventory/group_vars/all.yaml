@@ -78,3 +78,4 @@ version:
     redis: "8.6.1"
     immich: "v2.6.1"
     actualbudget: "26.3.0"
+    paperless: "2.20.13"

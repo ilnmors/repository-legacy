@@ -47,10 +47,15 @@ immich.app.ilnmors.internal {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-
 budget.app.ilnmors.internal {
         import private_tls
         reverse_proxy host.containers.internal:5006 {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}
+paperless.app.ilnmors.internal {
+        import private_tls
+        reverse_proxy host.containers.internal:8001 {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
