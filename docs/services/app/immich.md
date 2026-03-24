@@ -33,7 +33,7 @@ CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
 
 - Create the secret with `openssl rand -base64 32`
 - Save this value in secrets.yaml in `immich.il.password`
-- 
+
 ### Add postgresql dump backup list
 
 - [set_postgresql.yaml](../../../ansible/roles/infra/tasks/services/set_postgresql.yaml)
