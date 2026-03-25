@@ -60,6 +60,16 @@ ALTER DATABASE paperless_db OWNER TO paperless;
   - Continue
   - Login with Authelia
 
+### OCR configuration
+
+- Configuration: OCR settings
+  - Output Type: pdfa
+  - Mode: skip
+    - When the archive file has broken ocr text, then conduct replcae command manually
+  - Skip archive File: never
+  - Deskew: disable \(toggle to enable and once more to active disable option\)
+  - rotate: disable \(toggle to enable and once more to active disable option\)
+
 ## The non-standard pdf file
 
 - Some pdf files doesn't follow the standard, for example korean court or government pdf files.

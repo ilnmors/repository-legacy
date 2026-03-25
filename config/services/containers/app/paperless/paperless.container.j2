@@ -21,12 +21,14 @@ Volume=%h/containers/paperless/ssl:/etc/ssl/paperless:ro
 
 # General
 Environment="TZ=Asia/Seoul"
+Environment="PAPERLESS_TIME_ZONE=Asia/Seoul"
 Environment="PAPERLESS_URL=https://paperless.ilnmors.com"
 Environment="PAPERLESS_OCR_LANGUAGE=kor+eng"
 Environment="PAPERLESS_OCR_LANGUAGES=kor"
-Environment="PAPERLESS_OCR_MODE=force"
+# Environment="PAPERLESS_OCR_MODE=force"
 # Environment="PAPERLESS_TASK_WORKERS=1"
 # Environment="PAPERLESS_THREADS_PER_WORKER=1"
+Environment="PAPERLESS_WORKER_TIMEOUT=7200"
 Secret=PAPERLESS_SECRET_KEY,type=env
 
 # Redis
