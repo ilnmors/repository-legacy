@@ -109,6 +109,15 @@ paperless.ilnmors.com {
                 }
         }  
 }
+vikunja.ilnmors.com {
+        import crowdsec_log
+        route {
+                crowdsec
+                reverse_proxy https://vikunja.app.ilnmors.internal {
+                        header_up HOST {http.reverse_proxy.upstream.host}
+                }
+        }
+}
 
 # Internal domain
 auth.ilnmors.internal {

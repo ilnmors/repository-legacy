@@ -1,0 +1,56 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Vikunja
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/vikunja/vikunja:{{ version['containers']['vikunja'] }}
+ContainerName=vikunja
+HostName=vikunja
+PublishPort=3456:3456/tcp
+
+# Volumes
+Volume=%h/data/containers/vikunja:/app/vikunja/files:rw
+Volume=%h/containers/vikunja/ssl:/etc/ssl/vikunja:ro
+
+# General
+Environment="TZ=Asia/Seoul"
+Environment="VIKUNJA_DEFAULTSETTINGS_TIMEZONE=Asia/Seoul"
+Environment="VIKUNJA_SERVICE_TIMEZONE=Asia/Seoul"
+Environment="VIKUNJA_SERVICE_PUBLICURL=https://vikunja.ilnmors.com"
+Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=false"
+Secret=VIKUNJA_SERVICE_JWTSECRET,type=env
+
+
+# Database
+Environment="VIKUNJA_DATABASE_TYPE=postgres"
+Environment="VIKUNJA_DATABASE_HOST={{ infra_uri['postgresql']['domain'] }}"
+Environment="VIKUNJA_DATABASE_USER=vikunja"
+Environment="VIKUNJA_DATABASE_DATABASE=vikunja_db"
+Environment="VIKUNJA_DATABASE_SSLMODE=verify-full"
+Environment="VIKUNJA_DATABASE_SSLROOTCERT=/etc/ssl/vikunja/ilnmors_root_ca.crt"
+Secret=VIKUNJA_DATABASE_PASSWORD,type=env
+
+
+# OIDC
+Environment="VIKUNJA_AUTH_OPENID_ENABLED=true"
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_NAME=Authelia"
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_AUTHURL=https://authelia.ilnmors.com"
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTID=vikunja"
+# Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_SCOPE=" default value = openid email profile
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_USERNAMEFALLBACK=true"
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_EMAILFALLBACK=true"
+Secret=VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTSECRET,type=env
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

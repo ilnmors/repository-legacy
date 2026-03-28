@@ -13,6 +13,7 @@
       - "gitea"
       - "immich"
       - "paperless"
+      - "vikunja"
 
 - name: Create postgresql directory
   ansible.builtin.file:

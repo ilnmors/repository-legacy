@@ -201,6 +201,14 @@
           tags: ["site", "paperless"]
       tags: ["site", "paperless"]
 
+    - name: Set vikunja
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_vikunja"
+        apply:
+          tags: ["site", "vikunja"]
+      tags: ["site", "vikunja"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

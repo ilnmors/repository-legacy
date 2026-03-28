@@ -59,3 +59,9 @@ paperless.app.ilnmors.internal {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
+vikunja.app.ilnmors.internal {
+        import private_tls
+        reverse_proxy host.containers.internal:3456 {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}
