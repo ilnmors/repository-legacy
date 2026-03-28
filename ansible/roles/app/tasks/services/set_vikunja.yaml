@@ -3,7 +3,7 @@
   ansible.builtin.set_fact:
     vikunja_subuid: "100999"
 
-- name: Create paperless directory
+- name: Create vikunja directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
