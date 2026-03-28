@@ -74,17 +74,16 @@
         - [x] Prometheus \(alloy - push\)
         - [x] Loki \(alloy\)
         - [x] Grafana 
-        <!-- 
+    <!-- 
         Mail service is not needed, especially Diun is not needed.
         - Postfix
         - Dovecot
         - mbsync
         - Diun
-        -->
     - Study \(Rootless container\):
         - Kali
         - Debian 
-
+    -->
 
 ## auth \(Authorization\)
 
@@ -115,30 +114,30 @@
     - Disk: SATA Controller
 - Services:
     - OIDC native services:
+        - [x] Vaultwarden
+        - [x] Gitea
+        - [x] Immich
+        - [x] Actual budget
+        - [x] Paperless-ngx
+        - [x] vikunja
         - OpenCloud \(with Radicale, Collabora Web Office\)
-        - Vikunja \(with CalDAV\)
-        - Gitea
         - Outline
         - Wiki.js
         - WriteFreely
-        - Immich
         - MediaCMS
         - Funkwhale
         - Kavita
         - Audiobookshelf
-        - we-promise/sure - budget
-        - Paperless-ngx
         - Miniflux
         - Linkwarden
         - Ralph
         - Conduit
         - SnappyMail
-        - Vaultwarden
-        <!--
+    <!--
         - n8n
-        -->
     - Forward_auth
         - Homepage
+    -->
 
 ## External Backup server
 
