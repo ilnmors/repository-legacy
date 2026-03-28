@@ -24,6 +24,7 @@
     owner: "{{ ansible_user }}"
     group: "svadmins"
     mode: "0644"
+  register: "is_redis_conf"
 
 - name: Deploy redis container file
   ansible.builtin.template:
@@ -32,7 +33,7 @@
     owner: "{{ ansible_user }}"
     group: "svadmins"
     mode: "0644"
-  register: "is_redis_conf"
+  register: "is_redis_containerfile"
 
 - name: Enable (Restart) redis service
   ansible.builtin.systemd:
@@ -41,7 +42,7 @@
     enabled: true
     daemon_reload: true
     scope: "user"
-  when: is_redis_conf.changed # noqa: no-handler
+  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
 
 - name: Add user in video, render group
   ansible.builtin.user:
