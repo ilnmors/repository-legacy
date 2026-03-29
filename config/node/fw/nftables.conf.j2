@@ -30,6 +30,7 @@ define HOSTS4_INFRA = {{ hostvars['fw']['network4']['infra']['server'] }}
 define HOSTS4_AUTH = {{ hostvars['fw']['network4']['auth']['server'] }}
 define HOSTS4_APP = {{ hostvars['fw']['network4']['app']['server'] }}
 define HOSTS4_NAS = {{ hostvars['fw']['network4']['nas']['client'] }}
+define HOSTS4_PRINTER = {{ hostvars['fw']['network4']['printer']['client'] }}
 
 define HOSTS6_FW = { {{ hostvars['fw']['network6']['firewall'].values() | join(', ') }} }
 define HOSTS6_BLOCKY = {{ hostvars['fw']['network6']['blocky']['server'] }}
@@ -146,6 +147,8 @@ table inet filter {
                 # Kopia/NAS Console > NAS
                 oifname $IF_CLIENT ip saddr $HOSTS4_CONSOLE ip daddr $HOSTS4_NAS tcp dport { $PORTS_NAS, $PORTS_KOPIA } accept comment "allow ipv4 web connection (DSM, KOPIA): CONSOLE > FW > CLIENT NAS"
                 oifname $IF_CLIENT ip6 saddr $HOSTS6_CONSOLE ip6 daddr $HOSTS6_NAS tcp dport { $PORTS_NAS, $PORTS_KOPIA } accept comment "allow ipv6 web connection (DSM, KOPIA): CONSOLE > FW > CLIENT NAS"
+                # Printer
+                oifname $IF_CLIENT ip saddr $HOSTS4_CONSOLE ip daddr $HOSTS4_PRINTER accept comment "allow ipv4 printer connection: CONSOLE > FW > PRINTER"
 
                 iifname $IF_WAN jump wan comment "set WAN interface rules"
                 iifname $IF_CLIENT jump client comment "set CLIENT interface rules"
