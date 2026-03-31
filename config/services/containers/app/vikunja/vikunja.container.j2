@@ -42,8 +42,9 @@ Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_NAME=Authelia"
 Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_AUTHURL=https://authelia.ilnmors.com"
 Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTID=vikunja"
 # Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_SCOPE=" default value = openid email profile
-Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_USERNAMEFALLBACK=true"
-Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_EMAILFALLBACK=true"
+# Vikunja doesn't support OIDC and local dual login.
+# Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_USERNAMEFALLBACK=true"
+# Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_EMAILFALLBACK=true"
 Secret=VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTSECRET,type=env
 
 [Service]

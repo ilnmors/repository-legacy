@@ -27,11 +27,6 @@ ALTER DATABASE vikunja_db OWNER TO vikunja;
 - Create the secret with `LC_ALL=C tr -dc 'A-Za-z0-9!#%&()*+,-./:;<=>?@[\]^_{|}~' </dev/urandom | head -c 32`
   - Save this value in secrets.yaml in `vikunja.session_secret`
 
-### Create admin password
-
-- Create the secret with `openssl rand -base64 32`
-- Save this value in secrets.yaml in `vikunja.il.password`
-
 ### Add postgresql dump backup list
 
 - [set_postgresql.yaml](../../../ansible/roles/infra/tasks/services/set_postgresql.yaml)
@@ -45,6 +40,11 @@ ALTER DATABASE vikunja_db OWNER TO vikunja;
 ```
 
 ## Configuration
+
+- !NOTE!
+  - vikunja doesn't support local + oidc dual login environment. Don't use local account.
+  - Just use oidc login.
+  - ignore process below.
 
 ### Create local account
 
