@@ -1,13 +1,9 @@
 ---
-- name: Set x509-exporter container subuid
-  ansible.builtin.set_fact:
-    x509_exporter_subuid: "165533" # nobody - 65534
-
 - name: Create x509-exporter directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     state: "directory"
-    owner: "{{ x509_exporter_subuid }}"
+    owner: "{{ services['x509-exporter']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -20,7 +16,7 @@
     content: |
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/x509-exporter/certs/{{ item.name }}"
-    owner: "{{ x509_exporter_subuid }}"
+    owner: "{{ services['x509-exporter']['subuid'] }}"
     group: "svadmins"
     mode: "0440"
   loop:

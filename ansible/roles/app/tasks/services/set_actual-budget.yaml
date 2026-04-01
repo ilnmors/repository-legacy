@@ -1,13 +1,9 @@
 ---
-- name: Set actual budget container subuid
-  ansible.builtin.set_fact:
-    actualbudget_subuid: "101000"
-
 - name: Create actual budget directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/data/containers/actual-budget"
     state: "directory"
-    owner: "{{ actualbudget_subuid }}"
+    owner: "{{ services['actualbudget']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   become: true

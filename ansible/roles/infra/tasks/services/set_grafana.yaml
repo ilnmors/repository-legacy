@@ -1,12 +1,8 @@
 ---
-- name: Set grafana container subuid
-  ansible.builtin.set_fact:
-    grafana_subuid: "100471"
-
 - name: Create grafana directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
-    owner: "{{ grafana_subuid }}"
+    owner: "{{ services['grafana']['subuid'] }}"
     group: "svadmins"
     state: "directory"
     mode: "0770"
@@ -24,7 +20,7 @@
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/grafana/ssl/{{ root_cert_filename }}"
-    owner: "{{ grafana_subuid }}"
+    owner: "{{ services['grafana']['subuid'] }}"
     group: "svadmins"
     mode: "0400"
   become: true
@@ -51,7 +47,7 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/grafana/etc/{{ item }}"
-    owner: "{{ grafana_subuid }}"
+    owner: "{{ services['grafana']['subuid'] }}"
     group: "svadmins"
     mode: "0400"
   loop:
@@ -65,7 +61,7 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/provisioning/datasources/datasources.yaml.j2"
     dest: "{{ node['home_path'] }}/containers/grafana/etc/provisioning/datasources/datasources.yaml"
-    owner: "{{ grafana_subuid }}"
+    owner: "{{ services['grafana']['subuid'] }}"
     group: "svadmins"
     mode: "0400"
   become: true

@@ -1,12 +1,8 @@
 ---
-- name: Set ca container subuid
-  ansible.builtin.set_fact:
-    ca_subuid: "100999"
-
 - name: Create ca directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
-    owner: "{{ ca_subuid }}"
+    owner: "{{ services['ca']['subuid'] }}"
     group: "svadmins"
     state: "directory"
     mode: "0770"
@@ -32,7 +28,7 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ca/config/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/ca/config/{{ item }}"
-    owner: "{{ ca_subuid }}"
+    owner: "{{ services['ca']['subuid'] }}"
     group: "svadmins"
     mode: "0400"
   loop:
@@ -46,7 +42,7 @@
     content: |
       {{ item.value }}
     dest: "{{ item.path }}/{{ item.name }}"
-    owner: "{{ ca_subuid }}"
+    owner: "{{ services['ca']['subuid'] }}"
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:

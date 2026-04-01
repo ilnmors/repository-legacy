@@ -37,30 +37,37 @@ services:
     domain: "postgresql"
     ports:
       tcp: "5432" # postgresql db connection port
+    subuid: "100998"
   ldap:
     domain: "ldap"
     ports:
       http: "17170"
       ldaps: "6360"
+    subuid: "100999"
   ca:
     domain: "ca"
     ports:
       https: "9000"
+    subuid: "100999"
   x509-exporter:
     ports:
       http: "9793"
+    subuid: "165533"
   prometheus:
     domain: "prometheus"
     ports:
       https: "9090"
+    subuid: "165533"
   loki:
     domain: "loki"
     ports:
       https: "3100"
+    subuid: "110000"
   grafana:
     domain: "grafana"
     ports:
       http: "3000"
+    subuid: "100471"
   caddy:
     ports:
       http: "2080"
@@ -77,6 +84,8 @@ services:
     domain: "authelia"
     ports:
       http: "9091"
+  redis:
+    subuid: "100998"
   vaultwarden:
     domain:
       public: "vault"
@@ -89,6 +98,7 @@ services:
       internal: "gitea.app"
     ports:
       http: "3000"
+    subuid: "100999"
   immich:
     domain:
       public: "immich"
@@ -105,6 +115,7 @@ services:
       internal: "budget.app"
     ports:
       http: "5006"
+    subuid: "101000"
   paperless:
     domain:
       public: "paperless"
@@ -112,12 +123,14 @@ services:
     ports:
       http: "8001"
       redis: "6380"
+    subuid: "100999"
   vikunja:
     domain:
       public: "vikunja"
       internal: "vikunja.app"
     ports:
       http: "3456"
+    subuid: "100999"
 
 version:
   packages:

@@ -1,8 +1,4 @@
 ---
-- name: Set postgresql container subuid
-  ansible.builtin.set_fact:
-    postgresql_subuid: "100998"
-
 - name: Set connected services list
   ansible.builtin.set_fact:
     connected_services:
@@ -19,7 +15,7 @@
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     state: "directory"
-    owner: "{{ postgresql_subuid }}"
+    owner: "{{ services['postgresql']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -56,7 +52,7 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/config/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/postgresql/config/{{ item }}"
-    owner: "{{ postgresql_subuid }}"
+    owner: "{{ services['postgresql']['subuid'] }}"
     group: "svadmins"
     mode: "0600"
   loop:
@@ -71,7 +67,7 @@
     content: |
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/postgresql/ssl/{{ item.name }}"
-    owner: "{{ postgresql_subuid }}"
+    owner: "{{ services['postgresql']['subuid'] }}"
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:
@@ -107,7 +103,7 @@
       ansible.builtin.copy:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_cluster.sql"
         dest: "{{ node['home_path'] }}/containers/postgresql/init/0_pg_cluster.sql"
-        owner: "{{ postgresql_subuid }}"
+        owner: "{{ services['postgresql']['subuid'] }}"
         group: "svadmins"
         mode: "0600"
 
@@ -115,7 +111,7 @@
       ansible.builtin.copy:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_{{ item }}.sql"
         dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ index_num + 1 }}_pg_{{ item }}.sql"
-        owner: "{{ postgresql_subuid }}"
+        owner: "{{ services['postgresql']['subuid'] }}"
         group: "svadmins"
         mode: "0600"
       loop: "{{ connected_services }}"

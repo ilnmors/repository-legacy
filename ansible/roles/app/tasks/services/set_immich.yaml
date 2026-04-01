@@ -2,13 +2,12 @@
 - name: Set redis service name
   ansible.builtin.set_fact:
     redis_service: "immich"
-    redis_subuid: "100998"
 
 - name: Create redis_immich directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ redis_subuid }}"
+    owner: "{{ services['redis']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:

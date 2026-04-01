@@ -2,13 +2,12 @@
 - name: Set redis service name
   ansible.builtin.set_fact:
     redis_service: "paperless"
-    redis_subuid: "100998"
 
 - name: Create redis_paperless directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ redis_subuid }}"
+    owner: "{{ services['redis']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -44,15 +43,11 @@
     scope: "user"
   when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
 
-- name: Set paperless subuid
-  ansible.builtin.set_fact:
-    paperless_subuid: "100999"
-
 - name: Create paperless directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ paperless_subuid }}"
+    owner: "{{ services['paperless']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -70,7 +65,7 @@
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/paperless/ssl/{{ root_cert_filename }}"
-    owner: "{{ paperless_subuid }}"
+    owner: "{{ services['paperless']['subuid'] }}"
     group: "svadmins"
     mode: "0440"
   become: true

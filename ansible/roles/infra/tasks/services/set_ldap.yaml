@@ -1,12 +1,8 @@
 ---
-- name: Set ldap container subuid
-  ansible.builtin.set_fact:
-    ldap_subuid: "100999"
-
 - name: Create ldap directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
-    owner: "{{ ldap_subuid }}"
+    owner: "{{ services['ldap']['subuid'] }}"
     group: "svadmins"
     state: "directory"
     mode: "0770"
@@ -21,7 +17,7 @@
     content: |
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/ldap/ssl/{{ item.name }}"
-    owner: "{{ ldap_subuid }}"
+    owner: "{{ services['ldap']['subuid'] }}"
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:

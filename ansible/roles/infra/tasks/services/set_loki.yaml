@@ -1,13 +1,9 @@
 ---
-- name: Set loki container subuid
-  ansible.builtin.set_fact:
-    loki_subuid: "110000" # 10001
-
 - name: Create loki directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     state: "directory"
-    owner: "{{ loki_subuid }}"
+    owner: "{{ services['loki']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -21,7 +17,7 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/etc/loki.yaml.j2"
     dest: "{{ node['home_path'] }}/containers/loki/etc/loki.yaml"
-    owner: "{{ loki_subuid }}"
+    owner: "{{ services['loki']['subuid'] }}"
     group: "svadmins"
     mode: "0600"
   become: true
@@ -33,7 +29,7 @@
     content: |
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/loki/ssl/{{ item.name }}"
-    owner: "{{ loki_subuid }}"
+    owner: "{{ services['loki']['subuid'] }}"
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:

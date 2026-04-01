@@ -1,13 +1,9 @@
 ---
-- name: Set gitea container subuid
-  ansible.builtin.set_fact:
-    gitea_subuid: "100999"
-
 - name: Create gitea directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ gitea_subuid }}"
+    owner: "{{ services['gitea']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -21,7 +17,7 @@
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/gitea/ssl/{{ root_cert_filename }}"
-    owner: "{{ gitea_subuid }}"
+    owner: "{{ services['gitea']['subuid'] }}"
     group: "svadmins"
     mode: "0440"
   become: true

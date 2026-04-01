@@ -1,13 +1,9 @@
 ---
-- name: Set prometheus container subuid
-  ansible.builtin.set_fact:
-    prometheus_subuid: "165533" # nobody - 65534
-
 - name: Create prometheus directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     state: "directory"
-    owner: "{{ prometheus_subuid }}"
+    owner: "{{ services['prometheus']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -21,7 +17,7 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/prometheus/etc/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/prometheus/etc/{{ item }}"
-    owner: "{{ prometheus_subuid }}"
+    owner: "{{ services['prometheus']['subuid'] }}"
     group: "svadmins"
     mode: "0600"
   loop:
@@ -37,7 +33,7 @@
     content: |
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/prometheus/ssl/{{ item.name }}"
-    owner: "{{ prometheus_subuid }}"
+    owner: "{{ services['prometheus']['subuid'] }}"
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:

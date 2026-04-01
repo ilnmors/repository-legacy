@@ -1,13 +1,9 @@
 ---
-- name: Set vikunja subuid
-  ansible.builtin.set_fact:
-    vikunja_subuid: "100999"
-
 - name: Create vikunja directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ vikunja_subuid }}"
+    owner: "{{ services['vikunja']['subuid'] }}"
     group: "svadmins"
     mode: "0770"
   loop:
@@ -21,7 +17,7 @@
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/vikunja/ssl/{{ root_cert_filename }}"
-    owner: "{{ vikunja_subuid }}"
+    owner: "{{ services['vikunja']['subuid'] }}"
     group: "svadmins"
     mode: "0440"
   become: true
