@@ -8,7 +8,7 @@ listen_addresses = '*'
 # Max connections
 max_connections = 250
 # listen_port
-port = 5432
+port = {{ services['postgresql']['ports']['tcp'] }}
 
 # SSL
 ssl = on
