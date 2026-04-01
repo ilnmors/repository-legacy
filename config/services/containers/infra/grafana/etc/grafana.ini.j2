@@ -7,19 +7,19 @@ provisioning = /etc/grafana/provisioning
 
 [server]
 protocol = http
-http_port = 3000
-domain = grafana.ilnmors.internal
-root_url = http://grafana.ilnmors.internal/
+http_port = {{ services['grafana']['ports']['http'] }}
+domain = {{ services['grafana']['domain'] }}.{{ domain['internal'] }}
+root_url = http://{{ services['grafana']['domain'] }}.{{ domain['internal'] }}/
 router_logging = false
 
 [database]
 type = postgres
-host = {{ infra_uri['postgresql']['domain'] }}:{{ infra_uri['postgresql']['ports']['tcp'] }}
+host = {{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}
 name = grafana_db
 user = grafana
 password = $__file{/run/secrets/GF_DB_PASSWORD}
 ssl_mode = verify-full
-ca_cert_path = /etc/ssl/grafana/ilnmors_root_ca.crt
+ca_cert_path = /etc/ssl/grafana/{{ root_cert_filename }}
 
 [auth.ldap]
 enabled = true

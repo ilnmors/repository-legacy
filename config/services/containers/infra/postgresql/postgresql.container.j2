@@ -8,12 +8,12 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=ilnmors.internal/{{ node['name'] }}/postgres:pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}
+Image={{ domain['internal'] }}/{{ node['name'] }}/postgres:pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}
 
 ContainerName=postgresql
 HostName=postgresql
 
-PublishPort=5432:5432/tcp
+PublishPort={{ services['postgresql']['ports']['tcp'] }}:5432/tcp
 
 Volume=%h/containers/postgresql/data:/var/lib/postgresql:rw
 Volume=%h/containers/postgresql/config:/config:ro

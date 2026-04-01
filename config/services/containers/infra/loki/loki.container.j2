@@ -13,7 +13,7 @@ Image=docker.io/grafana/loki:{{ version['containers']['loki'] }}
 ContainerName=loki
 HostName=loki
 
-PublishPort=3100:3100/tcp
+PublishPort={{ services['loki']['ports']['https'] }}:3100/tcp
 
 Volume=%h/containers/loki/data:/loki:rw
 Volume=%h/containers/loki/etc:/etc/loki:ro

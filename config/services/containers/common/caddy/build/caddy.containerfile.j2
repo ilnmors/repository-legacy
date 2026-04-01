@@ -12,6 +12,6 @@ RUN xcaddy build \
 FROM docker.io/library/caddy:{{ version['containers']['caddy'] }}
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-COPY ./ilnmors_root_ca.crt /usr/local/share/ca-certificates/ilnmors_root_ca.crt
+COPY ./{{ root_cert_filename }} /usr/local/share/ca-certificates/{{ root_cert_filename }}
 
 RUN update-ca-certificates

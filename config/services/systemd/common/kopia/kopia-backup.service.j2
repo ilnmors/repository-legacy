@@ -32,9 +32,9 @@ BindPaths=/var/cache/kopia
 EnvironmentFile=/etc/secrets/{{ kopia_uid }}/kopia.env
 
 ExecStartPre=/usr/bin/kopia repository connect server \
-    --url=https://{{ infra_uri['kopia']['domain'] }}:{{ infra_uri['kopia']['ports']['https'] }} \
+    --url=https://{{ services['kopia']['domain'] }}.{{ domain['internal'] }}:{{ services['kopia']['ports']['https'] }} \
     --override-username={{ node['name'] }} \
-    --override-hostname={{ node['name'] }}.ilnmors.internal
+    --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
 
 {% if node['name'] == 'infra' %}
 ExecStart=/usr/bin/kopia snapshot create \

@@ -6,7 +6,7 @@
 //// Metric ouput
 prometheus.remote_write "prometheus" {
     endpoint {
-        url = "https://{{ infra_uri['prometheus']['domain'] }}:{{ infra_uri['prometheus']['ports']['https'] }}/api/v1/write"
+        url = "https://{{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}/api/v1/write"
     }
 }
 
@@ -71,8 +71,8 @@ prometheus.scrape "system" {
 ////// For Crowdsec metrics
 prometheus.scrape "crowdsec" {
     targets = [
-        { "__address__" = "{{ infra_uri['crowdsec']['domain'] }}:6060", "job" = "crowdsec" },
-        { "__address__" = "{{ infra_uri['crowdsec']['domain'] }}:60601", "job" = "crowdsec-bouncer" },
+        { "__address__" = "{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:6060", "job" = "crowdsec" },
+        { "__address__" = "{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:60601", "job" = "crowdsec-bouncer" },
     ]
     honor_labels = true
     forward_to = [prometheus.relabel.default_label.receiver]
@@ -83,7 +83,7 @@ prometheus.scrape "crowdsec" {
 ////// For postgresql metrics
 prometheus.exporter.postgres "postgresql" {
     data_source_names = [
-        "postgres://alloy@{{ infra_uri['postgresql']['domain'] }}:{{ infra_uri['postgresql']['ports']['tcp'] }}/postgres?sslmode=verify-full",
+        "postgres://alloy@{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}/postgres?sslmode=verify-full",
     ]
 }
 prometheus.scrape "postgresql" {
@@ -93,7 +93,7 @@ prometheus.scrape "postgresql" {
 ///// For certificates metrics
 prometheus.scrape "x509" {
     targets = [
-        { "__address__" = "{{ node['name'] }}.ilnmors.internal:9793" },
+        { "__address__" = "{{ node['name'] }}.{{ domain['internal'] }}:{{ services['x509-exporter']['ports']['http'] }}" },
     ]
     forward_to = [prometheus.relabel.default_label.receiver]
 }
@@ -103,7 +103,7 @@ prometheus.scrape "x509" {
 ////// For Input Caddy metrics
 prometheus.scrape "caddy" {
     targets = [
-        { "__address__" = "{{ node['name'] }}.ilnmors.internal:443" },
+        { "__address__" = "{{ node['name'] }}.{{ domain['internal'] }}:443" },
     ]
     scheme = "https"
     forward_to = [prometheus.relabel.default_label.receiver]
@@ -114,8 +114,8 @@ prometheus.scrape "caddy" {
 //// Logs output
 loki.write "loki" {
     endpoint {
-        url = "https://{{ infra_uri['loki']['domain'] }}:{{ infra_uri['loki']['ports']['https'] }}/loki/api/v1/push"
-        tenant_id = "ilnmors.internal"
+        url = "https://{{ services['loki']['domain'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}/loki/api/v1/push"
+        tenant_id = "{{ domain['internal'] }}"
     }
 }
 //// Logs relabel

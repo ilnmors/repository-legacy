@@ -13,7 +13,7 @@ Image=ghcr.io/immich-app/immich-machine-learning:{{ version['containers']['immic
 ContainerName=immich-ml
 HostName=immich-ml
 
-PublishPort=3003:3003
+PublishPort={{ services['immich-ml']['ports']['http'] }}:3003
 
 # iGPU access for OpenVINO
 AddDevice=/dev/dri:/dev/dri

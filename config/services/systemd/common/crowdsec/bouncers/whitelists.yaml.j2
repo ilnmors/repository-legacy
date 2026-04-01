@@ -13,7 +13,7 @@ whitelist:
 {% if node['name'] == 'auth' %}
     expression:
         # budget local-first sql scrap rule
-        - "evt.Meta.target_fqdn == 'budget.ilnmors.com' && evt.Meta.http_path contains '/data/migrations/'"
+        - "evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/data/migrations/'"
         # immich thumbnail request 404 error false positive
-        - "evt.Meta.target_fqdn == 'immich.ilnmors.com' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'"
+        - "evt.Meta.target_fqdn == '{{ services['immich']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'"
 {% endif %}

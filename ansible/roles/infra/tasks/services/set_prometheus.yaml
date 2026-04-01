@@ -41,7 +41,7 @@
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:
-    - name: "ilnmors_root_ca.crt"
+    - name: "{{ root_cert_filename }}"
       value: "{{ hostvars['console']['ca']['root']['crt'] }}"
       mode: "0440"
     - name: "prometheus.crt"

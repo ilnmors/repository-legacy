@@ -13,7 +13,7 @@ HostName=X509-exporter
 
 Volume=%h/containers/x509-exporter/certs:/certs:ro
 
-PublishPort=9793:9793
+PublishPort={{ services['x509-exporter']['ports']['http'] }}:9793
 
 Exec=--listen-address :9793 --watch-dir=/certs
 

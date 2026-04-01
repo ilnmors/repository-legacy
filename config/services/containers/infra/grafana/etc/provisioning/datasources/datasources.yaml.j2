@@ -4,7 +4,7 @@ apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
-    url: https://prometheus.ilnmors.internal:9090
+    url: https://{{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}
     access: proxy
     isDefault: true
     jsonData:
@@ -12,11 +12,11 @@ datasources:
       tlsAuthWithCACert: true
       httpMethod: POST
     secureJsonData:
-      tlsCACert: "$__file{/etc/ssl/grafana/ilnmors_root_ca.crt}"
+      tlsCACert: "$__file{/etc/ssl/grafana/{{ root_cert_filename }}}"
 
   - name: Loki
     type: loki
-    url: https://loki.ilnmors.internal:3100
+    url: https://{{ services['loki']['domain'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}
     access: proxy
     jsonData:
       tlsAuth: false
@@ -25,5 +25,5 @@ datasources:
       httpHeaderName1: "X-Scope-OrgID"
       maxLines: 1000
     secureJsonData:
-      tlsCACert: "$__file{/etc/ssl/grafana/ilnmors_root_ca.crt}"
-      httpHeaderValue1: "ilnmors.internal"
+      tlsCACert: "$__file{/etc/ssl/grafana/{{ root_cert_filename }}}"
+      httpHeaderValue1: "{{ domain['internal'] }} "

@@ -2,50 +2,122 @@
 # Global vars
 ansible_ssh_private_key_file: "/etc/secrets/{{ hostvars['console']['node']['uid'] }}/id_console"
 
-# URL infromation, you can use {{ infra_uri['services'] | split(':') | first|last }} to seperate domain and ports
-infra_uri:
+# CA
+root_cert_filename: "ilnmors_root_ca.crt"
+intermediate_cert_filename: "ilnmors_intermediate_ca.crt"
+intermediate_key_filename: "ilnmors_intermediate_ca.key"
+
+
+# local SAN and SSH SAN should be updated manually on host_vars
+domain:
+  public: "ilnmors.com"
+  internal: "ilnmors.internal"
+  dc: "dc=ilnmors,dc=internal"
+  org: "ilnmors"
+
+# DNS configuration including bind and blocky should be set manually.
+# named.conf.j2 is also set manually.
+# Check the hosts.j2 when cname records are fixed
+
+services:
   crowdsec:
-    domain: "crowdsec.ilnmors.internal"
+    domain: "crowdsec"
     ports:
       https: "8080"
   bind:
-    domain: "bind.ilnmors.internal"
+    domain: "bind"
     ports:
       dns: "53"
   blocky:
-    domain: "blocky.ilnmors.internal"
+    domain: "blocky"
     ports:
       https: "443"
       dns: "53"
   postgresql:
-    domain: "postgresql.ilnmors.internal"
+    domain: "postgresql"
     ports:
       tcp: "5432" # postgresql db connection port
   ldap:
-    domain: "ldap.ilnmors.internal"
+    domain: "ldap"
     ports:
       http: "17170"
-      ldaps: "636"
+      ldaps: "6360"
   ca:
-    domain: "ca.ilnmors.internal"
+    domain: "ca"
     ports:
       https: "9000"
+  x509-exporter:
+    ports:
+      http: "9793"
   prometheus:
-    domain: "prometheus.ilnmors.internal"
+    domain: "prometheus"
     ports:
       https: "9090"
   loki:
-    domain: "loki.ilnmors.internal"
+    domain: "loki"
     ports:
       https: "3100"
+  grafana:
+    domain: "grafana"
+    ports:
+      http: "3000"
+  caddy:
+    ports:
+      http: "2080"
+      https: "2443"
   nas:
-    domain: "nas.ilnmors.internal"
+    domain: "nas"
     ports:
       https: "5001"
   kopia:
-    domain: "nas.ilnmors.internal"
+    domain: "nas"
     ports:
       https: "51515"
+  authelia:
+    domain: "authelia"
+    ports:
+      http: "9091"
+  vaultwarden:
+    domain:
+      public: "vault"
+      internal: "vault.app"
+    ports:
+      http: "8000"
+  gitea:
+    domain:
+      public: "gitea"
+      internal: "gitea.app"
+    ports:
+      http: "3000"
+  immich:
+    domain:
+      public: "immich"
+      internal: "immich.app"
+    ports:
+      http: "2283"
+      redis: "6379"
+  immich-ml:
+    ports:
+      http: "3003"
+  actualbudget:
+    domain:
+      public: "budget"
+      internal: "budget.app"
+    ports:
+      http: "5006"
+  paperless:
+    domain:
+      public: "paperless"
+      internal: "paperless.app"
+    ports:
+      http: "8001"
+      redis: "6380"
+  vikunja:
+    domain:
+      public: "vikunja"
+      internal: "vikunja.app"
+    ports:
+      http: "3456"
 
 version:
   packages:
@@ -54,7 +126,6 @@ version:
     kopia: "0.22.3"
     blocky: "0.28.2"
     alloy: "1.13.0"
-    # telegraf: "1.37.1"
   containers:
     # common
     caddy: "2.10.2"

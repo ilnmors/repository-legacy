@@ -20,7 +20,7 @@
   ansible.builtin.copy:
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
-    dest: "{{ node['home_path'] }}/containers/gitea/ssl/ilnmors_root_ca.crt"
+    dest: "{{ node['home_path'] }}/containers/gitea/ssl/{{ root_cert_filename }}"
     owner: "{{ gitea_subuid }}"
     group: "svadmins"
     mode: "0440"

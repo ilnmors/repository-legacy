@@ -69,7 +69,7 @@
   ansible.builtin.copy:
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
-    dest: "{{ node['home_path'] }}/containers/paperless/ssl/ilnmors_root_ca.crt"
+    dest: "{{ node['home_path'] }}/containers/paperless/ssl/{{ root_cert_filename }}"
     owner: "{{ paperless_subuid }}"
     group: "svadmins"
     mode: "0440"
@@ -101,7 +101,7 @@
                 "client_id": "paperless",
                 "secret": "{{ hostvars['console']['paperless']['oidc']['secret'] }}",
                 "settings": {
-                  "server_url": "https://authelia.ilnmors.com/.well-known/openid-configuration",
+                  "server_url": "https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/.well-known/openid-configuration",
                   "token_auth_method": "client_secret_post"
                 }
               }

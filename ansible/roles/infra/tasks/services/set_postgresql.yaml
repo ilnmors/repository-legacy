@@ -42,7 +42,7 @@
 
 - name: Build postgresql container image
   containers.podman.podman_image:
-    name: "ilnmors.internal/{{ node['name'] }}/postgres"
+    name: "{{ domain['internal'] }}/{{ node['name'] }}/postgres"
     # check tags from container file
     tag: "pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}"
     state: "build"
@@ -75,7 +75,7 @@
     group: "svadmins"
     mode: "{{ item.mode }}"
   loop:
-    - name: "ilnmors_root_ca.crt"
+    - name: "{{ root_cert_filename }}"
       value: "{{ hostvars['console']['ca']['root']['crt'] }}"
       mode: "0440"
     - name: "postgresql.crt"

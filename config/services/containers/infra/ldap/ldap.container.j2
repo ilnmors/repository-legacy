@@ -13,11 +13,11 @@ Image=docker.io/lldap/lldap:{{ version['containers']['ldap'] }}
 ContainerName=ldap
 HostName=ldap
 # They are at the same host (for Pasta, it is needed)
-AddHost={{ infra_uri['postgresql']['domain'] }}:host-gateway
+AddHost={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:host-gateway
 # For LDAPS - 636 > 6360 nftables
-PublishPort=6360:6360/tcp
+PublishPort={{ services['ldap']['ports']['ldaps'] }}:6360/tcp
 # Web UI
-PublishPort=17170:17170/tcp
+PublishPort={{ services['ldap']['ports']['http'] }}:17170/tcp
 
 
 Volume=%h/containers/ldap/data:/data:rw
@@ -27,7 +27,7 @@ Volume=%h/containers/ldap/ssl:/etc/ssl/ldap:ro
 Environment="TZ=Asia/Seoul"
 
 # Domain
-Environment="LLDAP_LDAP_BASE_DN=dc=ilnmors,dc=internal"
+Environment="LLDAP_LDAP_BASE_DN={{ domain['dc'] }}"
 
 # LDAPS
 Environment="LLDAP_LDAPS_OPTIONS__ENABLED=true"

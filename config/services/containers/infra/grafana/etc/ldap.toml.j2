@@ -1,7 +1,7 @@
 # https://github.com/lldap/lldap/blob/main/example_configs/grafana_ldap_config.toml
 [[servers]]
-host = "{{ infra_uri['ldap']['domain'] }}"
-port = {{ infra_uri['ldap']['ports']['ldaps'] }}
+host = "{{ services['ldap']['domain'] }}.{{ domain['internal'] }}"
+port = {{ services['ldap']['ports']['ldaps'] }}
 # Activate STARTTLS or LDAPS
 use_ssl = true
 # true = STARTTLS, false = LDAPS
@@ -9,16 +9,16 @@ start_tls = false
 tls_ciphers = []
 min_tls_version = ""
 ssl_skip_verify = false
-root_ca_cert = "/etc/ssl/grafana/ilnmors_root_ca.crt"
+root_ca_cert = "/etc/ssl/grafana/{{ root_cert_filename }}"
 # mTLS option, it is not needed
 # client_cert = "/path/to/client.crt"
 # client_key = "/path/to/client.key"
 
-bind_dn = "uid=grafana,ou=people,dc=ilnmors,dc=internal"
+bind_dn = "uid=grafana,ou=people,{{ domain['dc'] }}"
 bind_password = "$__file{/run/secrets/LDAP_BIND_PASSWORD}"
 
 search_filter = "(|(uid=%s)(mail=%s))"
-search_base_dns = ["dc=ilnmors,dc=internal"]
+search_base_dns = ["{{ domain['dc'] }}"]
 
 [servers.attributes]
 member_of = "memberOf"
@@ -28,20 +28,20 @@ surname = "sn"
 username = "uid"
 
 group_search_filter = "(&(objectClass=groupOfUniqueNames)(uniqueMember=%s))"
-group_search_base_dns = ["ou=groups,dc=ilnmors,dc=internal"]
+group_search_base_dns = ["ou=groups,{{ domain['dc'] }}"]
 group_search_filter_user_attribute = "uid"
 
 [[servers.group_mappings]]
-group_dn = "cn=lldap_admin,ou=groups,dc=ilnmors,dc=internal"
+group_dn = "cn=lldap_admin,ou=groups,{{ domain['dc'] }}"
 org_role = "Admin"
 grafana_admin = true
 
 [[servers.group_mappings]]
-group_dn = "cn=admins,ou=groups,dc=ilnmors,dc=internal"
+group_dn = "cn=admins,ou=groups,{{ domain['dc'] }}"
 org_role = "Editor"
 grafana_admin = false
 
 [[servers.group_mappings]]
-group_dn = "cn=users,ou=groups,dc=ilnmors,dc=internal"
+group_dn = "cn=users,ou=groups,{{ domain['dc'] }}"
 org_role = "Viewer"
 grafana_admin = false

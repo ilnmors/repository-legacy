@@ -23,18 +23,18 @@ Environment="TZ=Asia/Seoul"
 Environment="GITEA__server__DISABLE_SSH=true"
 # Database
 Environment="GITEA__database__DB_TYPE=postgres"
-Environment="GITEA__database__HOST={{ infra_uri['postgresql']['domain'] }}:{{ infra_uri['postgresql']['ports']['tcp'] }}"
+Environment="GITEA__database__HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
 Environment="GITEA__database__NAME=gitea_db"
 Environment="GITEA__database__USER=gitea"
 Secret=GITEA__database__PASSWD,type=env
 Environment="GITEA__database__SSL_MODE=verify-full"
-Environment="PGSSLROOTCERT=/etc/ssl/gitea/ilnmors_root_ca.crt"
+Environment="PGSSLROOTCERT=/etc/ssl/gitea/{{ root_cert_filename }}"
 # OAuth2 client
 Environment="GITEA__oauth2_client__ACCOUNT_LINKING=auto"
 # OIDC configuration
 Environment="GITEA__openid__ENABLE_OPENID_SIGNIN=false"
 Environment="GITEA__openid__ENABLE_OPENID_SIGNUP=true"
-Environment="GITEA__openid__WHITELISTED_URIS=authelia.ilnmors.com"
+Environment="GITEA__openid__WHITELISTED_URIS={{ services['authelia']['domain'] }}.{{ domain['public'] }}"
 # automatic create user via authelia
 Environment="GITEA__service__DISABLE_REGISTRATION=false"
 Environment="GITEA__service__ALLOW_ONLY_EXTERNAL_REGISTRATION=true"
@@ -42,7 +42,7 @@ Environment="GITEA__service__SHOW_REGISTRATION_BUTTON=false"
 
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

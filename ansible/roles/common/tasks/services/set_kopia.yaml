@@ -37,9 +37,9 @@
         KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['user']['console'] }}"
       ansible.builtin.shell: |
         /usr/bin/kopia repository connect server \
-        --url=https://{{ infra_uri['kopia']['domain'] }}:{{ infra_uri['kopia']['ports']['https'] }} \
+        --url=https://{{ services['kopia']['domain'] }}.{{ domain['internal'] }}:{{ services['kopia']['ports']['https'] }} \
         --override-username=console \
-        --override-hostname=console.ilnmors.internal
+        --override-hostname=console.{{ domain['internal'] }}
       changed_when: false
       failed_when: is_kopia_connected.rc != 0
       register: "is_kopia_connected"

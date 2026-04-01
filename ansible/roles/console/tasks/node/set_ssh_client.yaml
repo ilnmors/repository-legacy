@@ -23,7 +23,7 @@
   become: true
   ansible.builtin.copy:
     content: |
-      @cert-authority *.ilnmors.internal {{ hostvars['console']['ssh']['ca']['pub'] }}
+      @cert-authority *.{{ domain['internal'] }} {{ hostvars['console']['ssh']['ca']['pub'] }}
     dest: "/etc/ssh/ssh_known_hosts"
     owner: "root"
     group: "root"

@@ -1,7 +1,7 @@
 {
         # CrowdSec LAPI connection
         crowdsec {
-                api_url https://{{ infra_uri['crowdsec']['domain'] }}:{{ infra_uri['crowdsec']['ports']['https'] }} 
+                api_url https://{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:{{ services['crowdsec']['ports']['https'] }} 
                 api_key "{file./run/secrets/CADDY_CROWDSEC_KEY}"
         }
 }
@@ -15,27 +15,27 @@
                         roll_size 100MiB
                         roll_keep 1
                 }
-        format json
+                format json
         }
 }
 # Private TLS ACME with DNS-01-challenge
 (private_tls) {
         tls {
                 issuer acme {
-                        dir https://{{ infra_uri['ca']['domain'] }}:{{ infra_uri['ca']['ports']['https'] }}/acme/acme@ilnmors.internal/directory
+                        dir https://{{ services['ca']['domain'] }}.{{ domain['internal'] }}:{{ services['ca']['ports']['https'] }}/acme/acme@{{ domain['internal'] }}/directory
                         dns rfc2136 {
-                                server {{ infra_uri['bind']['domain'] }}:{{ infra_uri['bind']['ports']['dns'] }}
+                                server {{ services['bind']['domain'] }}.{{ domain['internal'] }}:{{ services['bind']['ports']['dns'] }}
                                 key_name acme-key
                                 key_alg hmac-sha256
                                 key "{file./run/secrets/CADDY_ACME_KEY}"
                         }
-                        resolvers {{ infra_uri['bind']['domain'] }}
+                        resolvers {{ services['bind']['domain'] }}.{{ domain['internal'] }}
                 }
         }
 }
 
 # Public domain
-authelia.ilnmors.com {
+{{ services['authelia']['domain'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
@@ -64,63 +64,63 @@ authelia.ilnmors.com {
 #                 }
 #         }
 # }
-vault.ilnmors.com {
+{{ services['vaultwarden']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy https://vault.app.ilnmors.internal {
+                reverse_proxy https://{{ services['vaultwarden']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }
 }
-gitea.ilnmors.com {
+{{ services['gitea']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy https://gitea.app.ilnmors.internal {
+                reverse_proxy https://{{ services['gitea']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }
 }
-immich.ilnmors.com {
+{{ services['immich']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy https://immich.app.ilnmors.internal {
+                reverse_proxy https://{{ services['immich']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }
 }
-budget.ilnmors.com {
+{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy https://budget.app.ilnmors.internal {
+                reverse_proxy https://{{ services['actualbudget']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }
 }
-paperless.ilnmors.com {
+{{ services['paperless']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy https://paperless.app.ilnmors.internal {
+                reverse_proxy https://{{ services['paperless']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }  
 }
-vikunja.ilnmors.com {
+{{ services['vikunja']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy https://vikunja.app.ilnmors.internal {
-                        header_up HOST {http.reverse_proxy.upstream.host}
+                reverse_proxy https://{{ services['vikunja']['domain']['internal'] }}.{{ domain['internal'] }} {
+                        header_up Host {http.reverse_proxy.upstream.host}
                 }
         }
 }
 
 # Internal domain
-auth.ilnmors.internal {
+{{ node['name'] }}.{{ domain['internal'] }} {
         import private_tls
         metrics
 }

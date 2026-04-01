@@ -15,7 +15,7 @@ ContainerName=authelia
 HostName=authelia
 
 # Web UI
-PublishPort=9091:9091/tcp
+PublishPort={{ services['authelia']['ports']['http'] }}:9091/tcp
 
 
 Volume=%h/containers/authelia/config:/config:rw
@@ -56,8 +56,9 @@ Exec=--config /config/authelia.yaml
 # Wait for dependency
 # They run as rootless podman container, so their port is not opened until they are normaly running
 # Check their ports with nc command 
-ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
-ExecStartPre=/usr/bin/nc -zv {{ infra_uri['ldap']['domain'] }} {{ infra_uri['ldap']['ports']['ldaps'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+# services['ldap']['ports']['ldaps'] is 6360, but nftables works on 636 the original port
+ExecStartPre=/usr/bin/nc -zv {{ services['ldap']['domain'] }}.{{ domain['internal'] }} 636
 ExecStartPre=sleep 5
 Restart=always
 RestartSec=10s

@@ -90,7 +90,7 @@ Kea in fw already reserved DSM's IP. However it is necessary to set IP address s
 ## Authelia OIDC
 
 - **!CAUTION!** It can be set after authelia is implemented
-- Following [here](../../../config/containers/auth/authelia/config/authelia.yaml.j2) for Authelia configuration
+- Following [here](../../config/services/containers/auth/authelia/config/authelia.yaml.j2) for Authelia configuration
 - Control Panel:Domain/LDAP:SSO Client
     - Login Settings: \[x\] Select SSO by default on the login page
     - Services
@@ -192,9 +192,9 @@ BindPaths=/var/cache/kopia
 EnvironmentFile=/etc/secrets/{{ kopia_uid }}/kopia.env
 
 ExecStartPre=/usr/bin/kopia repository connect server \
-    --url=https://{{ infra_uri['kopia']['domain'] }}:{{ infra_uri['kopia']['ports']['https'] }} \
+    --url=https://{{ services['kopia']['domain'] }}.{{ domain['internal'] }}:{{ services['kopia']['ports']['https'] }} \
     --override-username={{ node['name'] }} \
-    --override-hostname={{ node['name'] }}.ilnmors.internal
+    --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
 
 ExecStart=/usr/bin/kopia snapshot create \
     /path/to/backup

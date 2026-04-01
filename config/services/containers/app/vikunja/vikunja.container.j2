@@ -11,7 +11,7 @@ Wants=network-online.target
 Image=docker.io/vikunja/vikunja:{{ version['containers']['vikunja'] }}
 ContainerName=vikunja
 HostName=vikunja
-PublishPort=3456:3456/tcp
+PublishPort={{ services['vikunja']['ports']['http'] }}:3456/tcp
 
 # Volumes
 Volume=%h/data/containers/vikunja:/app/vikunja/files:rw
@@ -21,25 +21,25 @@ Volume=%h/containers/vikunja/ssl:/etc/ssl/vikunja:ro
 Environment="TZ=Asia/Seoul"
 Environment="VIKUNJA_DEFAULTSETTINGS_TIMEZONE=Asia/Seoul"
 Environment="VIKUNJA_SERVICE_TIMEZONE=Asia/Seoul"
-Environment="VIKUNJA_SERVICE_PUBLICURL=https://vikunja.ilnmors.com"
+Environment="VIKUNJA_SERVICE_PUBLICURL=https://{{ services['vikunja']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=false"
 Secret=VIKUNJA_SERVICE_JWTSECRET,type=env
 
 
 # Database
 Environment="VIKUNJA_DATABASE_TYPE=postgres"
-Environment="VIKUNJA_DATABASE_HOST={{ infra_uri['postgresql']['domain'] }}"
+Environment="VIKUNJA_DATABASE_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
 Environment="VIKUNJA_DATABASE_USER=vikunja"
 Environment="VIKUNJA_DATABASE_DATABASE=vikunja_db"
 Environment="VIKUNJA_DATABASE_SSLMODE=verify-full"
-Environment="VIKUNJA_DATABASE_SSLROOTCERT=/etc/ssl/vikunja/ilnmors_root_ca.crt"
+Environment="VIKUNJA_DATABASE_SSLROOTCERT=/etc/ssl/vikunja/{{ root_cert_filename }}"
 Secret=VIKUNJA_DATABASE_PASSWORD,type=env
 
 
 # OIDC
 Environment="VIKUNJA_AUTH_OPENID_ENABLED=true"
 Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_NAME=Authelia"
-Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_AUTHURL=https://authelia.ilnmors.com"
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_AUTHURL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
 Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTID=vikunja"
 # Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_SCOPE=" default value = openid email profile
 # Vikunja doesn't support OIDC and local dual login.
@@ -48,7 +48,7 @@ Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTID=vikunja"
 Secret=VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTSECRET,type=env
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

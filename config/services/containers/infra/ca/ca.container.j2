@@ -13,7 +13,7 @@ Image=docker.io/smallstep/step-ca:{{ version['containers']['step'] }}
 ContainerName=ca
 HostName=ca
 
-PublishPort=9000:9000/tcp
+PublishPort={{ services['ca']['ports']['https'] }}:9000/tcp
 
 Volume=%h/containers/ca/certs:/home/step/certs:ro
 Volume=%h/containers/ca/secrets:/home/step/secrets:ro

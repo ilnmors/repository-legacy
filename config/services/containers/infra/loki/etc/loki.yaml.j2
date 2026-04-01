@@ -1,7 +1,7 @@
 ---
 server:
   http_listen_address: "::"
-  http_listen_port: 3100
+  http_listen_port: {{ services['loki']['ports']['https'] }}
   http_tls_config:
     cert_file: /etc/ssl/loki/loki.crt
     key_file: /etc/ssl/loki/loki.key

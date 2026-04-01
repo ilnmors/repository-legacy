@@ -11,7 +11,7 @@ Wants=redis_paperless.service
 Image=ghcr.io/paperless-ngx/paperless-ngx:{{ version['containers']['paperless'] }}
 ContainerName=paperless
 HostName=paperless
-PublishPort=8001:8000/tcp
+PublishPort={{ services['paperless']['ports']['http'] }}:8000/tcp
 
 # Volumes
 Volume=%h/data/containers/paperless/data:/usr/src/paperless/data:rw
@@ -22,7 +22,7 @@ Volume=%h/containers/paperless/ssl:/etc/ssl/paperless:ro
 # General
 Environment="TZ=Asia/Seoul"
 Environment="PAPERLESS_TIME_ZONE=Asia/Seoul"
-Environment="PAPERLESS_URL=https://paperless.ilnmors.com"
+Environment="PAPERLESS_URL=https://{{ services['paperless']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="PAPERLESS_OCR_LANGUAGE=kor+eng"
 Environment="PAPERLESS_OCR_LANGUAGES=kor"
 # Environment="PAPERLESS_OCR_MODE=force"
@@ -32,15 +32,15 @@ Environment="PAPERLESS_WORKER_TIMEOUT=7200"
 Secret=PAPERLESS_SECRET_KEY,type=env
 
 # Redis
-Environment="PAPERLESS_REDIS=redis://host.containers.internal:{{ hostvars['app']['redis']['paperless'] }}"
+Environment="PAPERLESS_REDIS=redis://host.containers.internal:{{ services['paperless']['ports']['redis'] }}"
 
 # Database
-Environment="PAPERLESS_DBHOST={{ infra_uri['postgresql']['domain'] }}"
-Environment="PAPERLESS_DBPORT={{ infra_uri['postgresql']['ports']['tcp'] }}"
+Environment="PAPERLESS_DBHOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="PAPERLESS_DBPORT={{ services['postgresql']['ports']['tcp'] }}"
 Environment="PAPERLESS_DBNAME=paperless_db"
 Environment="PAPERLESS_DBUSER=paperless"
 Environment="PAPERLESS_DBSSLMODE=verify-full"
-Environment="PAPERLESS_DBSSLROOTCERT=/etc/ssl/paperless/ilnmors_root_ca.crt"
+Environment="PAPERLESS_DBSSLROOTCERT=/etc/ssl/paperless/{{ root_cert_filename }}"
 Secret=PAPERLESS_DBPASS,type=env
 
 # OIDC
@@ -50,7 +50,7 @@ Environment="PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS=true"
 Secret=PAPERLESS_SOCIALACCOUNT_PROVIDERS,type=env
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

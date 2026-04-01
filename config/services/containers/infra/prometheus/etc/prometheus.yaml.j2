@@ -23,8 +23,8 @@ scrape_configs:
     # metrics_path defaults to '/metrics'
     scheme: "https"
     tls_config:
-      ca_file: "/etc/ssl/prometheus/ilnmors_root_ca.crt"
-      server_name: "{{ infra_uri['prometheus']['domain'] }}"
+      ca_file: "/etc/ssl/prometheus/{{ root_cert_filename }}"
+      server_name: "{{ services['prometheus']['domain'] }}.{{ domain['internal'] }}"
     static_configs:
       - targets: ["localhost:9090"]
        # The label name is added as a label `label_name=<label_value>` to any timeseries scraped from this config.

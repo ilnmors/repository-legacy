@@ -21,8 +21,8 @@
   become: true
 
 - name: Deploy ddns service files
-  ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/ddns/{{ item }}"
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/ddns/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
     owner: "{{ ansible_user }}"
     group: "svadmins"

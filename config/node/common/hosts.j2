@@ -3,32 +3,32 @@
 ::1 {{ node['local_san'] }}
 {% if node['name'] == 'console' %}
 # Hosts IPv4
-{{ hostvars['fw']['network4']['firewall']['server'] }} fw.ilnmors.internal
-{{ hostvars['fw']['network4']['vmm']['client'] }} init.vmm.ilnmors.internal
-{{ hostvars['fw']['network4']['vmm']['server'] }} vmm.ilnmors.internal
-{{ hostvars['fw']['network4']['infra']['server'] }} infra.ilnmors.internal
-{{ hostvars['fw']['network4']['auth']['server'] }} auth.ilnmors.internal
-{{ hostvars['fw']['network4']['app']['server'] }} app.ilnmors.internal
+{{ hostvars['fw']['network4']['firewall']['server'] }} fw.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['vmm']['client'] }} init.vmm.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['vmm']['server'] }} vmm.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['infra']['server'] }} infra.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['auth']['server'] }} auth.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['app']['server'] }} app.{{ domain['internal'] }}
 # Hosts IPv6
-{{ hostvars['fw']['network6']['firewall']['server'] }} fw.ilnmors.internal
-{{ hostvars['fw']['network6']['vmm']['client'] }} init.vmm.ilnmors.internal
-{{ hostvars['fw']['network6']['vmm']['server'] }} vmm.ilnmors.internal
-{{ hostvars['fw']['network6']['infra']['server'] }} infra.ilnmors.internal
-{{ hostvars['fw']['network6']['auth']['server'] }} auth.ilnmors.internal
-{{ hostvars['fw']['network6']['app']['server'] }} app.ilnmors.internal
+{{ hostvars['fw']['network6']['firewall']['server'] }} fw.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['vmm']['client'] }} init.vmm.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['vmm']['server'] }} vmm.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['infra']['server'] }} infra.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['auth']['server'] }} auth.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['app']['server'] }} app.{{ domain['internal'] }}
 {% else %}
 # IPv4
 # Crowdsec, blocky, bind(fw)
-{{ hostvars['fw']['network4']['firewall']['server'] }} ntp.ilnmors.internal crowdsec.ilnmors.internal
-{{ hostvars['fw']['network4']['blocky']['server'] }} blocky.ilnmors.internal
-{{ hostvars['fw']['network4']['bind']['server'] }} bind.ilnmors.internal
+{{ hostvars['fw']['network4']['firewall']['server'] }} ntp.{{ domain['internal'] }} crowdsec.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['blocky']['server'] }} blocky.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['bind']['server'] }} bind.{{ domain['internal'] }}
 # DB, LDAP, CA, Prometheus, Loki, mail (infra)
-{{ hostvars['fw']['network4']['infra']['server'] }} postgresql.ilnmors.internal ldap.ilnmors.internal prometheus.ilnmors.internal loki.ilnmors.internal mail.ilnmors.internal ca.ilnmors.internal
+{{ hostvars['fw']['network4']['infra']['server'] }} postgresql.{{ domain['internal'] }} ldap.{{ domain['internal'] }} prometheus.{{ domain['internal'] }} loki.{{ domain['internal'] }} mail.{{ domain['internal'] }} ca.{{ domain['internal'] }}
 # IPv6
 # Crowdsec, blocky, bind(fw)
-{{ hostvars['fw']['network6']['firewall']['server'] }} ntp.ilnmors.internal crowdsec.ilnmors.internal
-{{ hostvars['fw']['network6']['blocky']['server'] }} blocky.ilnmors.internal
-{{ hostvars['fw']['network6']['bind']['server'] }} bind.ilnmors.internal
+{{ hostvars['fw']['network6']['firewall']['server'] }} ntp.{{ domain['internal'] }} crowdsec.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['blocky']['server'] }} blocky.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['bind']['server'] }} bind.{{ domain['internal'] }}
 # DB, LDAP, CA, Prometheus, Loki, mail (infra)
-{{ hostvars['fw']['network6']['infra']['server'] }} postgresql.ilnmors.internal ldap.ilnmors.internal prometheus.ilnmors.internal loki.ilnmors.internal mail.ilnmors.internal ca.ilnmors.internal
+{{ hostvars['fw']['network6']['infra']['server'] }} postgresql.{{ domain['internal'] }} ldap.{{ domain['internal'] }} prometheus.{{ domain['internal'] }} loki.{{ domain['internal'] }} mail.{{ domain['internal'] }} ca.{{ domain['internal'] }}
 {% endif %}

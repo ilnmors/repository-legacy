@@ -12,7 +12,7 @@ port = 5432
 
 # SSL
 ssl = on
-ssl_ca_file = '/etc/ssl/postgresql/ilnmors_root_ca.crt'
+ssl_ca_file = '/etc/ssl/postgresql/{{ root_cert_filename }}'
 ssl_cert_file = '/etc/ssl/postgresql/postgresql.crt'
 ssl_key_file = '/etc/ssl/postgresql/postgresql.key'
 ssl_ciphers = 'HIGH:!aNULL:!MD5'

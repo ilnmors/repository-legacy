@@ -8,19 +8,19 @@
 (private_tls) {
         tls {
                 issuer acme {
-                        dir https://{{ infra_uri['ca']['domain'] }}:{{ infra_uri['ca']['ports']['https'] }}/acme/acme@ilnmors.internal/directory
+                        dir https://{{ services['ca']['domain'] }}.{{ domain['internal'] }}:{{ services['ca']['ports']['https'] }}/acme/acme@{{ domain['internal'] }}/directory
                         dns rfc2136 {
-                                server {{ infra_uri['bind']['domain'] }}:{{ infra_uri['bind']['ports']['dns'] }}
+                                server {{ services['bind']['domain'] }}.{{ domain['internal'] }}:{{ services['bind']['ports']['dns'] }}
                                 key_name acme-key
                                 key_alg hmac-sha256
                                 key "{file./run/secrets/CADDY_ACME_KEY}"
                         }
-                        resolvers {{ infra_uri['bind']['domain'] }}
+                        resolvers {{ services['bind']['domain'] }}.{{ domain['internal'] }}
                 }
         }
 }
 
-app.ilnmors.internal {
+{{ node['name'] }}.{{ domain['internal'] }} {
         import private_tls
         metrics
 }
@@ -29,39 +29,39 @@ app.ilnmors.internal {
 #         root * /usr/share/caddy
 #         file_server
 # }
-vault.app.ilnmors.internal {
+{{ services['vaultwarden']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-        reverse_proxy host.containers.internal:8000 {
+        reverse_proxy host.containers.internal:{{ services['vaultwarden']['ports']['http'] }} {
                header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-gitea.app.ilnmors.internal {
+{{ services['gitea']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-        reverse_proxy host.containers.internal:3000 {
+        reverse_proxy host.containers.internal:{{ services['gitea']['ports']['http'] }} {
                header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-immich.app.ilnmors.internal {
+{{ services['immich']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-        reverse_proxy host.containers.internal:2283 {
+        reverse_proxy host.containers.internal:{{ services['immich']['ports']['http'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-budget.app.ilnmors.internal {
+{{ services['actualbudget']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-        reverse_proxy host.containers.internal:5006 {
+        reverse_proxy host.containers.internal:{{ services['actualbudget']['ports']['http'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-paperless.app.ilnmors.internal {
+{{ services['paperless']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-        reverse_proxy host.containers.internal:8001 {
+        reverse_proxy host.containers.internal:{{ services['paperless']['ports']['http'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-vikunja.app.ilnmors.internal {
+{{ services['vikunja']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-        reverse_proxy host.containers.internal:3456 {
+        reverse_proxy host.containers.internal:{{ services['vikunja']['ports']['http'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }

@@ -54,7 +54,7 @@
 - name: Deploy root crt for build
   ansible.builtin.copy:
     content: "{{ hostvars['console']['ca']['root']['crt'] }}"
-    dest: "{{ node['home_path'] }}/containers/caddy/build/ilnmors_root_ca.crt"
+    dest: "{{ node['home_path'] }}/containers/caddy/build/{{ root_cert_filename }}"
     owner: "{{ ansible_user }}"
     group: "svadmins"
     mode: "0640"
@@ -62,7 +62,7 @@
 
 - name: Build caddy container image
   containers.podman.podman_image:
-    name: "ilnmors.internal/{{ node['name'] }}/caddy"
+    name: "{{ domain['internal'] }}/{{ node['name'] }}/caddy"
     # check tags from container file
     tag: "{{ version['containers']['caddy'] }}"
     state: "build"

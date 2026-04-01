@@ -13,12 +13,12 @@ Image=docker.io/grafana/grafana:{{ version['containers']['grafana'] }}
 ContainerName=grafana
 HostName=grafana
 
-AddHost={{ infra_uri['postgresql']['domain'] }}:host-gateway
-AddHost={{ infra_uri['ldap']['domain'] }}:host-gateway
-AddHost={{ infra_uri['prometheus']['domain'] }}:host-gateway
-AddHost={{ infra_uri['loki']['domain'] }}:host-gateway
+AddHost={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['ldap']['domain'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['loki']['domain'] }}.{{ domain['internal'] }}:host-gateway
 
-PublishPort=3000:3000/tcp
+PublishPort={{ services['grafana']['ports']['http'] }}:3000/tcp
 
 Volume=%h/containers/grafana/data:/var/lib/grafana:rw
 Volume=%h/containers/grafana/etc:/etc/grafana:ro

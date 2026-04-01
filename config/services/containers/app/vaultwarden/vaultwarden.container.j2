@@ -13,19 +13,19 @@ Image=docker.io/vaultwarden/server:{{ version['containers']['vaultwarden'] }}
 ContainerName=vaultwarden
 HostName=vaultwarden
 
-PublishPort=8000:80/tcp
+PublishPort={{ services['vaultwarden']['ports']['http'] }}:80/tcp
 
 Volume=%h/data/containers/vaultwarden:/data:rw
 Volume=%h/containers/vaultwarden/ssl:/etc/ssl/vaultwarden:ro
 
 Environment="TZ=Asia/Seoul"
-Environment="DOMAIN=https://vault.ilnmors.com"
+Environment="DOMAIN=https://{{ services['vaultwarden']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="SIGNUPS_ALLOWED=false"
 Secret=VW_ADMIN_TOKEN,type=env,target=ADMIN_TOKEN
 Secret=VW_DATABASE_URL,type=env,target=DATABASE_URL
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ infra_uri['postgresql']['domain'] }} {{ infra_uri['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

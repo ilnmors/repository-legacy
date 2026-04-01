@@ -13,7 +13,7 @@ Image=docker.io/library/redis:{{ version['containers']['redis'] }}
 ContainerName=redis_{{ redis_service }}
 HostName=redis_{{ redis_service }}
 
-PublishPort={{ hostvars['app']['redis'][redis_service] }}:{{ hostvars['app']['redis'][redis_service] }}
+PublishPort={{ services[redis_service]['ports']['redis'] }}:6379
 
 Volume=%h/containers/redis/{{ redis_service }}/data:/data:rw
 Volume=%h/containers/redis/{{ redis_service }}/redis.conf:/usr/local/etc/redis/redis.conf:ro

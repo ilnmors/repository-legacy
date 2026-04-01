@@ -15,7 +15,7 @@
   ansible.builtin.copy:
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
-    dest: "{{ node['home_path'] }}/containers/vaultwarden/ssl/ilnmors_root_ca.crt"
+    dest: "{{ node['home_path'] }}/containers/vaultwarden/ssl/{{ root_cert_filename }}"
     owner: "{{ ansible_user }}"
     group: "svadmins"
     mode: "0440"
@@ -34,7 +34,8 @@
       value: "{{ hostvars['console']['vaultwarden']['admin']['hash'] }}"
     - name: "VW_DATABASE_URL"
       value: "postgresql://vaultwarden:{{ hostvars['console']['postgresql']['password']['vaultwarden'] | urlencode | replace('/', '%2F') }}\
-        @{{ infra_uri['postgresql']['domain'] }}/vaultwarden_db?sslmode=verify-full&sslrootcert=/etc/ssl/vaultwarden/ilnmors_root_ca.crt"
+        @{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}/vaultwarden_db?sslmode=verify-full&\
+        sslrootcert=/etc/ssl/vaultwarden/{{ root_cert_filename }}"
   notify: "notification_restart_vaultwarden"
   no_log: true
 

@@ -12,4 +12,4 @@ StandardError=journal
 EnvironmentFile=/etc/secrets/%U/ddns.env
 
 # Run the script
-ExecStart=/usr/local/bin/ddns.sh -d "ilnmors.com"
+ExecStart=/usr/local/bin/ddns.sh -d "{{ domain['public'] }}"
