@@ -235,4 +235,16 @@ fw@fw:~$ sudo cscli alerts inspect 230 -d
 - check the log and analyze and make expression
   - e.g. immich
     - evt.Meta.target_fqdn == 'immich.ilnmors.com' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'
+  - e.g. opencloud
+    - "evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/js/chunks/'"
+- free false positive decision
+
+fw@fw:~$ sudo cscli decision list
+╭─────────┬──────────┬───────────────────┬──────────────────────────────────────┬────────┬─────────┬────────────────────────┬────────┬────────────────────┬──────────╮
+│   ID    │  Source  │    Scope:Value    │                Reason                │ Action │ Country │           AS           │ Events │     expiration     │ Alert ID │
+├─────────┼──────────┼───────────────────┼──────────────────────────────────────┼────────┼─────────┼────────────────────────┼────────┼────────────────────┼──────────┤
+│ 5280078 │ crowdsec │ Ip:223.195.50.112 │ crowdsecurity/http-crawl-non_statics │ ban    │ KR      │ 9769 Sejong University │ 43     │ 3h42m21.824049012s │ 430      │
+╰─────────┴──────────┴───────────────────┴──────────────────────────────────────┴────────┴─────────┴────────────────────────┴────────┴────────────────────┴──────────╯
+fw@fw:~$ sudo cscli decision delete --id 5280078
+INFO[04-04-2026 09:55:02] 1 decision(s) deleted
 
