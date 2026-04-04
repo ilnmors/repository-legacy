@@ -1,0 +1,74 @@
+---
+- name: Create opencloud directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['opencloud']['subuid'] }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/opencloud"
+    - "containers/opencloud"
+  become: true
+
+- name: Check data directory empty
+  ansible.builtin.find:
+    paths: "{{ node['home_path'] }}/data/containers/opencloud/"
+    hidden: true
+    file_type: "any"
+  become: true
+  register: "is_data_dir_empty"
+
+- name: Initialize opencloud
+  when: is_data_dir_empty.matched == 0
+  block:
+    - name: Execute init command (Including pulling image)
+      containers.podman.podman_container:
+        name: "opencloud_init"
+        image: "docker.io/opencloudeu/opencloud:{{ version['containers']['opencloud'] }}"
+        command: "init"
+        state: "started"
+        rm: true
+        detach: false
+        env:
+          IDM_ADMIN_PASSWORD: "{{ hostvars['console']['opencloud']['admin']['password'] }}"
+          # Verify the certificate (Opencloud to Authelia, authelia uses let's encrypt.)
+          OC_INSECURE: "true"
+        volume:
+          - "{{ node['home_path'] }}/containers/opencloud:/etc/opencloud:rw"
+          - "{{ node['home_path'] }}/data/containers/opencloud:/var/lib/opencloud:rw"
+      no_log: true
+
+    - name: Set is_opencloud_init_run
+      ansible.builtin.set_fact:
+        is_opencloud_init_run: true
+
+- name: Deploy configuration files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/opencloud/etc/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/containers/opencloud/{{ item }}"
+    owner: "{{ services['opencloud']['subuid'] }}"
+    group: "svadmins"
+    mode: "0640"
+  loop:
+    - "csp.yaml"
+    - "proxy.yaml"
+  become: true
+  notify: "notification_restart_opencloud"
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/opencloud/opencloud.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/opencloud.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_opencloud"
+
+- name: Enable opencloud.service
+  ansible.builtin.systemd:
+    name: "opencloud.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

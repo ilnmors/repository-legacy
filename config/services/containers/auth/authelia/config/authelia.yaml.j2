@@ -93,6 +93,17 @@ notifier:
 identity_providers:
   oidc:
     hmac_secret: '' # $AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
+    # For the app which doesn't use secret.
+    cors:
+      endpoints:
+        - 'authorization'
+        - 'token'
+        - 'revocation'
+        - 'introspection'
+        - 'userinfo'
+      allowed_origins:
+        - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}'
+      allowed_origins_from_client_redirect_uris: true
     jwks:{% raw %}
       - algorithm: 'RS256'
         use: 'sig'
@@ -238,3 +249,98 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_basic'
+      # OpenCloud configuration
+      ## https://docs.opencloud.eu/docs/admin/configuration/authentication-and-user-management/external-idp/
+      ## Web
+      - client_id: 'opencloud'
+        client_name: 'OpenCloud'
+        public: true
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}/'
+          - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}/oidc-callback.html'
+          - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}/oidc-silent-redirect.html'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'RS256'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'none'
+      ## desktop
+      - client_id: 'OpenCloudDesktop'
+        client_name: 'OpenCloud'
+        public: true
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'http://localhost'
+          - 'http://127.0.0.1'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+          - 'offline_access'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+          - 'refresh_token'
+        access_token_signed_response_alg: 'RS256'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'none'   
+      ## Android
+      - client_id: 'OpenCloudAndroid'
+        client_name: 'OpenCloud'
+        public: true
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'oc://android.opencloud.eu'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+          - 'offline_access'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+          - 'refresh_token'
+        access_token_signed_response_alg: 'RS256'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'none'
+      ## IOS
+      - client_id: 'OpenCloudIOS'
+        client_name: 'OpenCloud'
+        public: true
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'oc://ios.opencloud.eu'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+          - 'offline_access'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+          - 'refresh_token'
+        access_token_signed_response_alg: 'RS256'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'none'

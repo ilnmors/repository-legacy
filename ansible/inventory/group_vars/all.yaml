@@ -131,6 +131,13 @@ services:
     ports:
       http: "3456"
     subuid: "100999"
+  opencloud:
+    domain:
+      public: "opencloud"
+      internal: "opencloud.app"
+    ports:
+      http: "9200"
+    subuid: "100999"
 
 version:
   packages:
@@ -164,3 +171,4 @@ version:
     actualbudget: "26.3.0"
     paperless: "2.20.13"
     vikunja: "2.2.2"
+    opencloud: "4.0.4"

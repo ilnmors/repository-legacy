@@ -75,3 +75,15 @@
   changed_when: false
   listen: "notification_restart_vikunja"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart opencloud
+  ansible.builtin.systemd:
+    name: "opencloud.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: not (is_opencloud_init_run | default(false))
+  changed_when: false
+  listen: "notification_restart_opencloud"
+  ignore_errors: true # noqa: ignore-errors

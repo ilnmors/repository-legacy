@@ -1,0 +1,60 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=OpenCloud
+
+[Container]
+Image=docker.io/opencloudeu/opencloud:{{ version['containers']['opencloud'] }}
+ContainerName=opencloud
+HostName=opencloud
+
+PublishPort={{ services['opencloud']['ports']['http'] }}:9200
+
+Volume=%h/containers/opencloud:/etc/opencloud:rw
+Volume=%h/data/containers/opencloud:/var/lib/opencloud:rw
+
+# General
+Environment="TZ=Asia/Seoul"
+# Log level info
+Environment="OC_LOG_LEVEL=info"
+# TLS configuration
+Environment="PROXY_TLS=false"
+Environment="OC_INSECURE=true"
+# Connection
+Environment="PROXY_HTTP_ADDR=0.0.0.0:9200"
+Environment="OC_URL=https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}"
+## CSP file location: allow authelia public domain
+Environment="PROXY_CSP_CONFIG_FILE_LOCATION=/etc/opencloud/csp.yaml"
+# OIDC
+Environment="OC_OIDC_ISSUER=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="PROXY_OIDC_REWRITE_WELLKNOWN=true"
+## OIDC CLIENT CONFIGURATION and SCOPES
+Environment="WEB_OIDC_CLIENT_ID=opencloud"
+Environment="WEB_OIDC_SCOPE=openid profile email"
+## auto sign-in from authelia
+Environment="PROXY_AUTOPROVISION_ACCOUNTS=true"
+## Stop using internal idP service
+Environment="OC_EXCLUDE_RUN_SERVICES=idp"
+## Don't limit special characters
+Environment="GRAPH_USERNAME_MATCH=none"
+
+
+# OIDC standard link environments
+#Environment="WEB_OIDC_AUTHORITY=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+#Environment="WEBFINGER_OIDC_ISSUER=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+#Environment="OC_OIDC_CLIENT_ID=opencloud"
+#Environment="OC_OIDC_CLIENT_SCOPES=openid profile email groups"
+#Environment="WEBFINGER_ANDROID_OIDC_CLIENT_ID=opencloud"
+#Environment="WEBFINGER_ANDROID_OIDC_CLIENT_SCOPES=openid profile email groups offline_access"
+#Environment="WEBFINGER_DESKTOP_OIDC_CLIENT_ID=opencloud"
+#Environment="WEBFINGER_DESKTOP_OIDC_CLIENT_SCOPES=openid profile email groups offline_access"
+#Environment="WEBFINGER_IOS_OIDC_CLIENT_ID=opencloud"
+#Environment="WEBFINGER_IOS_OIDC_CLIENT_SCOPES=openid profile email groups offline_access"
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

@@ -209,6 +209,14 @@
           tags: ["site", "vikunja"]
       tags: ["site", "vikunja"]
 
+    - name: Set opencloud
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_opencloud"
+        apply:
+          tags: ["site", "opencloud"]
+      tags: ["site", "opencloud"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

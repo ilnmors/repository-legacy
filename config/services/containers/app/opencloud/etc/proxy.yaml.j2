@@ -1,0 +1,17 @@
+role_assignment:
+  driver: "oidc"
+  oidc_role_mapper:
+    role_claim: "preferred_username"
+    role_mapping:
+{% for admin_user in ['il'] %}
+      - role_name: "admin"
+        claim_value: "{{ admin_user }}"
+{% endfor %}
+{% for general_user in ['morsalin', 'eunkyoung'] %}
+      - role_name: "user"
+        claim_value: "{{ general_user }}"
+{% endfor %}
+#    - role_name: "spaceadmin"
+#      claim_value: ""
+#    - role_name: user-light
+#      claim_value: ""
