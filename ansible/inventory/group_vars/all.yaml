@@ -138,6 +138,8 @@ services:
     ports:
       http: "9200"
     subuid: "100999"
+  manticore:
+    subuid: "100998"
 
 version:
   packages:
@@ -172,3 +174,4 @@ version:
     paperless: "2.20.13"
     vikunja: "2.2.2"
     opencloud: "4.0.4"
+    manticore: "25.0.0"

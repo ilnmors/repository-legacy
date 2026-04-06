@@ -1,0 +1,25 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Manticore
+
+[Container]
+Image=docker.io/manticoresearch/manticore:{{ version['containers']['manticore'] }}
+ContainerName=manticore_{{ manticore_service }}
+HostName=manticore_{{ manticore_service }}
+
+PublishPort={{ services[manticore_service]['ports']['manticore'] }}:9308
+
+Volume=%h/data/containers/manticore/{{ manticore_service }}:/var/lib/manticore:rw
+
+# General
+Environment="TZ=Asia/Seoul"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
