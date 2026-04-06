@@ -119,10 +119,11 @@
         - [x] Immich
         - [x] Actual budget
         - [x] Paperless-ngx
-        - [x] vikunja
-        - OpenCloud \(with Radicale, Collabora Web Office\)
-        - Outline
-        - Wiki.js
+        - [x] vikunja - When affine is verified to subsitute kanban board and etc, then disable this service.
+        - [x] OpenCloud
+        - [x] affine \(Notion substitution\)
+        - [ ] Radicale
+        - [ ] Collabora office
         - WriteFreely
         - MediaCMS
         - Funkwhale
