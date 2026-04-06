@@ -87,3 +87,15 @@
   changed_when: false
   listen: "notification_restart_opencloud"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart affine
+  ansible.builtin.systemd:
+    name: "affine.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_affine_init.stat.exists
+  changed_when: false
+  listen: "notification_restart_affine"
+  ignore_errors: true # noqa: ignore-errors

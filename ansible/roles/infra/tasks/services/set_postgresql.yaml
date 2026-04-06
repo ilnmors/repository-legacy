@@ -10,6 +10,7 @@
       - "immich"
       - "paperless"
       - "vikunja"
+      - "affine"
 
 - name: Create postgresql directory
   ansible.builtin.file:

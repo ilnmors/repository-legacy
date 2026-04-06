@@ -2,7 +2,7 @@
 DefaultDependencies=false
 
 [Unit]
-Description=Manticore
+Description=Manticore - {{ manticore_service }}
 
 [Container]
 Image=docker.io/manticoresearch/manticore:{{ version['containers']['manticore'] }}

@@ -110,7 +110,7 @@ identity_providers:
         key: {{ secret "/run/secrets/AUTHELIA_JWKS_RS256" | mindent 10 "|" | msquote }}
       - algorithm: 'ES256'
         use: 'sig'
-        key: {{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %}   
+        key: {{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %} 
     clients:
       # https://www.authelia.com/integration/openid-connect/clients/synology-dsm/
       - client_id: 'dsm'
@@ -344,3 +344,24 @@ identity_providers:
         access_token_signed_response_alg: 'RS256'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'none'
+      # https://docs.affine.pro/self-host-affine/administer/oauth-2-0
+      - client_id: 'affine'
+        client_name: 'Affine'
+        client_secret: '{{ hostvars['console']['affine']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          - 'https://{{ services['affine']['domain']['public'] }}.{{ domain['public'] }}/oauth/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_post'

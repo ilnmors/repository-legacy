@@ -140,6 +140,14 @@ services:
     subuid: "100999"
   manticore:
     subuid: "100998"
+  affine:
+    domain:
+      public: "affine"
+      internal: "affine.app"
+    ports:
+      http: "3010"
+      redis: "6381"
+      manticore: "9308"
 
 version:
   packages:
@@ -175,3 +183,4 @@ version:
     vikunja: "2.2.2"
     opencloud: "4.0.4"
     manticore: "25.0.0"
+    affine: "0.26.3"

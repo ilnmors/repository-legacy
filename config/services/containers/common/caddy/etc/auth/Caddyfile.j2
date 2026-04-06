@@ -127,6 +127,15 @@
                 }
         }
 }
+{{ services['affine']['domain']['public'] }}.{{ domain['public'] }} {
+        import crowdsec_log
+        route {
+                crowdsec
+                reverse_proxy https://{{ services['affine']['domain']['internal'] }}.{{ domain['internal'] }} {
+                        header_up Host {http.reverse_proxy.upstream.host}
+                }
+        }
+}
 
 # Internal domain
 {{ node['name'] }}.{{ domain['internal'] }} {

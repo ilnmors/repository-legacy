@@ -217,6 +217,15 @@
           tags: ["site", "opencloud"]
       tags: ["site", "opencloud"]
 
+    - name: Set affine
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_affine"
+        apply:
+          tags: ["site", "affine"]
+      tags: ["site", "affine"]
+
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

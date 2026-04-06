@@ -1,0 +1,49 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=AFFiNE
+
+After=redis_affine.service manticore_affine.service
+Wants=redis_affine.service manticore_affine.service
+
+[Container]
+Image=ghcr.io/toeverything/affine:{{ version['containers']['affine'] }}
+ContainerName=affine
+HostName=affine
+
+PublishPort={{ services['affine']['ports']['http'] }}:3010
+
+Volume=%h/data/containers/affine:/root/.affine/storage:rw
+Volume=%h/containers/affine/config:/root/.affine/config
+Volume=%h/containers/affine/ssl:/etc/ssl/affine:ro
+
+# General
+Environment="TZ=Asia/Seoul"
+## OIDC callback URIs
+Environment="AFFINE_SERVER_HOST={{ services['affine']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="AFFINE_SERVER_EXTERNAL_URL=https://{{ services['affine']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="AFFINE_SERVER_HTTPS=true"
+
+Secret=AFFINE_PRIVATE_KEY,type=env
+
+# Database
+Secret=AFFINE_DATABASE_URL,type=env,target=DATABASE_URL
+## Enable AI function: this needs pgvector
+
+# Redis
+Environment="REDIS_SERVER_HOST=host.containers.internal"
+Environment="REDIS_SERVER_PORT={{ services['affine']['ports']['redis'] }}"
+
+# Indexer
+Environment="AFFINE_INDEXER_ENABLED=true"
+Environment="AFFINE_INDEXER_SEARCH_ENDPOINT=http://host.containers.internal:{{ services['affine']['ports']['manticore'] }}"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

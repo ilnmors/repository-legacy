@@ -71,3 +71,9 @@
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
+{{ services['affine']['domain']['internal'] }}.{{ domain['internal'] }} {
+        import private_tls
+        reverse_proxy host.containers.internal:{{ services['affine']['ports']['http'] }} {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}
