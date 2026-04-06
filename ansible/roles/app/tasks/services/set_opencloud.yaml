@@ -12,15 +12,13 @@
   become: true
 
 - name: Check data directory empty
-  ansible.builtin.find:
-    paths: "{{ node['home_path'] }}/data/containers/opencloud/"
-    hidden: true
-    file_type: "any"
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/data/containers/opencloud/.init"
   become: true
-  register: "is_data_dir_empty"
+  register: "is_opencloud_init"
 
 - name: Initialize opencloud
-  when: is_data_dir_empty.matched == 0
+  when: not is_opencloud_init.stat.exists
   block:
     - name: Execute init command (Including pulling image)
       containers.podman.podman_container:
@@ -39,9 +37,13 @@
           - "{{ node['home_path'] }}/data/containers/opencloud:/var/lib/opencloud:rw"
       no_log: true
 
-    - name: Set is_opencloud_init_run
-      ansible.builtin.set_fact:
-        is_opencloud_init_run: true
+    - name: Create .init file
+      ansible.builtin.file:
+        path: "{{ node['home_path'] }}/data/containers/opencloud/.init"
+        state: "touch"
+        mode: "0644"
+        owner: "{{ ansible_user }}"
+        group: "svadmins"
 
 - name: Deploy configuration files
   ansible.builtin.template:

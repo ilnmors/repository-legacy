@@ -83,7 +83,7 @@
     enabled: true
     daemon_reload: true
     scope: "user"
-  when: not (is_opencloud_init_run | default(false))
+  when: is_opencloud_init.stat.exists
   changed_when: false
   listen: "notification_restart_opencloud"
   ignore_errors: true # noqa: ignore-errors
