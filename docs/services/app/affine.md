@@ -51,12 +51,15 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ## Configuration
 
-### About quota
+### About community edition limitation
 
-- Workspace seats for family: below 10 seats
-  - If 10 members is needed, then buy a licence
+- Workspace seats
+  - The number of members itself \(account\) are unlimited.
+  - However the number of members who work on the same workspace simultaneously \(seats\) are designated as 10 members.
 - Workspace storage quota
-  - They are planning unlimited storage quota, not now. Now they have 100GB quota for sync.
+  - Originally, self-hosted version has no limitation in storage quota and uploading file size.
+  - Now, there is some limitation even in the self-hosted version.
+  - It will be changed when the application is updating
 
 ### Following feature which will be applied in this system
 
