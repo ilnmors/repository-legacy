@@ -21,5 +21,6 @@ node:
   config_path: "{{ node.homelab_path }}/config"
   ssh_san: "console,console.ilnmors.internal"
   ssh_users: "vmm,fw,infra,auth,app"
-  local_san: "localhost console.ilnmors.internal"
+  # add the hostname of wsl, it is needed to improve the sudo problem
+  local_san: "localhost console.ilnmors.internal surface"
 # ansible_python_interpreter: "{{ ansible_playbook_python }}"
