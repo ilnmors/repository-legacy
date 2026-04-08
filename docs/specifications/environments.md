@@ -119,7 +119,7 @@
         - [x] Immich
         - [x] Actual budget
         - [x] Paperless-ngx
-        - [x] vikunja - When affine is verified to subsitute kanban board and etc, then disable this service.
+        - [x] vikunja - When affine is verified to substitute kanban board and etc, then disable this service.
         - [x] OpenCloud
         - [x] affine \(Notion substitution\)
         - [ ] Radicale

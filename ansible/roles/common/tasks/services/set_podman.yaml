@@ -15,7 +15,7 @@
     state: "directory"
     mode: "0700"
 
-- name: Create contaienr data directory for app
+- name: Create container data directory for app
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/data/containers"
     owner: "{{ ansible_user }}"
