@@ -204,6 +204,11 @@ loki.process "journal_parser" {
         forward_to = [loki.write.loki.receiver]
         // Severity parsing
         // If content of log includes "level" information, change the level
+        stage.json {
+            expressions = {
+                "content_level" = "level",
+            }
+        }
         stage.logfmt {
             mapping = {
                 "content_level" = "level",
