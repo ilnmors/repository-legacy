@@ -25,6 +25,10 @@ Volume=%h/containers/immich/ssl:/etc/ssl/immich:ro
 
 # Environment
 Environment="TZ=Asia/Seoul"
+# The new environment from version 2.7.0 to enable CSP
+Environment="IMMICH_HELMET_FILE=true"
+
+# Redis
 Environment="REDIS_HOSTNAME=host.containers.internal"
 Environment="REDIS_PORT={{ services['immich']['ports']['redis'] }}"
 Environment="REDIS_DBINDEX=0"

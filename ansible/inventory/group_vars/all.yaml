@@ -177,7 +177,7 @@ version:
     vaultwarden: "1.35.4"
     gitea: "1.25.5"
     redis: "8.6.1"
-    immich: "v2.6.3"
+    immich: "v2.7.4"
     actualbudget: "26.3.0"
     paperless: "2.20.13"
     vikunja: "2.2.2"
