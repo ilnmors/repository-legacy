@@ -1,5 +1,26 @@
 # Git configuration
 
+## Convention
+
+- `type(scope): subject`
+
+- type:
+    - feat: Append the new feature
+    - fix: Fix the bug or errors
+    - docs: Fix the documentations
+    - refactor: Modify code structure without functional changes
+    - perf: Improve the performance
+    - chore: Modify system, package manager, etc configuration 
+    - style: Fix code formatting, etc...
+
+## Commit and tags
+
+- In this homelab, `[Infra_structure_change]:[Services_change]:[Documents_and_configuration_change]` is the tagging rule.
+- Tagging and commit should be distinguished.
+- The change which affects system: tagging
+- The change which doesn't affect system: commit
+- `git commit -m "docs(git): define git convention"`
+
 ## Local git
 
 ```bash
@@ -29,14 +50,8 @@ git add .
 # Check git changes
 git status
 git commit -m "1.0.0: Release IaaS baseline"
-# git commit -m "docs: update 07-git.md to add the way to manage git system"
-# Make current documents as snapshot
 git tag -a 1.0.0 -m "IaaS baseline"
-# Make special changes
-# In this homelab, [Infra_structure_change]:[Services_change]:[Documents_and_configuration_change]
-# Tagging and commit should be distinguished.
-# The change which affects system: tagging
-# The change which doesn't affect system: commit
+
 
 # Commands
 git status # What files are changed
