@@ -115,18 +115,10 @@
       become: true
       tags: ["init", "site", "install-packages"]
 
-    - name: Install CLI tools
+    - name: Set CLI tools
       ansible.builtin.include_role:
         name: "console"
         tasks_from: "services/set_cli_tools"
         apply:
           tags: ["init", "site", "tools"]
       tags: ["init", "site", "tools"]
-
-    - name: Install chromium with font
-      ansible.builtin.include_role:
-        name: "console"
-        tasks_from: "services/set_chromium"
-        apply:
-          tags: ["init", "site", "chromium"]
-      tags: ["init", "site", "chromium"]
