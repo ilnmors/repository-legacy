@@ -10,7 +10,7 @@ theme: 'auto'
 # Server configuration
 server:
   # TLS will be applied on caddy
-  address: 'tcp://:9091/'
+  address: 'tcp://:{{ services['authelia']['ports']['http'] }}/'
 
 # Log configuration
 log:

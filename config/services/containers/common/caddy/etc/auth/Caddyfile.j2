@@ -39,7 +39,7 @@
         import crowdsec_log
         route {
                 crowdsec
-                reverse_proxy host.containers.internal:9091
+                reverse_proxy host.containers.internal:{{ services['authelia']['ports']['http'] }}
         }
 }
 # test.ilnmors.com {
