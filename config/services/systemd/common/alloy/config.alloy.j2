@@ -203,17 +203,11 @@ loki.relabel "caddy_relabel" {
 loki.process "journal_parser" {
         forward_to = [loki.write.loki.receiver]
         // Severity parsing
-        // If content of log includes "level" information, change the level
-        stage.json {
-            expressions = {
-                "content_level" = "level",
-            }
+        stage.regex {
+            // Regex to extract the log level from the content.
+            expression = "(?i)(?:level[\"\\s:=]+|\\[|\\s|^)(?P<content_level>info|warn|warning|error|debug|fatal|critical|trace)(?:[\"\\]\\s]|$)"
         }
-        stage.logfmt {
-            mapping = {
-                "content_level" = "level",
-            }
-        }
+        
         stage.labels {
             values = {
                 "level" = "content_level",
