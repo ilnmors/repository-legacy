@@ -21,9 +21,9 @@ ProtectHome=tmpfs
 InaccessiblePaths=/boot /root
 
 {% if node['name'] == 'infra' %}
-BindReadOnlyPaths=/home/infra/containers/postgresql/backups
+BindReadOnlyPaths=%h/containers/postgresql/backups
 {% elif node['name'] == 'app' %}
-BindReadOnlyPaths=/home/app/data
+BindReadOnlyPaths=%h/data
 {% endif %}
 # In root namescope, %u always bring 0
 BindPaths=/etc/kopia
