@@ -13,7 +13,7 @@ Image=docker.io/gitea/gitea:{{ version['containers']['gitea'] }}
 ContainerName=gitea
 HostName=gitea
 
-PublishPort=3000:3000/tcp
+PublishPort={{ services['gitea']['ports']['http'] }}:3000/tcp
 
 Volume=%h/data/containers/gitea:/data:rw
 Volume=%h/containers/gitea/ssl:/etc/ssl/gitea:ro
