@@ -55,6 +55,8 @@
   no_log: true
 
 - name: Initiate ldap (When = false, If DB data does not exist in postgresql, activate this block)
+# The reason why this task doesn't use the way to check ".init" file is this tasks can override original database.
+# Absent of ".init" file cannot guarantee DB is empty.
   when: false
   become: true
   block:
