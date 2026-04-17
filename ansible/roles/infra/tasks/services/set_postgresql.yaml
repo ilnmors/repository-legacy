@@ -88,15 +88,13 @@
   no_log: true
 
 - name: Check data directory empty
-  ansible.builtin.find:
-    paths: "{{ node['home_path'] }}/containers/postgresql/data/"
-    hidden: true
-    file_type: "any"
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/containers/postgresql/data/.init"
   become: true
-  register: "is_data_dir_empty"
+  register: "is_postgresql_init"
 
 - name: Prepare initiating DB
-  when: is_data_dir_empty.matched == 0
+  when: not is_postgresql_init.stat.exists
   become: true
   block:
     # `init/pg_cluster.sql` should be fetched from postgresql's backup directory before running initiating
@@ -118,9 +116,14 @@
       loop: "{{ connected_services }}"
       loop_control:
         index_var: index_num
-    - name: Set is_postgresql_init_run
-      ansible.builtin.set_fact:
-        is_postgresql_init_run: true
+
+    - name: Create .init file
+      ansible.builtin.file:
+        path: "{{ node['home_path'] }}/containers/postgresql/data/.init"
+        state: "touch"
+        mode: "0644"
+        owner: "{{ ansible_user }}"
+        group: "svadmins"
 
 - name: Deploy container file
   ansible.builtin.template:

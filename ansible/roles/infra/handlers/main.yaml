@@ -12,7 +12,7 @@
 - name: Reload postgresql
   ansible.builtin.command:
     /usr/bin/podman exec -u postgres postgresql sh -c "pg_ctl reload"
-  when: not (is_postgresql_init_run | default(false))
+  when: is_postgresql_init.stat.exists
   changed_when: false
   listen: "notification_reload_postgresql"
   ignore_errors: true # noqa: ignore-errors
@@ -24,7 +24,7 @@
     enabled: true
     daemon_reload: true
     scope: "user"
-  when: not (is_postgresql_init_run | default(false))
+  when: is_postgresql_init.stat.exists
   changed_when: false
   listen: "notification_restart_postgresql"
   ignore_errors: true # noqa: ignore-errors
