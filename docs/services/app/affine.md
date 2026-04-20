@@ -117,6 +117,5 @@ Environment="AFFINE_SERVER_HTTPS=true"
 
 #### Flags
 
-- [ ] Whether allow guest users to create demo workspaces
+- [x] Whether allow guest users to create demo workspaces
 - save
-
