@@ -6,7 +6,7 @@
 ## Date
 - 2026-04-20
 
-## version
+## Version
 - affine server: 0.26.3 (self-hosted)
 - affine application: 0.26.3 (Android)
 - IdP: Authelia:4.39.15
