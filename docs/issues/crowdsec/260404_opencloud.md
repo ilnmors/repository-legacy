@@ -18,7 +18,7 @@
 - LAPI decides a ban when a lot of chunks file is uploaded or downloaded from external devices 
 
 ## Timeline
-- 2026-04-04: Release Immich
+- 2026-04-04: Release OpenCloud
 - 2026-04-04: Find the false positive case, and add whitelist
 
 ## Solution
