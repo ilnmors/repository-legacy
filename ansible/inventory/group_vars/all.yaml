@@ -175,7 +175,7 @@ version:
     authelia: "4.39.15"
     # App
     vaultwarden: "1.35.4"
-    gitea: "1.25.5"
+    gitea: "1.26.1"
     redis: "8.6.1"
     immich: "v2.7.5"
     actualbudget: "26.3.0"
