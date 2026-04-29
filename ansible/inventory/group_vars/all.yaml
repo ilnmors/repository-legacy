@@ -179,7 +179,7 @@ version:
     redis: "8.6.1"
     immich: "v2.7.5"
     actualbudget: "26.3.0"
-    paperless: "2.20.13"
+    paperless: "2.20.15"
     vikunja: "2.2.2"
     opencloud: "4.0.6"
     manticore: "25.0.0"
