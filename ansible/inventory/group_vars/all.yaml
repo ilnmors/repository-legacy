@@ -172,7 +172,7 @@ version:
 #    pgvector: "v0.8.1"
     vectorchord: "0.5.3"
     # Auth
-    authelia: "4.39.15"
+    authelia: "4.39.19"
     # App
     vaultwarden: "1.35.4"
     gitea: "1.26.1"
