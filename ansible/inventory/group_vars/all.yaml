@@ -158,7 +158,7 @@ version:
     alloy: "1.13.0"
   containers:
     # common
-    caddy: "2.10.2"
+    caddy: "2.11.2"
     # infra
     step: "0.29.0"
     ldap: "v0.6.2"
