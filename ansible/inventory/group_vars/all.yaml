@@ -174,7 +174,7 @@ version:
     # Auth
     authelia: "4.39.19"
     # App
-    vaultwarden: "1.35.4"
+    vaultwarden: "1.35.8"
     gitea: "1.26.1"
     redis: "8.6.1"
     immich: "v2.7.5"
