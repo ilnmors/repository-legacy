@@ -22,9 +22,12 @@ Volume=%h/containers/ca/db:/home/step/db:rw
 Volume=%h/containers/ca/templates:/home/step/templates:rw
 
 Environment="TZ=Asia/Seoul"
-Environment="PWDPATH=/run/secrets/STEP_CA_PASSWORD"
+# Since 0.30.0, Docker CMD no longer expands PWDPATH.
+#Environment="PWDPATH=/run/secrets/STEP_CA_PASSWORD"
 
 Secret=STEP_CA_PASSWORD,target=/run/secrets/STEP_CA_PASSWORD
+
+Exec=/usr/local/bin/step-ca --password-file /run/secrets/STEP_CA_PASSWORD /home/step/config/ca.json
 
 [Service]
 Restart=always
