@@ -73,10 +73,10 @@
   listen: "notification_restart_grafana"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Enable x509-exporter.service
+- name: Restart x509-exporter.service
   ansible.builtin.systemd:
     name: "x509-exporter.service"
-    state: "started"
+    state: "restarted"
     enabled: true
     daemon_reload: true
     scope: "user"
