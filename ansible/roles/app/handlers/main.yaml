@@ -99,3 +99,15 @@
   changed_when: false
   listen: "notification_restart_affine"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart nextcloud
+  ansible.builtin.systemd:
+    name: "nextcloud.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_nextcloud_init.stat.exists
+  changed_when: false
+  listen: "notification_restart_nextcloud"
+  ignore_errors: true # noqa: ignore-errors

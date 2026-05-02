@@ -11,8 +11,8 @@
     - [x] Terminal
     - [x] Step-CLI
     - [x] Ansible
-    - Git
-    - Kopia
+    - [x] Git
+    - [x] Kopia
     - [x] cloud-image-utils
 
 ## vmm \(Hypervisor\)
@@ -119,10 +119,10 @@
         - [x] Immich
         - [x] Actual budget
         - [x] Paperless-ngx
-        - [x] vikunja - When affine is verified to substitute kanban board and etc, then disable this service.
+        - [x] vikunja
         - [x] OpenCloud
         - [x] affine \(Notion substitution\)
-        - [ ] Radicale
+        - [x] Nextcloud \(Use nextcloud as CalDAV and CardDav, kanban and todo\)
         - [ ] Collabora office
         - WriteFreely
         - MediaCMS

@@ -1,0 +1,36 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Nextcloud
+
+[Container]
+Image=docker.io/library/nextcloud:{{ version['containers']['nextcloud'] }}
+ContainerName=nextcloud
+HostName=nextcloud
+
+PublishPort={{ services['nextcloud']['ports']['http'] }}:80
+
+Volume=%h/containers/nextcloud/ssl:/etc/ssl/nextcloud:ro
+Volume=%h/containers/nextcloud/ini/opcache.ini:/usr/local/etc/php/conf.d/opcache-recommended.ini:ro
+Volume=%h/containers/nextcloud/ini/upload.ini:/usr/local/etc/php/conf.d/upload.ini:ro
+Volume=%h/data/containers/nextcloud/html:/var/www/html:rw
+
+# General
+Environment="TZ=Asia/Seoul"
+# PostgreSQL
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/nextcloud/{{ root_cert_filename }}"
+## libpq in Nextcloud automatically tries to use a client certificate for mTLS. Therefore, when only TLS is required, then disable the option explicitly.
+Environment="PGSSLCERTMODE=disable"
+# Redis
+Environment="REDIS_HOST=host.containers.internal"
+Environment="REDIS_HOST_PORT={{ services['nextcloud']['ports']['redis'] }}"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

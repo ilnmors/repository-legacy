@@ -11,6 +11,7 @@
       - "paperless"
       - "vikunja"
       - "affine"
+      - "nextcloud"
 
 - name: Create postgresql directory
   ansible.builtin.file:

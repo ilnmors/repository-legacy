@@ -225,6 +225,14 @@
           tags: ["site", "affine"]
       tags: ["site", "affine"]
 
+    - name: Set nextcloud
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_nextcloud"
+        apply:
+          tags: ["site", "nextcloud"]
+      tags: ["site", "nextcloud"]
+
 
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"

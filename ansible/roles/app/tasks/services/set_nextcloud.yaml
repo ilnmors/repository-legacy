@@ -1,0 +1,176 @@
+---
+- name: Set redis service name
+  ansible.builtin.set_fact:
+    redis_service: "nextcloud"
+
+- name: Create redis_nextcloud directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['redis']['subuid'] }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "containers/redis"
+    - "containers/redis/{{ redis_service }}"
+    - "containers/redis/{{ redis_service }}/data"
+  become: true
+
+- name: Deploy redis config file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  register: "is_redis_conf"
+
+- name: Deploy redis container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  register: "is_redis_containerfile"
+
+- name: Enable (Restart) redis service
+  ansible.builtin.systemd:
+    name: "redis_{{ redis_service }}.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
+
+- name: Create nextcloud directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['nextcloud']['subuid'] }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/nextcloud"
+    - "data/containers/nextcloud/html"
+    - "containers/nextcloud"
+    - "containers/nextcloud/ssl"
+    - "containers/nextcloud/ini"
+  become: true
+
+- name: Check data directory empty
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/data/containers/nextcloud/.init"
+  register: "is_nextcloud_init"
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/nextcloud/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['nextcloud']['subuid'] }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_nextcloud"
+  no_log: true
+
+- name: Initialize nextcloud
+  when: not is_nextcloud_init.stat.exists
+  block:
+    - name: Execute init command (Including pulling image)
+      containers.podman.podman_container:
+        name: "nextcloud_init"
+        image: "docker.io/library/nextcloud:{{ version['containers']['nextcloud'] }}"
+        command: "/bin/true"
+        state: "started"
+        rm: true
+        detach: false
+        env:
+          NEXTCLOUD_UPDATE: "1"
+          NEXTCLOUD_ADMIN_USER: "admin-local"
+          NEXTCLOUD_ADMIN_PASSWORD: "{{ hostvars['console']['nextcloud']['admin-local']['password'] }}"
+          POSTGRES_HOST: "{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
+          POSTGRES_DB: "nextcloud_db"
+          POSTGRES_USER: "nextcloud"
+          POSTGRES_PASSWORD: "{{ hostvars['console']['postgresql']['password']['nextcloud'] }}"
+          PGSSLMODE: "verify-full"
+          PGSSLROOTCERT: "/etc/ssl/nextcloud/{{ root_cert_filename }}"
+          PGSSLCERTMODE: "disable"
+          REDIS_HOST: "host.containers.internal"
+          REDIS_HOST_PORT: "{{ services['nextcloud']['ports']['redis'] }}"
+        volume:
+          - "{{ node['home_path'] }}/containers/nextcloud/ssl:/etc/ssl/nextcloud:ro"
+          - "{{ node['home_path'] }}/data/containers/nextcloud/html:/var/www/html:rw"
+      no_log: true
+
+    - name: Create .init file
+      ansible.builtin.file:
+        path: "{{ node['home_path'] }}/data/containers/nextcloud/.init"
+        state: "touch"
+        mode: "0644"
+        owner: "{{ ansible_user }}"
+        group: "svadmins"
+
+- name: Deploy config files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/config/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/data/containers/nextcloud/html/config/{{ item }}"
+    owner: "{{ services['nextcloud']['subuid'] }}"
+    group: "svadmins"
+    mode: "0640"
+  loop:
+    - "background.config.php"
+    - "cache.config.php"
+    - "domain.config.php"
+    - "local_remote.config.php"
+    - "user_oidc.config.php"
+  become: true
+  notify: "notification_restart_nextcloud"
+
+- name: Deploy opcache.ini file
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/ini/{{ item }}"
+    dest: "{{ node['home_path'] }}/containers/nextcloud/ini/{{ item }}"
+    group: "svadmins"
+    mode: "0644"
+  loop:
+    - "opcache.ini"
+    - "upload.ini"
+  notify: "notification_restart_nextcloud"
+
+- name: Deploy nextcloud.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/nextcloud.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/nextcloud.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_nextcloud"
+
+- name: Deploy nextcloud-cron service
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/systemd/{{ item }}"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  loop:
+    - "nextcloud-cron.service"
+    - "nextcloud-cron.timer"
+
+- name: Enable nextcloud.service
+  ansible.builtin.systemd:
+    name: "nextcloud.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Enable nextcloud-cron.timer
+  ansible.builtin.systemd:
+    name: "nextcloud-cron.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

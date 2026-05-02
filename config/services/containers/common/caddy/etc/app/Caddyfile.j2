@@ -77,3 +77,9 @@
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
+{{ services['nextcloud']['domain']['internal'] }}.{{ domain['internal'] }} {
+        import private_tls
+        reverse_proxy host.containers.internal:{{ services['nextcloud']['ports']['http'] }} {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}

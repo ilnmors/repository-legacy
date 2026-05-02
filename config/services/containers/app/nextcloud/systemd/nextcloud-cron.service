@@ -1,0 +1,8 @@
+[Unit]
+Description=Nextcloud cron.php
+Requires=nextcloud.service
+After=nextcloud.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec -u www-data nextcloud php -f /var/www/html/cron.php

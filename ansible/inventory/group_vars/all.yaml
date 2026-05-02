@@ -148,6 +148,14 @@ services:
       http: "3010"
       redis: "6381"
       manticore: "9308"
+  nextcloud:
+    domain:
+      public: "nextcloud"
+      internal: "nextcloud.app"
+    ports:
+      http: "8002"
+      redis: "6382"
+    subuid: "100032"
 
 version:
   packages:
@@ -184,3 +192,4 @@ version:
     opencloud: "4.0.6"
     manticore: "25.0.0"
     affine: "0.26.3"
+    nextcloud: "33.0.3"
