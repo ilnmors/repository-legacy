@@ -30,4 +30,4 @@
   - evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/data/migrations/'
 - Delete false positive decision
   - Check false positive decision with `sudo cscli decision list`
-  - Delete false positive decision with `sudo cscli decision list --id $ID`
+  - Delete false positive decision with `sudo cscli decision delete --id $ID`
