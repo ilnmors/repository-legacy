@@ -18,4 +18,9 @@ whitelist:
         - "evt.Meta.target_fqdn == '{{ services['immich']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'"
         # opencloud chunk request false positive
         - "evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/js/chunks/'"
+        # nextcloud chunk request false positive (crowdsecurity/http-crawl-non_statics)
+        - "evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/apps/viewer/js/'"
+        - "evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/dist/'"
+        # nextcloud upload directory request 404 error false positive (crowdsecurity/http-probing)
+        - "evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/remote.php/dav/files/'"
 {% endif %}
