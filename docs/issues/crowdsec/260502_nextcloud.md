@@ -14,18 +14,18 @@
   - fw ban users' IP address.
 
 ## Reason
-- Nextcloud uses chunks for actions, and uploading and downloading
-    - chunks on '/apps/viewer/js', '/dist/'
-    - `crowdsecurity/http-crawl-non_statics`
-- Nextcloud keeps checking directory which is uploading
-    - upload directory '/remote.php/dav/files/'
-    - `crowdsecurity/http-probing`
+- Nextcloud has a lot of workflows which can be caught from crowdsec
 
 ## Timeline
 - 2026-05-02: Release nextcloud
 - 2026-05-02: Find the false positive case, and add whitelist
+- 2026-05-03: Install crowdsecurity/nextcloud-whitelist parser
+- 2026-05-03: Make previous expressions annotation
 
 ## Solution
+- Install crowdsecurity/nextcloud-whitelist on auth node
+
+### Deprecated solution
 - Access to fw
   - Check the ban list with `sudo cscli alerts list`
   - Read the ban case with `sudo cscli alerts inspect $NUMBER`

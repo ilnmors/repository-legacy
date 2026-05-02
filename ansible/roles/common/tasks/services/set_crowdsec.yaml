@@ -36,10 +36,15 @@
   ansible.builtin.set_fact:
     acquisd_list:
       fw:
-        collection: "crowdsecurity/suricata"
+        collection:
+          - "crowdsecurity/suricata"
+        parser: []
         config: "suricata.yaml"
       auth:
-        collection: "crowdsecurity/caddy"
+        collection:
+          - "crowdsecurity/caddy"
+        parser:
+          - "crowdsecurity/nextcloud-whitelist"
         config: "caddy.yaml"
 
 - name: Deploy crowdsec-update service files
@@ -181,13 +186,25 @@
   block:
     - name: Install crowdsec collection
       ansible.builtin.command:
-        cmd: "cscli collections install {{ acquisd_list[node['name']]['collection'] }}"
+        cmd: "cscli collections install {{ item }}"
+      loop: "{{ acquisd_list[node['name']]['collection'] }}"
       become: true
       changed_when: "'overwrite' not in is_collection_installed.stderr"
       failed_when:
         - is_collection_installed.rc != 0
         - "'already installed' not in is_collection_installed.stderr"
       register: "is_collection_installed"
+
+    - name: Install crowdsec parser
+      ansible.builtin.command:
+        cmd: "cscli parsers install {{ item }}"
+      loop: "{{ acquisd_list[node['name']]['parser'] }}"
+      become: true
+      changed_when: "'overwrite' not in is_parser_installed.stderr"
+      failed_when:
+        - is_parser_installed.rc != 0
+        - "'already installed' not in is_parser_installed.stderr"
+      register: "is_parser_installed"
 
     - name: Create crowdsec acquis.d directory
       ansible.builtin.file:
