@@ -26,7 +26,7 @@
 - Access to fw
   - Check the ban list with `sudo cscli alerts list`
   - Read the ban case with `sudo cscli alerts inspect $NUMBER`
-- Add regex on whitelist
+- Add expressions on whitelist
   - evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/data/migrations/'
 - Delete false positive decision
   - Check false positive decision with `sudo cscli decision list`
