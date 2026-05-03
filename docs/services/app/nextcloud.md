@@ -86,3 +86,8 @@ podman exec -u www-data nextcloud php occ db:add-missing-primary-keys
 
 - Profile: Accounts:
   - allocate admin group for admin users
+
+#### Disable System addressbook expose
+
+- Profile: Administration Settings: Groupware: System Address Book
+  - Dsiable Enable system address book
