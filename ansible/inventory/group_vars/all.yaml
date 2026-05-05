@@ -156,6 +156,13 @@ services:
       http: "8002"
       redis: "6382"
     subuid: "100032"
+  collabora:
+    domain:
+      public: "collabora"
+      internal: "collabora.app"
+    ports:
+      http: "9980"
+    subuid: "101000"
 
 version:
   packages:
@@ -193,3 +200,4 @@ version:
     manticore: "25.0.0"
     affine: "0.26.3"
     nextcloud: "33.0.3"
+    collabora: "25.04.9.4.1"

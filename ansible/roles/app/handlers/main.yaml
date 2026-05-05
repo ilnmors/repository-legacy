@@ -111,3 +111,14 @@
   changed_when: false
   listen: "notification_restart_nextcloud"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart collabora
+  ansible.builtin.systemd:
+    name: "collabora.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_collabora"
+  ignore_errors: true # noqa: ignore-errors

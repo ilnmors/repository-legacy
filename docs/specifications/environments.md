@@ -123,7 +123,7 @@
         - [x] OpenCloud
         - [x] affine \(Notion substitution\)
         - [x] Nextcloud \(Use nextcloud as CalDAV and CardDav, kanban and todo\)
-        - [ ] Collabora office
+        - [x] Collabora office \(Link to Nextcloud, it works well\)
         - WriteFreely
         - MediaCMS
         - Funkwhale

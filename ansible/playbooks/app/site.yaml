@@ -233,6 +233,13 @@
           tags: ["site", "nextcloud"]
       tags: ["site", "nextcloud"]
 
+    - name: Set collabora
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_collabora"
+        apply:
+          tags: ["site", "collabora"]
+      tags: ["site", "collabora"]
 
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"

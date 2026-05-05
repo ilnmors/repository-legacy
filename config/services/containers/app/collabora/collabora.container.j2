@@ -1,0 +1,25 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Collabora Online
+
+[Container]
+Image=docker.io/collabora/code:{{ version['containers']['collabora'] }}
+ContainerName=collabora
+HostName=collabora
+
+PublishPort={{ services['collabora']['ports']['http'] }}:9980/tcp
+
+Environment="TZ=Asia/Seoul"
+Environment="aliasgroup1=https://{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}"
+# Environment="aliasgroup2=other_server_FQDN"
+Environment="extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:server_name={{ services['collabora']['domain']['public'] }}.{{ domain['public'] }} --o:admin_console.enable=false"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
