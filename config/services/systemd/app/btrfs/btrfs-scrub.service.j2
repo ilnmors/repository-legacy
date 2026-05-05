@@ -1,0 +1,10 @@
+[Unit]
+Description=BTRFS auto scrub
+ConditionPathIsMountPoint={{ node['home_path'] }}/data
+RequiresMountsFor={{ node['home_path'] }}/data
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/btrfs scrub start -Bd {{ node['home_path'] }}/data
+Nice=19
+IOSchedulingClass=idle
