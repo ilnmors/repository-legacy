@@ -61,7 +61,7 @@ ALTER DATABASE nextcloud_db OWNER TO nextcloud;
   - Mail
   - Nextcloud Office
 
-### Configuration
+### OIDC and DB Configuration
 
 ```bash
 podman exec -u www-data nextcloud php occ user_oidc:provider Authelia \
@@ -90,4 +90,17 @@ podman exec -u www-data nextcloud php occ db:add-missing-primary-keys
 #### Disable System addressbook expose
 
 - Profile: Administration Settings: Groupware: System Address Book
-  - Dsiable Enable system address book
+  - Disable `Enable system address book` option
+
+## Security warning in Nextcloud (ignored)
+
+### trusted_proxies option
+- Nextcloud wants admin to set `trusted_proxies` via forwarded ip header.
+  - In current system, app vm explicitly prevents access the nextcloud container outside of vm.
+  - trusted_proxy ip address will be definitely 169.254.1.2 (caddy's APIPA address which is used in PASTA network), so it is not distinguished from other containers.
+  - Therefore, it doesn't need to be set.
+
+### HSTS option
+- This system is already main - sidecar reverse proxy system, and main proxy automatically changes http requests to https request (Caddyfile listens https).
+  - main - sidecar communication is also on https via internal certificate.
+  - Therefore, it doesn't need to be set.
