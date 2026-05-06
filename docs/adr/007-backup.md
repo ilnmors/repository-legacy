@@ -6,7 +6,10 @@
     - First documentation
 
 - Feb/27/2026
-    - Status changed from Deffered to Accepted
+    - Status changed from Deferred to Accepted
+
+- May/06/2026
+    - Add backup checking rules
     
 ## Status
 
@@ -29,6 +32,12 @@
 - Physical Backup (Raw data folder backup / File system snapshots)
     - Backing up the `/var/lib/postgresql` directory directly while the DB is running can lead to severe data corruption and inconsistency.
     - Logical dumps (`pg_dump`) are much safer, database-agnostic, and easier to restore in a homelab environment.
+
+### Silent failure problem
+
+- May/06/2026, the fact that backups haven't run since commit '9f236b6fa5' because of '%h' in system service unit.
+    - Operator couldn't realize backup doesn't run because the system service was failed silently.
+    - Therefore, set the checking rule.
 
 
 ## Decisions
@@ -54,7 +63,14 @@
         - From kopia server to console:$HOMELAB_PATH/data/volume/infra/postgresql/\{cluster,data\}
     - APP data files
         - From kopia server to APP vm after initiating before deploy services
-- Automative backup does not guarantee integrity of data system, so before reset the system conduct manual backup after making sure all services are shutdown.
+- Automatic backup does not guarantee integrity of data system, so before reset the system conduct manual backup after making sure all services are shutdown.
+- Check the repository once a week (Every monday)
+    - Check the snapshot in repository with `kopia snapshot list --all`
+    - Mount the snapshot respectively with `kopia mount $SNAPSHOT_ID $DESTINATION`
+    - Copy random file from snapshot and check the values.
+    - If there's some failure, check the backup service and conduct backup immediately.
+    - Repeat the check flow.
+    - When everything is done, umount the kopia mount with `ctrl+c`
 
 ## Consequences
 
