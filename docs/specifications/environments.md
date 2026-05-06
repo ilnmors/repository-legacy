@@ -117,16 +117,18 @@
         - [x] Vaultwarden
         - [x] Gitea
         - [x] Immich
-        - [x] Actual budget
+        - [x] Actual budget (Comparing to ezBookkeeping)
         - [x] Paperless-ngx
-        - [x] vikunja
-        - [x] OpenCloud
+        - [x] vikunja (Comparing to Nextcloud deck)
+        - [x] OpenCloud (Comparing to Nextcloud)
         - [x] affine \(Notion substitution\)
         - [x] Nextcloud \(Use nextcloud as CalDAV and CardDav, kanban and todo\)
         - [x] Collabora office \(Link to Nextcloud, it works well\)
+        - [x] ezBookkeeping (budget, consider this the main budget app instead of actual budget)
+            - use budget.ilnmors.com for ezBookkeeping, actual budget domain is changed as actualbudget.ilnmors.com
         - WriteFreely
-        - MediaCMS
-        - Funkwhale
+        - MediaCMS or PeerTube
+        - Funkwhale or Navidrome or Jellyfin
         - Kavita
         - Audiobookshelf
         - Miniflux

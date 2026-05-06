@@ -111,8 +111,8 @@ services:
       http: "3003"
   actualbudget:
     domain:
-      public: "budget"
-      internal: "budget.app"
+      public: "actualbudget"
+      internal: "actualbudget.app"
     ports:
       http: "5006"
     subuid: "101000"
@@ -163,6 +163,13 @@ services:
     ports:
       http: "9980"
     subuid: "101000"
+  ezbookkeeping:
+    domain:
+      public: "budget"
+      internal: "budget.app"
+    ports:
+      http: "8003"
+    subuid: "100999"
 
 version:
   packages:
@@ -201,3 +208,4 @@ version:
     affine: "0.26.3"
     nextcloud: "33.0.3"
     collabora: "25.04.9.4.1"
+    ezbookkeeping: "1.4.0"

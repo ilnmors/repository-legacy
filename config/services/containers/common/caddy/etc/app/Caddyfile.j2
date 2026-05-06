@@ -89,3 +89,9 @@
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
+{{ services['ezbookkeeping']['domain']['internal'] }}.{{ domain['internal'] }} {
+        import private_tls
+        reverse_proxy host.containers.internal:{{ services['ezbookkeeping']['ports']['http'] }} {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}

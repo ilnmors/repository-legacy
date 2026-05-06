@@ -12,6 +12,7 @@
       - "vikunja"
       - "affine"
       - "nextcloud"
+      - "ezbookkeeping"
 
 - name: Create postgresql directory
   ansible.builtin.file:

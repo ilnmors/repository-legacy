@@ -241,6 +241,14 @@
           tags: ["site", "collabora"]
       tags: ["site", "collabora"]
 
+    - name: Set ezbookkeeping
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_ezbookkeeping"
+        apply:
+          tags: ["site", "ezbookkeeping"]
+      tags: ["site", "ezbookkeeping"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

@@ -122,3 +122,14 @@
   changed_when: false
   listen: "notification_restart_collabora"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart ezbookkeeping
+  ansible.builtin.systemd:
+    name: "ezbookkeeping.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_ezbookkeeping"
+  ignore_errors: true # noqa: ignore-errors
