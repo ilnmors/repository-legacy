@@ -1,10 +1,10 @@
 [Unit]
 Description=BTRFS auto scrub
-ConditionPathIsMountPoint={{ node['home_path'] }}/data
-RequiresMountsFor={{ node['home_path'] }}/data
+ConditionPathIsMountPoint={{ storage['btrfs']['mount_point'] }}
+RequiresMountsFor={{ storage['btrfs']['mount_point'] }}
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/btrfs scrub start -Bd {{ node['home_path'] }}/data
+ExecStart=/usr/bin/btrfs scrub start -Bd {{ storage['btrfs']['mount_point'] }}
 Nice=19
 IOSchedulingClass=idle
