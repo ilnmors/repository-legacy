@@ -133,3 +133,17 @@
   changed_when: false
   listen: "notification_restart_ezbookkeeping"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart sure
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  loop:
+    - "sure-web.service"
+    - "sure-worker.service"
+  changed_when: false
+  listen: "notification_restart_sure"
+  ignore_errors: true # noqa: ignore-errors

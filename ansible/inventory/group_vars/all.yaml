@@ -66,7 +66,7 @@ services:
   grafana:
     domain: "grafana"
     ports:
-      http: "3000"
+      http: "3000" # Infra server: Internal ports
     subuid: "100471"
   caddy:
     ports:
@@ -97,7 +97,7 @@ services:
       public: "gitea"
       internal: "gitea.app"
     ports:
-      http: "3000"
+      http: "3000" # App server: Public ports
     subuid: "100999"
   immich:
     domain:
@@ -170,6 +170,14 @@ services:
     ports:
       http: "8003"
     subuid: "100999"
+  sure:
+    domain:
+      public: "sure"
+      internal: "sure.app"
+    ports:
+      http: "3001"
+      redis: "6383"
+    subuid: "100999"
 
 version:
   packages:
@@ -209,3 +217,4 @@ version:
     nextcloud: "33.0.3"
     collabora: "25.04.9.4.1"
     ezbookkeeping: "1.4.0"
+    sure: "0.7.0-hotfix.2"

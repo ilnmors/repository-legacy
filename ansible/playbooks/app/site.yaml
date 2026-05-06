@@ -249,6 +249,14 @@
           tags: ["site", "ezbookkeeping"]
       tags: ["site", "ezbookkeeping"]
 
+    - name: Set sure
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_sure"
+        apply:
+          tags: ["site", "sure"]
+      tags: ["site", "sure"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 
