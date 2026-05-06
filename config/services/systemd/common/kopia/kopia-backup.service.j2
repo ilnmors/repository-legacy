@@ -21,9 +21,9 @@ ProtectHome=tmpfs
 InaccessiblePaths=/boot /root
 
 {% if node['name'] == 'infra' %}
-BindReadOnlyPaths=%h/containers/postgresql/backups
+BindReadOnlyPaths={{ node['home_path'] }}/containers/postgresql/backups
 {% elif node['name'] == 'app' %}
-BindReadOnlyPaths=%h/data
+BindReadOnlyPaths={{ node['home_path'] }}/data
 {% endif %}
 # In root namescope, %u always bring 0
 BindPaths=/etc/kopia
@@ -38,10 +38,10 @@ ExecStartPre=/usr/bin/kopia repository connect server \
 
 {% if node['name'] == 'infra' %}
 ExecStart=/usr/bin/kopia snapshot create \
-    /home/infra/containers/postgresql/backups
+    {{ node['home_path'] }}/containers/postgresql/backups
 {% elif node['name'] == 'app' %}
 ExecStart=/usr/bin/kopia snapshot create \
-    /home/app/data
+    {{ node['home_path'] }}/data
 {% endif %}
 
 
