@@ -21,9 +21,13 @@
 - 2026-05-02: Find the false positive case, and add whitelist
 - 2026-05-03: Install crowdsecurity/nextcloud-whitelist parser
 - 2026-05-03: Make previous expressions annotation
+- 2026-05-07: Find the false positive case, which is not on `crowdsecurity/nextcloud-whitelist`
+- 2026-05-07: Set whitelist expression
 
 ## Solution
 - Install crowdsecurity/nextcloud-whitelist on auth node
+- Add expression on whitelist
+  - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' &&  evt.Meta.http_path startsWith '/index.php/core/preview?'
 
 ### Deprecated solution
 - Access to fw
