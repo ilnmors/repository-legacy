@@ -82,6 +82,8 @@ table inet filter {
         chain global {
                 # invalid packets
                 ct state invalid drop comment "deny invalid connection"
+                # VPN connection exception handling
+                udp dport $PORTS_VPN return comment "return vpn connection to input and forward chain"
                 # crowdsec
                 ip saddr @crowdsec-blacklists counter drop comment "deny all crowdsec blacklist"
                 ip6 saddr @crowdsec6-blacklists counter drop comment "deny all ipv6 crowdsec blacklist"
