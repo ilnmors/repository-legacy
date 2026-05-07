@@ -21,13 +21,14 @@
 ## Timeline
 - 2026-03-21: Release actual budget
 - 2026-03-21: Find the false positive case, and add whitelist
+- 2026-05-07: Optimize whitelist expression
 
 ## Solution
 - Access to fw
   - Check the ban list with `sudo cscli alerts list`
   - Read the ban case with `sudo cscli alerts inspect $NUMBER`
 - Add expressions on whitelist
-  - evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/data/migrations/'
+  - evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/data/migrations/'
 - Delete false positive decision
   - Check false positive decision with `sudo cscli decision list`
   - Delete false positive decision with `sudo cscli decision delete --id $ID`

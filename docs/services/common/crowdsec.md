@@ -234,9 +234,9 @@ fw@fw:~$ sudo cscli alerts inspect 230 -d
 
 - check the log and analyze and make expression
   - e.g. immich
-    - evt.Meta.target_fqdn == 'immich.ilnmors.com' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'
+    - "evt.Meta.target_fqdn == '{{ services['immich']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'"
   - e.g. opencloud
-    - "evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/js/chunks/'"
+    - "evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/js/chunks/'"
 - free false positive decision
 
 fw@fw:~$ sudo cscli decision list

@@ -20,13 +20,14 @@
 ## Timeline
 - 2026-04-04: Release OpenCloud
 - 2026-04-04: Find the false positive case, and add whitelist
+- 2026-05-07: Optimize whitelist expression
 
 ## Solution
 - Access to fw
   - Check the ban list with `sudo cscli alerts list`
   - Read the ban case with `sudo cscli alerts inspect $NUMBER`
 - Add expressions on whitelist
-  - evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_path contains '/js/chunks/'
+  - evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/js/chunks/'
 - Delete false positive decision
   - Check false positive decision with `sudo cscli decision list`
   - Delete false positive decision with `sudo cscli decision delete --id $ID`
