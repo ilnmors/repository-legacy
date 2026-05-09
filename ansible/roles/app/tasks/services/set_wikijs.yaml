@@ -1,0 +1,53 @@
+---
+- name: Create wiki.js directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['wikijs']['subuid'] }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/wikijs"
+    - "data/containers/wikijs/data"
+    - "data/containers/wikijs/export"
+    - "containers/wikijs"
+    - "containers/wikijs/ssl"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/wikijs/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['wikijs']['subuid'] }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_wikijs"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "WIKIJS_DB_PASS"
+    data: "{{ hostvars['console']['postgresql']['password']['wikijs'] }}"
+    state: "present"
+    force: true
+  notify: "notification_restart_wikijs"
+  no_log: true
+
+- name: Deploy wikijs.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/wikijs/wikijs.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/wikijs.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_wikijs"
+
+- name: Enable wikijs.service
+  ansible.builtin.systemd:
+    name: "wikijs.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

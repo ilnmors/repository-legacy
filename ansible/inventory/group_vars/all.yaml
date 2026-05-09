@@ -178,6 +178,13 @@ services:
       http: "3001"
       redis: "6383"
     subuid: "100999"
+  wikijs:
+    domain:
+      public: "wiki"
+      internal: "wiki.app"
+    ports:
+      http: "3002"
+    subuid: "100999"
 
 version:
   packages:
@@ -218,3 +225,4 @@ version:
     collabora: "25.04.9.4.1"
     ezbookkeeping: "1.4.0"
     sure: "0.7.0-hotfix.2"
+    wikijs: "2.5.314"

@@ -257,6 +257,14 @@
           tags: ["site", "sure"]
       tags: ["site", "sure"]
 
+    - name: Set wiki.js
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_wikijs"
+        apply:
+          tags: ["site", "wikijs"]
+      tags: ["site", "wikijs"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

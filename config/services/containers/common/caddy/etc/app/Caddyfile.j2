@@ -101,3 +101,9 @@
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
+{{ services['wikijs']['domain']['internal'] }}.{{ domain['internal'] }} {
+        import private_tls
+        reverse_proxy host.containers.internal:{{ services['wikijs']['ports']['http'] }} {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}

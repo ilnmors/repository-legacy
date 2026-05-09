@@ -131,7 +131,11 @@
             - ezbookkeeping has no function to share the account and budget to the other users.
             - actual budget's YNAB way is hard to adjust
             - sure is heavy, but it is not YNAB and it allows to share account the other users
-        - WriteFreely
+        - [x] wiki.js
+            - check wiki.js to use as base wiki of documents.
+        - [ ] TriliumNext
+        - [ ] memos
+        - WriteFreely or directus + frontend(Astro)
         - MediaCMS or PeerTube
         - Funkwhale or Navidrome or Jellyfin
         - Kavita

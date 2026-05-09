@@ -147,3 +147,14 @@
   changed_when: false
   listen: "notification_restart_sure"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart wikijs
+  ansible.builtin.systemd:
+    name: "wikijs.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_wikijs"
+  ignore_errors: true # noqa: ignore-errors

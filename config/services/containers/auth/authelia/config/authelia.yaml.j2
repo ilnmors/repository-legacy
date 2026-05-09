@@ -430,3 +430,25 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_basic'
+      # https://www.authelia.com/integration/openid-connect/clients/wikijs/
+      - client_id: 'wikijs'
+        client_name: 'Wiki'
+        client_secret: '{{ hostvars['console']['wikijs']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          # add Callback URL / Redirect URI HERE
+          - 'https://wiki.ilnmors.com/login/aa72242e-7058-4cfa-9504-19a4208062ea/callback'  # Note this must be copied during step 7 of the Application configuration.
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_post'

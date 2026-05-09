@@ -1,0 +1,41 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Wiki.js
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/requarks/wiki:{{ version['containers']['wikijs'] }}
+ContainerName=wikijs
+HostName=wikijs
+PublishPort={{ services['wikijs']['ports']['http'] }}:3000/tcp
+
+# Volumes
+Volume=%h/data/containers/wikijs/data:/wiki/data:rw
+Volume=%h/data/containers/wikijs/export:/wiki/export:rw
+Volume=%h/containers/wikijs/ssl:/etc/ssl/wiki:ro
+
+# General
+Environment="TZ=Asia/Seoul"
+
+# Database
+Environment="DB_TYPE=postgres"
+Environment="DB_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="DB_USER=wikijs"
+Environment="DB_NAME=wikijs_db"
+Environment="DB_SSL=true"
+Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/wiki/{{ root_cert_filename }}"
+Secret=WIKIJS_DB_PASS,type=env,target=DB_PASS
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
