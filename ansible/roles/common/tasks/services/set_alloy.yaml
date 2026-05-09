@@ -5,9 +5,10 @@
       - hardware
   become: true
 
-- name: Deploy alloy deb file (x86_64)
-  ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['data_path'] }}/bin/alloy-{{ version['packages']['alloy'] }}-amd64.deb"
+- name: Download alloy deb file (x86_64)
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/alloy/releases/download/v{{ version['packages']['alloy'] }}/\
+      alloy-{{ version['packages']['alloy'] }}-1.amd64.deb"
     dest: "/var/cache/apt/archives/alloy-{{ version['packages']['alloy'] }}.deb"
     owner: "root"
     group: "root"
@@ -15,9 +16,10 @@
   become: true
   when: ansible_facts['architecture'] == "x86_64"
 
-- name: Deploy alloy deb file (aarch64)
-  ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['data_path'] }}/bin/alloy-{{ version['packages']['alloy'] }}-arm64.deb"
+- name: Download alloy deb file (aarch64)
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/alloy/releases/download/v{{ version['packages']['alloy'] }}/\
+      alloy-{{ version['packages']['alloy'] }}-1.arm64.deb"
     dest: "/var/cache/apt/archives/alloy-{{ version['packages']['alloy'] }}.deb"
     owner: "root"
     group: "root"
@@ -30,6 +32,7 @@
     deb: "/var/cache/apt/archives/alloy-{{ version['packages']['alloy'] }}.deb"
     state: "present"
   become: true
+  notify: "notification_restart_alloy"
 
 - name: Deploy alloy config
   ansible.builtin.template:

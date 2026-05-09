@@ -122,3 +122,11 @@
         apply:
           tags: ["init", "site", "tools"]
       tags: ["init", "site", "tools"]
+
+    - name: Set kopia
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_kopia"
+        apply:
+          tags: ["init", "site", "kopia"]
+      tags: ["init", "site", "kopia"]

@@ -23,7 +23,7 @@
     state: "present"
   become: true
 
-- name: Create blocky etc directory
+- name: Create blocky directory
   ansible.builtin.file:
     path: "{{ item }}"
     owner: "blocky"
@@ -31,13 +31,38 @@
     mode: "0750"
     state: "directory"
   loop:
+    - "/home/blocky"
+    - "/home/blocky/bin"
     - "/etc/blocky"
     - "/etc/blocky/ssl"
   become: true
 
+- name: Download blocky (x86_64)
+  ansible.builtin.get_url:
+    url: "https://github.com/0xERR0R/blocky/releases/download/v{{ version['packages']['blocky'] }}/\
+      blocky_v{{ version['packages']['blocky'] }}_Linux_x86_64.tar.gz"
+    dest: "/home/blocky/bin/blocky-{{ version['packages']['blocky'] }}-x86_64.tar.gz"
+    owner: "blocky"
+    group: "blocky"
+    mode: "0600"
+  become: true
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Download blocky (aarch64)
+  ansible.builtin.get_url:
+    url: "https://github.com/0xERR0R/blocky/releases/download/v{{ version['packages']['blocky'] }}/\
+      blocky_v{{ version['packages']['blocky'] }}_Linux_arm64.tar.gz"
+    dest: "/home/blocky/bin/blocky-{{ version['packages']['blocky'] }}-arm64.tar.gz"
+    owner: "blocky"
+    group: "blocky"
+    mode: "0600"
+  become: true
+  when: ansible_facts['architecture'] == "aarch64"
+
 - name: Deploy blocky binary file (x86_64)
   ansible.builtin.unarchive:
-    src: "{{ hostvars['console']['node']['data_path'] }}/bin/blocky-{{ version['packages']['blocky'] }}-x86_64.tar.gz"
+    src: "/home/blocky/bin/blocky-{{ version['packages']['blocky'] }}-x86_64.tar.gz"
+    remote_src: true
     dest: "/usr/local/bin/"
     owner: "root"
     group: "root"
@@ -52,7 +77,8 @@
 
 - name: Deploy blocky binary file (aarch64)
   ansible.builtin.unarchive:
-    src: "{{ hostvars['console']['node']['data_path'] }}/bin/blocky-{{ version['packages']['blocky'] }}-arm64.tar.gz"
+    src: "/home/blocky/bin/blocky-{{ version['packages']['blocky'] }}-arm64.tar.gz"
+    remote_src: true
     dest: "/usr/local/bin/"
     owner: "root"
     group: "root"
