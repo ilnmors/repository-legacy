@@ -37,14 +37,14 @@ podman exec -it -u postgres postgresql "psql -U postgres"
 > \l
 > \q
 
-# Restor database (manually)
+# Restore database (manually)
 podman exec -u postgres postgresql "psql -U postgres -f $POSTGRESQL_BACKUP_PATH_IN_CONTAINER/script.sql"
 
 # Backup service executes
 systemctl --user start postgresql-cluster-backup.service
 
 # Stop and remove all data
-systemctl --stop postgresql
+systemctl --user stop postgresql
 sudo find "/home/infra/data/containers/postgresql/data" -mindepth 1 -delete
 
 # Restore database
@@ -62,3 +62,39 @@ postgres=# SHOW shared_preload_libraries;
  vchord.so
 (1 row)
 ```
+
+## Update and upgrade version
+
+### Update version
+
+#### Prerequisite
+
+- Shutdown all related services on [infra, auth, app] vms.
+    - [service list](../../../ansible/roles/infra/tasks/services/set_postgresql.yaml)
+    - `systemctl --user stop $SERVICE`
+
+- Run backup service unit on infra vm.
+    - `systemctl --user start postgresql-cluster-backup.service`
+    - `systemctl --user start postgresql-data-backup@$SERVICE.service`
+
+- Modify postgresql and extension version and run ansible playbook
+    - [version info](../../../ansible/inventory/group_vars/all.yaml)
+    - `ansible-playbook playbooks/infra/site.yaml --tags "postgresql"`
+
+- Check postgresql container and update extension
+
+```postgresql
+# immich example
+# extension should be checked on each database which needs the extension
+\c immich_db
+\dx
+# check the installed_version and default_version
+ALTER EXTENSION vchord UPDATE;
+REINDEX INDEX face_index;
+REINDEX INDEX clip_index;
+```
+
+- Run playbook to start all services
+    - `ansible-playbook playbooks/[infra, auth, app]/site.yaml --tags "site"`
+
+- Check all services

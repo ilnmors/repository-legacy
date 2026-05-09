@@ -197,10 +197,10 @@ version:
     loki: "3.7.1"
     grafana: "13.0.1"
     ## Postgresql
-    postgresql: "18.2"
+    postgresql: "18.3"
     # For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
 #    pgvector: "v0.8.1"
-    vectorchord: "0.5.3"
+    vectorchord: "1.1.1"
     # Auth
     authelia: "4.39.19"
     # App
