@@ -20,7 +20,7 @@
     group: "svadmins"
     mode: "0440"
   become: true
-  no_log: true
+  notify: "notification_restart_x509-exporter"
 
 - name: Deploy certificates
   ansible.builtin.copy:
