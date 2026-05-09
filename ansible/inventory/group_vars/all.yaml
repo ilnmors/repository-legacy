@@ -185,7 +185,7 @@ version:
     step: "0.30.2"
     kopia: "0.22.3"
     blocky: "0.29.0"
-    alloy: "1.13.0"
+    alloy: "1.16.1"
   containers:
     # common
     caddy: "2.11.2"
