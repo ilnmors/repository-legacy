@@ -8,8 +8,19 @@
     mode: "0770"
   loop:
     - "x509-exporter"
+    - "x509-exporter/config"
     - "x509-exporter/certs"
   become: true
+
+- name: Deploy config.yaml
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/x509-exporter/config/config.yaml"
+    dest: "{{ node['home_path'] }}/containers/x509-exporter/config/config.yaml"
+    owner: "{{ services['x509-exporter']['subuid'] }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  no_log: true
 
 - name: Deploy certificates
   ansible.builtin.copy:

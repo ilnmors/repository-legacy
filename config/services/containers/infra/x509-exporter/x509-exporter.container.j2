@@ -11,11 +11,12 @@ Image=docker.io/enix/x509-certificate-exporter:{{ version['containers']['x509-ex
 ContainerName=x509-exporter
 HostName=X509-exporter
 
+Volume=%h/containers/x509-exporter/config/config.yaml:/etc/config.yaml:ro
 Volume=%h/containers/x509-exporter/certs:/certs:ro
 
 PublishPort={{ services['x509-exporter']['ports']['http'] }}:9793
 
-Exec=--listen-address :9793 --watch-dir=/certs
+Exec=--config /etc/config.yaml
 
 [Service]
 Restart=always

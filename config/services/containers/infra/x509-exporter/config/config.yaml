@@ -1,0 +1,11 @@
+server:
+  listen: :9793
+
+sources:
+  - kind: file
+    name: homelab-certs
+    paths:
+      - /certs/*.crt
+      - /certs/*.pem
+      - /certs/*.cer
+    refreshInterval: 1m
