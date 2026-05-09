@@ -396,7 +396,7 @@ identity_providers:
         require_pkce: true
         pkce_challenge_method: 'S256'
         redirect_uris:
-          - 'https://budget.ilnmors.com/oauth2/callback'
+          - 'https://{{ services['ezbookkeeping']['domain']['public'] }}.{{ domain['public'] }}/oauth2/callback'
         scopes:
           - 'openid'
           - 'profile'
@@ -417,7 +417,7 @@ identity_providers:
         require_pkce: true
         pkce_challenge_method: 'S256'
         redirect_uris:
-          - 'https://sure.ilnmors.com/auth/openid_connect/callback'
+          - 'https://{{ services['sure']['domain']['public'] }}.{{ domain['public'] }}/auth/openid_connect/callback'
         scopes:
           - 'openid'
           - 'email'
@@ -440,7 +440,7 @@ identity_providers:
         pkce_challenge_method: ''
         redirect_uris:
           # add Callback URL / Redirect URI HERE
-          - 'https://wiki.ilnmors.com/login/aa72242e-7058-4cfa-9504-19a4208062ea/callback'  # Note this must be copied during step 7 of the Application configuration.
+          - 'https://{{ services['wikijs']['domain']['public'] }}.{{ domain['public'] }}/login/aa72242e-7058-4cfa-9504-19a4208062ea/callback'  # Note this must be copied during step 7 of the Application configuration.
         scopes:
           - 'openid'
           - 'profile'
