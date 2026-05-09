@@ -195,7 +195,7 @@ version:
     x509-exporter: "4.1.0"
     prometheus: "v3.11.3"
     loki: "3.7.1"
-    grafana: "12.3.3"
+    grafana: "13.0.1"
     ## Postgresql
     postgresql: "18.2"
     # For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
