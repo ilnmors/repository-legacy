@@ -109,13 +109,6 @@ services:
   immich-ml:
     ports:
       http: "3003"
-  actualbudget:
-    domain:
-      public: "actualbudget"
-      internal: "actualbudget.app"
-    ports:
-      http: "5006"
-    subuid: "101000"
   paperless:
     domain:
       public: "paperless"
@@ -123,20 +116,6 @@ services:
     ports:
       http: "8001"
       redis: "6380"
-    subuid: "100999"
-  vikunja:
-    domain:
-      public: "vikunja"
-      internal: "vikunja.app"
-    ports:
-      http: "3456"
-    subuid: "100999"
-  opencloud:
-    domain:
-      public: "opencloud"
-      internal: "opencloud.app"
-    ports:
-      http: "9200"
     subuid: "100999"
   manticore:
     subuid: "100998"
@@ -163,13 +142,6 @@ services:
     ports:
       http: "9980"
     subuid: "101000"
-  ezbookkeeping:
-    domain:
-      public: "budget"
-      internal: "budget.app"
-    ports:
-      http: "8003"
-    subuid: "100999"
   sure:
     domain:
       public: "sure"
@@ -177,20 +149,6 @@ services:
     ports:
       http: "3001"
       redis: "6383"
-    subuid: "100999"
-  wikijs:
-    domain:
-      public: "wiki"
-      internal: "wiki.app"
-    ports:
-      http: "3002"
-    subuid: "100999"
-  trilium:
-    domain:
-      public: "notes"
-      internal: "notes.app"
-    ports:
-      http: "8004"
     subuid: "100999"
 
 version:
@@ -222,15 +180,9 @@ version:
     gitea: "1.26.1"
     redis: "8.6.3"
     immich: "v2.7.5"
-    actualbudget: "26.3.0"
     paperless: "2.20.15"
-    vikunja: "2.2.2"
-    opencloud: "4.0.6"
     manticore: "25.0.0"
     affine: "0.26.3"
     nextcloud: "33.0.3"
     collabora: "25.04.9.4.1"
-    ezbookkeeping: "1.4.0"
     sure: "0.7.0-hotfix.2"
-    wikijs: "2.5.314"
-    trilium: "v0.102.2"

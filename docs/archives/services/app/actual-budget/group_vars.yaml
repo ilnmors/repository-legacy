@@ -1,0 +1,13 @@
+---
+services:
+    actualbudget:
+      domain:
+        public: ""
+        internal: ""
+      ports:
+        http: ""
+      subuid: "101000"
+
+version:
+  containers:
+    actualbudget: "26.3.0"

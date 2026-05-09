@@ -12,12 +12,8 @@ whitelist:
         - "{{ hostvars['fw']['network6']['console']['wg'] }}"
 {% if node['name'] == 'auth' %}
     expression:
-        # budget local-first sql scrap rule
-        - "evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/data/migrations/'"
         # immich thumbnail request 404 error false positive
         - "evt.Meta.target_fqdn == '{{ services['immich']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/api/assets/' && evt.Meta.http_path contains '/thumbnail'"
-        # opencloud chunk request false positive
-        - "evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/js/chunks/'"
         # nextcloud thumbnail/preview request error false positive
         - "evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' &&  evt.Meta.http_path startsWith '/index.php/core/preview?'"
 {% endif %}

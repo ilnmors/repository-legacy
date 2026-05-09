@@ -43,17 +43,6 @@
   listen: "notification_restart_immich-ml"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart actual-budget
-  ansible.builtin.systemd:
-    name: "actual-budget.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_actual-budget"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart paperless
   ansible.builtin.systemd:
     name: "paperless.service"
@@ -63,29 +52,6 @@
     daemon_reload: true
   changed_when: false
   listen: "notification_restart_paperless"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart vikunja
-  ansible.builtin.systemd:
-    name: "vikunja.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_vikunja"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart opencloud
-  ansible.builtin.systemd:
-    name: "opencloud.service"
-    state: "restarted"
-    enabled: true
-    daemon_reload: true
-    scope: "user"
-  when: is_opencloud_init.stat.exists
-  changed_when: false
-  listen: "notification_restart_opencloud"
   ignore_errors: true # noqa: ignore-errors
 
 - name: Restart affine
@@ -123,17 +89,6 @@
   listen: "notification_restart_collabora"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart ezbookkeeping
-  ansible.builtin.systemd:
-    name: "ezbookkeeping.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_ezbookkeeping"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart sure
   ansible.builtin.systemd:
     name: "{{ item }}"
@@ -146,26 +101,4 @@
     - "sure-worker.service"
   changed_when: false
   listen: "notification_restart_sure"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart wikijs
-  ansible.builtin.systemd:
-    name: "wikijs.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_wikijs"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart trilium
-  ansible.builtin.systemd:
-    name: "trilium.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_trilium"
   ignore_errors: true # noqa: ignore-errors

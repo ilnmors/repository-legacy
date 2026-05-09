@@ -47,27 +47,9 @@
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-{{ services['actualbudget']['domain']['internal'] }}.{{ domain['internal'] }} {
-        import private_tls
-        reverse_proxy host.containers.internal:{{ services['actualbudget']['ports']['http'] }} {
-                header_up Host {http.request.header.X-Forwarded-Host}
-        }
-}
 {{ services['paperless']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
         reverse_proxy host.containers.internal:{{ services['paperless']['ports']['http'] }} {
-                header_up Host {http.request.header.X-Forwarded-Host}
-        }
-}
-{{ services['vikunja']['domain']['internal'] }}.{{ domain['internal'] }} {
-        import private_tls
-        reverse_proxy host.containers.internal:{{ services['vikunja']['ports']['http'] }} {
-                header_up Host {http.request.header.X-Forwarded-Host}
-        }
-}
-{{ services['opencloud']['domain']['internal'] }}.{{ domain['internal'] }} {
-        import private_tls
-        reverse_proxy host.containers.internal:{{ services['opencloud']['ports']['http'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
@@ -89,27 +71,9 @@
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }
-{{ services['ezbookkeeping']['domain']['internal'] }}.{{ domain['internal'] }} {
-        import private_tls
-        reverse_proxy host.containers.internal:{{ services['ezbookkeeping']['ports']['http'] }} {
-                header_up Host {http.request.header.X-Forwarded-Host}
-        }
-}
 {{ services['sure']['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
         reverse_proxy host.containers.internal:{{ services['sure']['ports']['http'] }} {
-                header_up Host {http.request.header.X-Forwarded-Host}
-        }
-}
-{{ services['wikijs']['domain']['internal'] }}.{{ domain['internal'] }} {
-        import private_tls
-        reverse_proxy host.containers.internal:{{ services['wikijs']['ports']['http'] }} {
-                header_up Host {http.request.header.X-Forwarded-Host}
-        }
-}
-{{ services['trilium']['domain']['internal'] }}.{{ domain['internal'] }} {
-        import private_tls
-        reverse_proxy host.containers.internal:{{ services['trilium']['ports']['http'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 }

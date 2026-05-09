@@ -1,0 +1,13 @@
+---
+services:
+  wikijs:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+    subuid: "100999"
+
+version:
+  containers:
+    wikijs: "2.5.314"

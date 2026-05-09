@@ -1,0 +1,6 @@
+name: crowdsecurity/whitelists
+description: "Local whitelist policy"
+whitelist:
+    expression:
+        # budget local-first sql scrap rule
+        - "evt.Meta.target_fqdn == '{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/data/migrations/'"

@@ -185,14 +185,6 @@
           tags: ["site", "immich"]
       tags: ["site", "immich"]
 
-    - name: Set actual budget
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_actual-budget"
-        apply:
-          tags: ["site", "actual-budget"]
-      tags: ["site", "actual-budget"]
-
     - name: Set paperless
       ansible.builtin.include_role:
         name: "app"
@@ -200,22 +192,6 @@
         apply:
           tags: ["site", "paperless"]
       tags: ["site", "paperless"]
-
-    - name: Set vikunja
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_vikunja"
-        apply:
-          tags: ["site", "vikunja"]
-      tags: ["site", "vikunja"]
-
-    - name: Set opencloud
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_opencloud"
-        apply:
-          tags: ["site", "opencloud"]
-      tags: ["site", "opencloud"]
 
     - name: Set affine
       ansible.builtin.include_role:
@@ -241,14 +217,6 @@
           tags: ["site", "collabora"]
       tags: ["site", "collabora"]
 
-    - name: Set ezbookkeeping
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_ezbookkeeping"
-        apply:
-          tags: ["site", "ezbookkeeping"]
-      tags: ["site", "ezbookkeeping"]
-
     - name: Set sure
       ansible.builtin.include_role:
         name: "app"
@@ -256,22 +224,6 @@
         apply:
           tags: ["site", "sure"]
       tags: ["site", "sure"]
-
-    - name: Set wiki.js
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_wikijs"
-        apply:
-          tags: ["site", "wikijs"]
-      tags: ["site", "wikijs"]
-
-    - name: Set trilium
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_trilium"
-        apply:
-          tags: ["site", "trilium"]
-      tags: ["site", "trilium"]
 
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"

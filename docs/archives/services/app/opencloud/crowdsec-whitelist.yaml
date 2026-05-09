@@ -1,0 +1,6 @@
+name: crowdsecurity/whitelists
+description: "Local whitelist policy"
+whitelist:
+    expression:
+        # opencloud chunk request false positive
+        - "evt.Meta.target_fqdn == '{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/js/chunks/'"

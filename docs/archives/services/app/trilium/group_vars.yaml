@@ -1,0 +1,13 @@
+---
+services:
+  trilium:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+    subuid: "100999"
+
+version:
+  containers:
+    trilium: "v0.102.2"

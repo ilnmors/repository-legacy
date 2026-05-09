@@ -9,12 +9,9 @@
       - "gitea"
       - "immich"
       - "paperless"
-      - "vikunja"
       - "affine"
       - "nextcloud"
-      - "ezbookkeeping"
       - "sure"
-      - "wikijs"
 
 - name: Create postgresql directory
   ansible.builtin.file:

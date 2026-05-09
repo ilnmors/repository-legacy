@@ -117,24 +117,15 @@
         - [x] Vaultwarden
         - [x] Gitea
         - [x] Immich
-        - [x] Actual budget
         - [x] Paperless-ngx
-        - [x] vikunja (Comparing to Nextcloud deck)
-        - [x] OpenCloud (Comparing to Nextcloud)
-        - [x] affine (Notion substitution)
-        - [x] Nextcloud (Use nextcloud as CalDAV and CardDav, kanban and todo)
-        - [x] Collabora office (Link to Nextcloud, it works well)
-        - [x] ezBookkeeping 
-            - use budget.ilnmors.com for ezBookkeeping, actual budget domain is changed as actualbudget.ilnmors.com
+        - [x] affine
+            - integrated document management via markdown, whiteboard, canvas
+        - [x] Nextcloud
+            - Use Nextcloud as CalDAV and CardDav, kanban and todo
+        - [x] Collabora office
+            - Link to Nextcloud
         - [x] sure
-            - comparing sure, ezBookkeeping, and actualbudget
-            - ezbookkeeping has no function to share the account and budget to the other users.
-            - actual budget's YNAB way is hard to adjust
-            - sure is heavy, but it is not YNAB and it allows to share account the other users
-        - [x] wiki.js
-            - check wiki.js to use as base wiki of documents.
-        - [x] TriliumNext
-            - UNSTABLE, it is impossible to use.
+            - budget and finance
         - [ ] memos
         - WriteFreely or directus + frontend(Astro)
         - MediaCMS or PeerTube
@@ -146,11 +137,19 @@
         - Ralph
         - Conduit
         - SnappyMail
-    <!--
-        - n8n
-    - Forward_auth
-        - Homepage
-    -->
+    - archived services:
+        - [x] Actual budget
+            - YNAB way is hard to adjust
+        - [x] OpenCloud
+            - Nextcloud is more stable
+        - [x] vikunja
+            - integrated experience from Nextcloud is better
+        - [x] ezBookkeeping
+            - No sharing budget function
+        - [x] wiki.js
+            - Too complex, too heavy
+        - [x] TriliumNext
+            - OIDC errors, and trilium itself is unstable
 
 ## External Backup server
 

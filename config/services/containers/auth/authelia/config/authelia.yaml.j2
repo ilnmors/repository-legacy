@@ -93,25 +93,6 @@ notifier:
 identity_providers:
   oidc:
     hmac_secret: '' # $AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
-    claims_policies:
-      # trilium expects name/email value in id token, but authelia doesn't send it basically
-      trilium:
-        id_token:
-          - email
-          - email_verified
-          - preferred_username
-          - name
-    # For the app which doesn't use secret.
-    cors:
-      endpoints:
-        - 'authorization'
-        - 'token'
-        - 'revocation'
-        - 'introspection'
-        - 'userinfo'
-      allowed_origins:
-        - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}'
-      allowed_origins_from_client_redirect_uris: true
     jwks:{% raw %}
       - algorithm: 'RS256'
         use: 'sig'
@@ -192,28 +173,6 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
-      # https://www.authelia.com/integration/openid-connect/clients/actual-budget/
-      - client_id: 'actual-budget'
-        client_name: 'Actual Budget'
-        client_secret: '{{ hostvars['console']['actualbudget']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}/openid/callback'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'groups'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
       # https://www.authelia.com/integration/openid-connect/clients/paperless/
       - client_id: 'paperless'
         client_name: 'Paperless'
@@ -236,122 +195,6 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
-      # https://www.authelia.com/integration/openid-connect/clients/vikunja/
-      - client_id: 'vikunja'
-        client_name: 'Vikunja'
-        client_secret: '{{ hostvars['console']['vikunja']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['vikunja']['domain']['public'] }}.{{ domain['public'] }}/auth/openid/authelia'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
-      # OpenCloud configuration
-      ## https://docs.opencloud.eu/docs/admin/configuration/authentication-and-user-management/external-idp/
-      ## Web
-      - client_id: 'opencloud'
-        client_name: 'OpenCloud'
-        public: true
-        authorization_policy: 'one_factor'
-        require_pkce: true
-        pkce_challenge_method: 'S256'
-        redirect_uris:
-          - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}/'
-          - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}/oidc-callback.html'
-          - 'https://{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }}/oidc-silent-redirect.html'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-          - 'groups'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'RS256'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'none'
-      ## desktop
-      - client_id: 'OpenCloudDesktop'
-        client_name: 'OpenCloud'
-        public: true
-        authorization_policy: 'one_factor'
-        require_pkce: true
-        pkce_challenge_method: 'S256'
-        redirect_uris:
-          - 'http://localhost'
-          - 'http://127.0.0.1'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-          - 'groups'
-          - 'offline_access'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-          - 'refresh_token'
-        access_token_signed_response_alg: 'RS256'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'none'   
-      ## Android
-      - client_id: 'OpenCloudAndroid'
-        client_name: 'OpenCloud'
-        public: true
-        authorization_policy: 'one_factor'
-        require_pkce: true
-        pkce_challenge_method: 'S256'
-        redirect_uris:
-          - 'oc://android.opencloud.eu'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-          - 'groups'
-          - 'offline_access'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-          - 'refresh_token'
-        access_token_signed_response_alg: 'RS256'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'none'
-      ## IOS
-      - client_id: 'OpenCloudIOS'
-        client_name: 'OpenCloud'
-        public: true
-        authorization_policy: 'one_factor'
-        require_pkce: true
-        pkce_challenge_method: 'S256'
-        redirect_uris:
-          - 'oc://ios.opencloud.eu'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-          - 'groups'
-          - 'offline_access'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-          - 'refresh_token'
-        access_token_signed_response_alg: 'RS256'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'none'
       # https://docs.affine.pro/self-host-affine/administer/oauth-2-0
       - client_id: 'affine'
         client_name: 'Affine'
@@ -395,27 +238,6 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
-      # https://www.authelia.com/integration/openid-connect/clients/ezbookkeeping/
-      - client_id: 'ezbookkeeping'
-        client_name: 'ezBookkeeping'
-        client_secret: '{{ hostvars['console']['ezbookkeeping']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: true
-        pkce_challenge_method: 'S256'
-        redirect_uris:
-          - 'https://{{ services['ezbookkeeping']['domain']['public'] }}.{{ domain['public'] }}/oauth2/callback'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
       # https://www.authelia.com/integration/openid-connect/clients/sure/
       - client_id: 'sure'
         client_name: 'Sure'
@@ -431,52 +253,6 @@ identity_providers:
           - 'email'
           - 'profile'
           - 'groups'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
-      # https://www.authelia.com/integration/openid-connect/clients/wikijs/
-      - client_id: 'wikijs'
-        client_name: 'Wiki'
-        client_secret: '{{ hostvars['console']['wikijs']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          # add Callback URL / Redirect URI HERE
-          - 'https://{{ services['wikijs']['domain']['public'] }}.{{ domain['public'] }}/login/aa72242e-7058-4cfa-9504-19a4208062ea/callback'  # Note this must be copied during step 7 of the Application configuration.
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_post'
-      # https://www.authelia.com/integration/openid-connect/clients/trillium/
-      # The name is trilium, not trillium
-      - client_id: 'trilium'
-        client_name: 'Trilium Notes'
-        client_secret: '{{ hostvars['console']['trilium']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        # claims policy above
-        claims_policy: 'trilium'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }}/callback'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
         response_types:
           - 'code'
         grant_types:

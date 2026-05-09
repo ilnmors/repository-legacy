@@ -91,15 +91,6 @@
                 }
         }
 }
-{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{ services['actualbudget']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
-        }
-}
 {{ services['paperless']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
@@ -108,24 +99,6 @@
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }  
-}
-{{ services['vikunja']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{ services['vikunja']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
-        }
-}
-{{ services['opencloud']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{ services['opencloud']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
-        }
 }
 {{ services['affine']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
@@ -154,38 +127,11 @@
                 }
         }
 }
-{{ services['ezbookkeeping']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{services['ezbookkeeping']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
-        }
-}
 {{ services['sure']['domain']['public'] }}.{{ domain['public'] }} {
         import crowdsec_log
         route {
                 crowdsec
                 reverse_proxy https://{{services['sure']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
-        }
-}
-{{ services['wikijs']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{services['wikijs']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
-        }
-}
-{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{services['trilium']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }

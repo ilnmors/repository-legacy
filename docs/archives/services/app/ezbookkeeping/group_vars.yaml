@@ -1,0 +1,13 @@
+---
+services:
+  ezbookkeeping:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+    subuid: "100999"
+
+version:
+  containers:
+    ezbookkeeping: "1.4.0"

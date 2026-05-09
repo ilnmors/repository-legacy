@@ -1,0 +1,36 @@
+---
+identity_providers:
+  oidc:
+    claims_policies:
+      # trilium expects name/email value in id token, but authelia doesn't send it basically
+      trilium:
+        id_token:
+          - email
+          - email_verified
+          - preferred_username
+          - name
+    clients:
+      # https://www.authelia.com/integration/openid-connect/clients/trillium/
+      # The name is trilium, not trillium
+      - client_id: 'trilium'
+        client_name: 'Trilium Notes'
+        client_secret: 'hash'
+        public: false
+        authorization_policy: 'one_factor'
+        # claims policy above
+        claims_policy: 'trilium'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          - 'https://trilium.example.com/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'

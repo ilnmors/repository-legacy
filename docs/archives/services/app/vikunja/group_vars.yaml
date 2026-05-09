@@ -1,0 +1,13 @@
+---
+services:
+  vikunja:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+    subuid: "100999"
+
+version:
+  containers:
+    vikunja: "2.2.2"

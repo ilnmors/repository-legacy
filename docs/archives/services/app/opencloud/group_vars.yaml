@@ -1,0 +1,13 @@
+---
+services:
+  opencloud:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+    subuid: "100999"
+
+version:
+  containers:
+    opencloud: "4.0.6"
