@@ -185,6 +185,13 @@ services:
     ports:
       http: "3002"
     subuid: "100999"
+  trilium:
+    domain:
+      public: "notes"
+      internal: "notes.app"
+    ports:
+      http: "8004"
+    subuid: "100999"
 
 version:
   packages:
@@ -226,3 +233,4 @@ version:
     ezbookkeeping: "1.4.0"
     sure: "0.7.0-hotfix.2"
     wikijs: "2.5.314"
+    trilium: "v0.102.2"

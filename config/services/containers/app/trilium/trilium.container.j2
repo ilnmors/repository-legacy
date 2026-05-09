@@ -1,0 +1,46 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=trilium
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/triliumnext/trilium:{{ version['containers']['trilium'] }}
+
+ContainerName=trilium
+HostName=trilium
+
+PublishPort={{ services['trilium']['ports']['http'] }}:8080/tcp
+
+Volume=%h/data/containers/trilium/data:/home/node/trilium-data:rw
+
+# General
+Environment="TZ=Asia/Seoul"
+Environment="TRILIUM_DATA_DIR=/home/node/trilium-data"
+Environment="TRILIUM_NO_UPLOAD_LIMIT=true"
+
+# OIDC
+## Short Alias doesn't work now.
+#Environment="TRILIUM_OAUTH_BASE_URL=https://{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }}"
+#Environment="TRILIUM_OAUTH_CLIENT_ID=trilium"
+#Environment="TRILIUM_OAUTH_ISSUER_BASE_URL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+#Environment="TRILIUM_OAUTH_ISSUER_NAME=Authelia"
+#Environment="TRILIUM_OAUTH_ISSUER_ICON=https://www.authelia.com/images/branding/logo-cropped.png"
+#Secret="TRILIUM_OAUTH_CLIENT_SECRET",type=env
+Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHBASEURL=https://{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTID=trilium"
+Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERBASEURL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERNAME=Authelia"
+Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERICON=https://www.authelia.com/images/branding/logo-cropped.png"
+Secret="TRILIUM_OAUTH_CLIENT_SECRET",type=env,target=TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTSECRET
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

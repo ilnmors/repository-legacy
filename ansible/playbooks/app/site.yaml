@@ -265,6 +265,14 @@
           tags: ["site", "wikijs"]
       tags: ["site", "wikijs"]
 
+    - name: Set trilium
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_trilium"
+        apply:
+          tags: ["site", "trilium"]
+      tags: ["site", "trilium"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

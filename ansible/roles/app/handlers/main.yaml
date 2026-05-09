@@ -158,3 +158,14 @@
   changed_when: false
   listen: "notification_restart_wikijs"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart trilium
+  ansible.builtin.systemd:
+    name: "trilium.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_trilium"
+  ignore_errors: true # noqa: ignore-errors

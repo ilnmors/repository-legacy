@@ -93,6 +93,14 @@ notifier:
 identity_providers:
   oidc:
     hmac_secret: '' # $AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
+    claims_policies:
+      # trilium expects name/email value in id token, but authelia doesn't send it basically
+      trilium:
+        id_token:
+          - email
+          - email_verified
+          - preferred_username
+          - name
     # For the app which doesn't use secret.
     cors:
       endpoints:
@@ -452,3 +460,27 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
+      # https://www.authelia.com/integration/openid-connect/clients/trillium/
+      # The name is trilium, not trillium
+      - client_id: 'trilium'
+        client_name: 'Trilium Notes'
+        client_secret: '{{ hostvars['console']['trilium']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        # claims policy above
+        claims_policy: 'trilium'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          - 'https://{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }}/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'

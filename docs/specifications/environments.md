@@ -133,7 +133,8 @@
             - sure is heavy, but it is not YNAB and it allows to share account the other users
         - [x] wiki.js
             - check wiki.js to use as base wiki of documents.
-        - [ ] TriliumNext
+        - [x] TriliumNext
+            - UNSTABLE, it is impossible to use.
         - [ ] memos
         - WriteFreely or directus + frontend(Astro)
         - MediaCMS or PeerTube
