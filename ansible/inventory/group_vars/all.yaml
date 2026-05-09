@@ -206,7 +206,7 @@ version:
     # App
     vaultwarden: "1.36.0"
     gitea: "1.26.1"
-    redis: "8.6.1"
+    redis: "8.6.3"
     immich: "v2.7.5"
     actualbudget: "26.3.0"
     paperless: "2.20.15"
