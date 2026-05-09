@@ -19,7 +19,7 @@
 ### Apply mTLS
 
 - implementing mTLS needs both client certificate and server certificate
-- Managing a number of certificates makes a huge operational burden \(expiry date, revocation, etc ..\)
+- Managing a number of certificates makes a huge operational burden (expiry date, revocation, etc ..)
 
 ## Decisions
 
@@ -30,4 +30,4 @@
 
 - The policy is set simple
 - The overhead is increased little
-- Exclude the exceptions on operation \(For the administrator\)
+- Exclude the exceptions on operation (For the administrator)

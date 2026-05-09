@@ -3,16 +3,16 @@
 ## LAPI
 
 ### Detecting
-Host logs \> CrowdSec Agent\(parser\) > CrowdSec LAPI
+Host logs > CrowdSec Agent(parser) > CrowdSec LAPI
 
 ### Decision
-CrowdSec LAPI \(Decision + Register\)
+CrowdSec LAPI (Decision + Register)
 
 ### Block
-CrowdSec LAPI \> CrowdSec Bouncer \(Block\)
+CrowdSec LAPI > CrowdSec Bouncer (Block)
 
 ## CAPI
-CrowdSec CAPI \> crowdsec LAPI \(local\) \> CrowdSec Bouncer \(Block\)
+CrowdSec CAPI > crowdsec LAPI (local) > CrowdSec Bouncer (Block)
 
 ## Ansible Deployment
 
@@ -20,34 +20,34 @@ CrowdSec CAPI \> crowdsec LAPI \(local\) \> CrowdSec Bouncer \(Block\)
 
 - Deploy fw's config.yaml
 - Deploy crowdsec certificates
-- Register machines \(Agents\)
-- Register bouncers \(Bouncers\)
+- Register machines (Agents)
+- Register bouncers (Bouncers)
 
 ### Set Bouncer (fw/roles/tasks/set_crowdsec_bouncer.yaml)
 
 - Deploy crowdsec-firewall-bouncer.yaml
-- Install suricata collection \(parser\) with cscli
+- Install suricata collection (parser) with cscli
 - Set acquis.d for suricata
 - set-only: bouncer can't get metrics from the chain and rules count result which it doesn't make. - It means, it is impossible to use prometheus metric with set-only true option.
 - chain or rules matched count reasults are able to check on nftables. 
-  - use sudo nft list chain inet filter global to check packet blocked. \(counter command is required\)
+  - use sudo nft list chain inet filter global to check packet blocked. (counter command is required)
 
 ### Set Machines; agents (common/tasks/set_crowdsec_agent.yaml)
 
-- Deploy config.yaml except fw \(disable LAPI, online_api_credentials\)
+- Deploy config.yaml except fw (disable LAPI, online_api_credentials)
 - Deploy local_api_credentials.yaml
 
 ### Set caddy host (auth/tasks/set_caddy.yaml)
 
 - Set caddy CrowdSec module
 - Set caddy log directory
-- Install caddy collection \(parser\) with cscli
+- Install caddy collection (parser) with cscli
 - Set acquis.d for caddy
 
 ### Set whitelist (/etc/crowdsec/parser/s02-enrich/whitelists.yaml)
 
 - Set only local console IP address
-- This can block local VM to the other subnet, but the communication between vms is possible because they are in the same subnet\(L2\) - packets don't pass the fw.
+- This can block local VM to the other subnet, but the communication between vms is possible because they are in the same subnet(L2) - packets don't pass the fw.
 - Crowdsec bouncer only conducts blocks forward chain which pass Firewall, it is blocked by crowdsec bouncer based on lapi
 
 ## Test

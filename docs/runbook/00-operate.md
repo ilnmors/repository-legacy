@@ -22,7 +22,11 @@ When the migration is decided, the manual backup after shutting all services dow
 Only when kopia repository exists.
 
 ```bash
-kopia repository connect --override-username="console" --override-hostname="console.ilnmors.internal"
+kopia repository connect server \
+--url=https://nas.ilnmors.internal:51515 \
+--override-username=console \
+--override-hostname=console.ilnmors.internal
+# Enter the password
 
 kopia snapshot list --all
 
@@ -38,7 +42,7 @@ cp ~/workspace/homelab/volumes/infra/cluster/cluster.sql ~/workspace/homelab/con
 
 ### Provisioning
 
-Ansible playbooks should be declarative. This won't contain complex branch logics \(Declarative over imperative\). Playbooks describes what should be there, not how to. The basic rule is manual destroy and auto reprovisioning.
+Ansible playbooks should be declarative. This won't contain complex branch logics (Declarative over imperative). Playbooks describes what should be there, not how to. The basic rule is manual destroy and auto reprovisioning.
 
 #### vmm and fw
 

@@ -6,10 +6,10 @@ This is not a perfect E2EE communication theorogically, however technically it i
 
 ### .com public domain
 
-WAN - \(Let's Encrypt certificate\) -> Caddy \(auth\) - \(ilnmors internal certificate\) -> Caddy \(app\) or https services - http -> app's local service
+WAN - (Let's Encrypt certificate) -> Caddy (auth) - (ilnmors internal certificate) -> Caddy (app) or https services - http -> app's local service
 
 ### .internal private domain
-client - \(ilnmors internal certificate\) -> Caddy \(Infra\) - http -> local services
+client - (ilnmors internal certificate) -> Caddy (Infra) - http -> local services
 
 ### DNS record
 

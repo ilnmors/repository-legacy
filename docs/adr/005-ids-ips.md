@@ -29,8 +29,8 @@
     - Regex based log parsing is less structured than CrowdSec's parser/scenario model
 
 - Crowdsec
-    - Community based rules and sinario \(CAPI\)
-    - Prevention based on local machines and parsers \(LAPI\)
+    - Community based rules and sinario (CAPI)
+    - Prevention based on local machines and parsers (LAPI)
     - Bouncers can use nftables to prevent threats
     - Parser can detect even L7 attack under TLS
 
@@ -43,7 +43,7 @@
 - Operate Crowdsec as IPS
     - CrowdSec uses two API server, CAPI, LAPI.
         - CAPI updates malicious IPs based on community decisions
-        - LAPI decides malicious attack based on log from its parser and scenario \(Suricata, caddy, etc\)
+        - LAPI decides malicious attack based on log from its parser and scenario (Suricata, caddy, etc)
         - When CAPI, and LAPI decides block some IP based on log parsed by parser and scenarios, bouncer block the malicious accesses.
     - Crowdsec register blacklist on nftables or iptables.
 

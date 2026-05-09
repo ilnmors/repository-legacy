@@ -12,7 +12,7 @@ openssl rand -base64 32 > /run/user/$UID/root_ca_password
 openssl rand -base64 32 > /run/user/$UID/intermediate_ca_password
 # Save the values in `secrets.yaml`
 
-# Create CAs \(Key and cert)
+# Create CAs (Key and cert)
 # Root CA
 step certificate create \
 "ilnmors.internal Root CA" /run/user/$UID/root_ca.crt /run/user/$UID/root_ca.key \

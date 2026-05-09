@@ -1,4 +1,4 @@
-# Hypervisor \(vmm\)
+# Hypervisor (vmm)
 
 Initiating hypervisor doesn't use ansible. Hypervisor is working on hardware itself, so there is a lot of possible variables like IOMMU id, MAC addresses, etc.
 
@@ -19,29 +19,29 @@ Hypervisor is initiated manually with the configuration files which are stored i
     - Hostname: vmm
     - Domain: ilnmors.internal
 - User:
-    - Root Password: \[blank\]
+    - Root Password: `[blank]`
     - Full name for the new user: vmm
     - User Name: bootstrap
     - User Password: debian
 - Partition setting: manual
-    - 512MiB - EFI system partition \(Booting flag: on\) 
-    - 1GiB - Ext4 Journaling \(Mount: /boot)
+    - 512MiB - EFI system partition (Booting flag: on) 
+    - 1GiB - Ext4 Journaling (Mount: /boot)
     - 800 GiB -LVM
-        - 64GiB: vmm-root - Ext4 Journaling \(Mount: /\)
-        - 700GiB: vmm-libvirt - Ext4 \(Mount: /var/lib/libvirt\)
+        - 64GiB: vmm-root - Ext4 Journaling (Mount: /)
+        - 700GiB: vmm-libvirt - Ext4 (Mount: /var/lib/libvirt)
 - Debian package manager setting
     - Scan extra installation media: no
     - Mirror country: South Korea
     - Archive mirror: deb.debian.org
-    - Proxy: \[blank\]
+    - Proxy: `[blank]`
     - Popularity-contest: no
 - Installing packages setting
-    - \[\*\] SSH server
-    - \[\*\] Standard system utilities
+    - `[*]` SSH server
+    - `[*]` Standard system utilities
 
 ### Initial configuration
 
-Hypervisor operates pure L2 switch for fw and it never can access WAN without fw after initial configuration. This means, there is an air-gap which means hypervisor cannot access to WAN for a while \(from end of initial setting to the beginning of fw setting\).
+Hypervisor operates pure L2 switch for fw and it never can access WAN without fw after initial configuration. This means, there is an air-gap which means hypervisor cannot access to WAN for a while (from end of initial setting to the beginning of fw setting).
 
 Hypervisor operates on hardware. Hardware information is always uncertain, and it is set only once. Managing this process as IaC is over engineering.
 

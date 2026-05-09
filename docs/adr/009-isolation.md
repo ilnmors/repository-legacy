@@ -18,7 +18,7 @@
 ### Hypervisor
 
 - As a pure hypervisor, it should only operate virtualization for VM.
-- Hypervisor just provides resources and dummy hub \(br\)
+- Hypervisor just provides resources and dummy hub (br)
 
 ### VM
 
@@ -30,7 +30,7 @@
 
 ### Services
 
-- Services should be distinguished based on their needs \(Privilege\)
+- Services should be distinguished based on their needs (Privilege)
     - Network stack, backup stack needs special privilege for low level ACL or networks.
     - application stack doesn't need low level privilege usually
 

@@ -12,7 +12,7 @@
 |infra|2002|2000|infrastructure|
 |auth|2003|2000|authentication and authorization|
 |app|2004|2000|services|
-|console|2999|2000|console node\(surface\)|
+|console|2999|2000|console node(surface)|
 
 ### subuid and subgid
 
@@ -25,8 +25,8 @@
 |port number|node|subnet|id|
 |:-:|:-:|:-:|:-:|
 |1|WTR Pro N150|Trunk|-|
-|2|AP\(Preparation\)|USER|20|
-|3|DS124\(NAS\)|CLIENT|1|
+|2|AP(Preparation)|USER|20|
+|3|DS124(NAS)|CLIENT|1|
 |4|Console|CLIENT|1|
 |5|Printer|CLIENT|1|
 |6|-|-|-|
@@ -39,10 +39,10 @@
 
 |name|IPv4|IPv6|id|
 |:-:|:-:|:-:|:-:|
-|CLIENT|192.168.1.0/24|fd00:1::/64\(ULA\)|1|
-|SERVER|192.168.10.0/24|fd00:10::/64\(ULA\)|10|
+|CLIENT|192.168.1.0/24|fd00:1::/64(ULA)|1|
+|SERVER|192.168.10.0/24|fd00:10::/64(ULA)|10|
 |USER|192.168.20.0/24|GUA from ISP|20|
-|WG0|192.168.99.0/24|fd00:99::/64\(ULA\)|-|
+|WG0|192.168.99.0/24|fd00:99::/64(ULA)|-|
 
 ### Host
 
@@ -68,12 +68,12 @@
     - 192.168.99.1
     - fd00:99::1
 
-#### blocky \(fw\)
+#### blocky (fw)
 - SERVER
     - 192.168.10.2
     - fd00:10::2
 
-#### bind \(fw\)
+#### bind (fw)
 - SERVER
     - 192.168.10.3
     - fd00:10::3

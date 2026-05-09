@@ -142,5 +142,5 @@ podman exec -it ca step ca certificate test.com test.crt test_key --provisioner 
 ### Firefox
 
 - Setting - Security - view certificates - Authority - add
-    - \[x\] trust this ca to identify website
-    - \[x\] trust this ca to identify email users
+    - `[x]` trust this ca to identify website
+    - `[x]` trust this ca to identify email users

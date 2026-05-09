@@ -20,7 +20,7 @@
 
 - HashiCorp Vault or Infisical
     - Very powerful, but introduces significant compute/memory overhead.
-    - Creates a "Secret Zero" problem for a single-node homelab environment because of dependency \(DB, or etc\).
+    - Creates a "Secret Zero" problem for a single-node homelab environment because of dependency (DB, or etc).
     - It is hard to operate hardware separated key servers.
 
 ### Systemd-credential
@@ -37,10 +37,10 @@
 ## Decisions
 
 - All secret data which has yaml format is encrypted by sops with age-key in `secret.yaml`.
-- age-key is encrypted by gpg and ansible vault with master key \(including upper, lower case, number, special letters) above 40 characters.
+- age-key is encrypted by gpg and ansible vault with master key (including upper, lower case, number, special letters) above 40 characters.
     - All secret data always decrypt by `edit_secret.sh` script or ansible tasks from secrets.yaml using age-key encrypted by ansible-vault.
     - decrypted secret data is always processed on ramfs, they are never saved on disk.
-- Master key is never saved on disk, but only cold storage \(USB, M-DISC, operators' memory\)
+- Master key is never saved on disk, but only cold storage (USB, M-DISC, operators' memory)
 - The secret data will be saved on each servers specific directory or podman secret.
     - OS:
         - path: /etc/secrets

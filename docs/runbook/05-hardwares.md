@@ -6,19 +6,19 @@ All hardware configuration is set after fw vm. The MAC address of hardware is re
 
 ### Access VLAN switch
 
-- http://switch.ilnmors.internal \(192.168.1.2, KEA-DHCP, Only IPv4 support\)
+- http://switch.ilnmors.internal (192.168.1.2, KEA-DHCP, Only IPv4 support)
     - before set ipv6, use ip4 address instead of FQDN
     - id: admin, password: admin
     - new password: switch.password
 
 ### Set VLAN
 - VLAN:802.1Q VLAN
-    - \[x\] Enable - Apply
+    - `[x]` Enable - Apply
     - VLAN client
         - id 1
         - name default > client
-        - member \(Untagged\)
-            - Port 1 \(Trunk, untagged\): Linux bridge is already process untagged packet as id 1
+        - member (Untagged)
+            - Port 1 (Trunk, untagged): Linux bridge is already process untagged packet as id 1
             - Port 3
             - Port 4
             - Port 5
@@ -29,13 +29,13 @@ All hardware configuration is set after fw vm. The MAC address of hardware is re
         - id 10
         - name server
         - member
-            - Port 1 \(Trunk, tagged\)
+            - Port 1 (Trunk, tagged)
     - VLAN user
         - id 20
         - name user
         - member
-            - Port 1 \(Trunk, tagged\)
-            - Port 2 \(Not a member of client vlan, untagged\)
+            - Port 1 (Trunk, tagged)
+            - Port 2 (Not a member of client vlan, untagged)
 
 - VLAN:802.1Q VLAN PVID setting
     - Port 2
@@ -48,9 +48,9 @@ All hardware configuration is set after fw vm. The MAC address of hardware is re
 - Check internet connection
 
 
-## DSM \(DS124\)
+## DSM (DS124)
 
-- https://finds.synology.com/# \(192.168.1.11, KEA-DHCP\)
+- https://finds.synology.com/# (192.168.1.11, KEA-DHCP)
     - Install DSM
 
 ### Initial configuration
@@ -83,7 +83,7 @@ Kea in fw already reserved DSM's IP. However it is necessary to set IP address s
         - Certificate
         - Intermediate certificate
     - Edit: For: Set as default certificate
-    - Setting \(!CAUTION!\)
+    - Setting (!CAUTION!)
         - Even though you set the certificate as default, you have to set certificate for each services.
         - configure: service: certificate: nas.ilnmors.internal
 
@@ -92,20 +92,20 @@ Kea in fw already reserved DSM's IP. However it is necessary to set IP address s
 - **!CAUTION!** It can be set after authelia is implemented
 - Following [here](../../config/services/containers/auth/authelia/config/authelia.yaml.j2) for Authelia configuration
 - Control Panel:Domain/LDAP:SSO Client
-    - Login Settings: \[x\] Select SSO by default on the login page
+    - Login Settings: `[x]` Select SSO by default on the login page
     - Services
-        - \[x\] Enable OpenID Connect SSO service
+        - `[x]` Enable OpenID Connect SSO service
         - OpenID Connect SSO Settings
             - Profile: OIDC
             - Account type: Domain/LDAP/local
             - Name: Authelia
             - Well-Known URL: https://authelia.ilnmors.com/.well-known/openid-configuration
-            - Application ID: dsm \(what you designated\)
+            - Application ID: dsm (what you designated)
             - Application Secret: secret value
             - Redirect URI: https://nas.ilnmors.internal:5001
             - Authorization scope: openid profile groups email
             - Username claim: preferred_username
-- Match the user name \(ID\) in DSM and lldap id.
+- Match the user name (ID) in DSM and lldap id.
 
 ### Kopia in DSM
 
@@ -123,15 +123,15 @@ Kea in fw already reserved DSM's IP. However it is necessary to set IP address s
 
 - Add certificate - DSM reverse proxy cannot deal with gRPC
     - /docker/kopia/config/ssl/nas.key
-    - /docker/kopia/config/ssl/nas.crt \(including intermediate crt\)
+    - /docker/kopia/config/ssl/nas.crt (including intermediate crt)
 
 - container manager:images:import
     - kopia/kopia
-    - tags: \{\{ version['packages']['kopia'] \}\}
+    - tags: {{ version['packages']['kopia'] }}
 - run
     - image: kopia/kopia
     - containername: kopia-server
-    - \[x\] Enable auto restart
+    - `[x]` Enable auto restart
     - port: 51515:51515
     - volume: /docker/kopia/config:/app/config:rw
     - volume: /docker/kopia/cache:/app/cache:rw
@@ -159,7 +159,7 @@ Repository directory - encrypted by server KOPIA_PASSWORD as master key of repos
 
 Server manage ACL with user password, user's KOPIA_PASSWORD. When server verify user with their password, server works with its repository password.
 
-Repository - \(Repository key; master key\) -  Server - \(User key; access key\) - Client
+Repository - (Repository key; master key) -  Server - (User key; access key) - Client
 
 - Client knows its access password as KOPIA_PASSWORD to access server. It doesn't know master key, server's KOPIA_PASSWORD. server will control repository by its KOPIA_PASSWORD. their name is the same but it is different.
 

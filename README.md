@@ -1,6 +1,6 @@
 # ilnmors homelab README
 
-This homelab project implements single-node On-premise IaaS system. The homelab contains virtual machines which are divided by their roles, such as private firewall, DNS, PKI, LDAP and database, SSO\(OIDC\). The standard domain is used to implement this system without specific vendors. All components are defined as code and initiated by IaC \(Ansible\) except hypervisor initial configuration.
+This homelab project implements single-node On-premise IaaS system. The homelab contains virtual machines which are divided by their roles, such as private firewall, DNS, PKI, LDAP and database, SSO(OIDC). The standard domain is used to implement this system without specific vendors. All components are defined as code and initiated by IaC (Ansible) except hypervisor initial configuration.
 
 ## RTO times
 - Feb/25/2026 - Reprovisioning Hypervisor and vms
@@ -15,12 +15,12 @@ This homelab project implements single-node On-premise IaaS system. The homelab 
 - Mar/5/2026 - Reprovisioning Hardware and Hypervisor and vms
     - RTO: 2 hour 20 min
         - console: 15min - verified
-        - certificate: 0 min \(When it needs to be created, RTO will be 20 min) - not verified
-        - wireguard: 0 min \(When it needs to be created, RTO will be 1 min) - not verified
-        - hypervisor\(+fw\): 45 min - verified
+        - certificate: 0 min (When it needs to be created, RTO will be 20 min) - not verified
+        - wireguard: 0 min (When it needs to be created, RTO will be 1 min) - not verified
+        - hypervisor(+fw): 45 min - verified
         - switch: 1 min - verified
         - dsm: 30 min - verified
-        - kopia: 0 min \(When it needs to be created, RTO will be 10 min) - verified
+        - kopia: 0 min (When it needs to be created, RTO will be 10 min) - verified
         - Extra vms: 30 min - verified
         - Etc: 30 min
 

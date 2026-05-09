@@ -63,6 +63,10 @@ Set-Service DiagTrack -StartupType Disable
 Stop-Service dmwappushservice
 Set-Service dmwappushservice -StartupType Disable
 
+## Disable - WorkloadsSessionHost which is the service for AI function
+Stop-Service -Name "WSAIFabricSvc" -Force -ErrorAction SilentlyContinue; Set-Service -Name "WSAIFabricSvc" -StartupType Disabled
+Stop-Process -Name "WorkloadsSessionHost" -Force -ErrorAction SilentlyContinue
+
 ## Compact OS configuration
 compact /compactos:always
 ```
@@ -102,10 +106,10 @@ sign in on app only
 
 - WindowsDefender Firewall:Inbound Rules:
     - File and Printer Sharing (Echo Request - ICMPv4-In) - Profile: Private, Public
-        - General: \[x\] Enable
+        - General: `[x]` Enable
         - Scope: 192.168.1.0/24, 192.168.10.0/24, 192.168.99.0/24
     - File and Printer Sharing (Echo Request - ICMPv6-In) - Profile: Private, Public
-        - General: \[x\] Enable
+        - General: `[x]` Enable
         - Scope: fd00::/8
     - Apply
 
@@ -119,7 +123,8 @@ sign in on app only
 
 ### Create wsl config
 
-- C:\Users\$USERNAME\.wslconfig
+- `C:\Users\$USERNAME\.wslconfig`
+
 ```ini
 [wsl2]
 processors=4
@@ -201,13 +206,13 @@ mkdir ~/workspace
 
 #### VS Code configuration
 
-- WSL extension\(`Ctrl + shift + x`\)
+- WSL extension(`Ctrl + shift + x`)
     - Install `WSL` by Microsoft
         - Remote Explorer:Debian:Connect in Current Windows
 - `Ctrl + k` and `Ctrl + o`
     - Open folder: `/home/console/workspace`
 - `` Ctrl + shift + ` `` for Terminal
-- Extensions\(`Ctrl + shift + x`\)
+- Extensions(`Ctrl + shift + x`)
     - Install `Ansible` by RedHat
 
 ### Playbooks
@@ -244,9 +249,9 @@ ansible-playbook playbooks/console/site.yaml --tags "init"
     - encrypted by gpg and ansible vault with master key
 - Master key
     - The key which has above 40 characters containing upper and lower letters, numbers, and special letters
-    - managed by physical media \(Mind, MDisc, paper\) as file, string, and QR
+    - managed by physical media (Mind, MDisc, paper) as file, string, and QR
     - This value is never saved in server or console.
-- Root CA \(including ssh CA\) must not be deployed.
+- Root CA (including ssh CA) must not be deployed.
      - The tasks with root CA must be performed manually. The source of Trust is the most important in security.
 - Intermediate CA can be deployed.
     - Intermediate CA is operated as a live server. 

@@ -54,8 +54,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ### About community edition limitation
 
 - Workspace seats
-  - The number of members itself \(account\) are unlimited.
-  - However the number of members who work on the same workspace simultaneously \(seats\) are designated as 10 members.
+  - The number of members itself (account) are unlimited.
+  - However the number of members who work on the same workspace simultaneously (seats) are designated as 10 members.
 - Workspace storage quota
   - Originally, self-hosted version has no limitation in storage quota and uploading file size.
   - Now, there is some limitation even in the self-hosted version.
@@ -85,8 +85,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 #### Auth
 
-- [ ] Whether allow new registrations
-- [x] Whether allow new registration via configured oauth
+- `[ ]` Whether allow new registrations
+- `[x]` Whether allow new registration via configured oauth
 - Minimum length requirement of password: 8
 - Maximum length requirement of password: 50
 - save
@@ -117,5 +117,5 @@ Environment="AFFINE_SERVER_HTTPS=true"
 
 #### Flags
 
-- [x] Whether allow guest users to create demo workspaces
+- `[x]` Whether allow guest users to create demo workspaces
 - save

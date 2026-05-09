@@ -70,6 +70,13 @@ git stash pop # get temporary save
 # After git switch
 git switch service
 git rebase --ignore-date main # set date as current time on main branch
+
+# Example
+
+git show HEAD
+git show HEAD~$NUM
+git diff HEAD~$NUM HEAD
+git diff $PREVIOUS_HASH $CURRENT_HASH
 ```
 
 ## Add Service with git
@@ -90,6 +97,10 @@ git merge caddy-app
 - Set this after gitea is implemented
 
 ```bash
+# Copy git from remote
+git clone --mirror https://gitea.ilnmors.com/il/ilnmors-homelab.git
+# If the tag doesn't come then
+git fetch --tags
 # Add git remote repository
 git config --global credential.helper store
 git remote add origin https://gitea.ilnmors.com/il/ilnmors-homelab.git

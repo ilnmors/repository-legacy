@@ -8,11 +8,11 @@
 
 # *! CAUTION !*
 # THIS PROCESS CONTAINING SECRET VALUES.
-# WHEN YOU TYPE THE COMMAND ON SHELL, YOU MUST USE [BLANK] BEFORE COMMAND
+# WHEN YOU TYPE THE COMMAND ON SHELL, YOU MUST USE [blank] BEFORE COMMAND
 # e.g.
 # shell@shell$ command (X)
-# shell@shell$ [BLANK]command (O)
-# BLANK prevent the command to save on .bash_history
+# shell@shell$ [blank]command (O)
+# [blank] prevent the command to save on .bash_history
 # After finish this process, use `history -c` and `clear` for just in case.
 
 

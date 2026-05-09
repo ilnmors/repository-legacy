@@ -4,7 +4,7 @@ Quadlet is for defining container configuration and lifecycle combining systemd 
 
 ## Rootless container
 
-Containers should be isolated from host OS. However, docker runs with root permission on daemon \(dockerd\). This means when one docker container has vulnerability and it is taken over, all the host system authority is threatened. Rootless container, podman runs without root permission and daemon so that even if one of containers is taken over, prevent the damage in host's normal user authority.
+Containers should be isolated from host OS. However, docker runs with root permission on daemon (dockerd). This means when one docker container has vulnerability and it is taken over, all the host system authority is threatened. Rootless container, podman runs without root permission and daemon so that even if one of containers is taken over, prevent the damage in host's normal user authority.
 
 Rootless container maps UID/GID between host and its own following namespace. Host's user UID/GID is mapped with container's root, and host's subuid/subgid defined on `/etc/subuid`, `/etc/subgid` is mapped with container's user UID/GID by default.
 

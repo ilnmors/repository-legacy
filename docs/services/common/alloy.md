@@ -2,7 +2,7 @@
 
 ## Communication
 
-Alloy runs on systemd \(host\), and postgresql runs as container \(rootless podman\). When host system and container communicate, container recognizes host system as host-gateway \(Link local address\).
+Alloy runs on systemd (host), and postgresql runs as container (rootless podman). When host system and container communicate, container recognizes host system as host-gateway (Link local address).
 
 ## postgresql monitor
  

@@ -17,7 +17,7 @@
 
 ## Context
 
-- All configuration file is managed by git \(IaC\)
+- All configuration file is managed by git (IaC)
 - All data file should be backed up by kopia
 - All backup should follow 3-2-1 backup cycle
 
@@ -45,14 +45,14 @@
 - All configuration files are managed by Git
     - Configuration files are based on text
     - It is necessary to version, history management.
-    - Local git -> private Gitea -> github private project \(mirrored\) 
+    - Local git -> private Gitea -> github private project (mirrored) 
     - This fulfills 3-2-1 backup rules
 - Data files are managed by Kopia and DSM
     - Local storage - kopia -> DSM's Kopia repository server - CloudSync -> Cloud server such as OneDrive or Google Drive
     - This fulfills 3-2-1 backup rules
 - Data files which needs backup
     - DB data files: dump
-        - DB data files are located on infra:/home/infra/containers/postgresql/backups/\{cluster,$service\}/
+        - DB data files are located on infra:/home/infra/containers/postgresql/backups/{cluster,$service}/
     - App data files: Photos, Media, etc ..
         - App data files are located on app:/home/app/data/
     - Backed up files: kopia
@@ -60,7 +60,7 @@
 - Kopia over DSM configuration is managed by runbook with equivalent CLI commands due to vendor limitation
 - Restore will be processed manually
     - DB data files
-        - From kopia server to console:$HOMELAB_PATH/data/volume/infra/postgresql/\{cluster,data\}
+        - From kopia server to console:$HOMELAB_PATH/data/volume/infra/postgresql/{cluster,data}
     - APP data files
         - From kopia server to APP vm after initiating before deploy services
 - Automatic backup does not guarantee integrity of data system, so before reset the system conduct manual backup after making sure all services are shutdown.
@@ -74,4 +74,4 @@
 
 ## Consequences
 
-- All files including configuration and data back ups will fulfill 3-2-1 \(3 Copies, 2 different media, 1 offsite\) back up rules
+- All files including configuration and data back ups will fulfill 3-2-1 (3 Copies, 2 different media, 1 offsite) back up rules

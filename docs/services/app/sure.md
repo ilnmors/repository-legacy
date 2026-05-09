@@ -52,7 +52,7 @@ ALTER DATABASE sure_db OWNER TO sure;
 - Setup: 
   - First name and last name
   - Will be using sure with
-    - [x] Family members
+    - `[x]` Family members
   - Country: South Korea
 - Preference: 
   - South Korean Won (KRW)

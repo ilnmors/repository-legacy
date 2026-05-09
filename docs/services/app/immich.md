@@ -61,7 +61,7 @@ CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
   - map
   - version check
 - User privacy
-  - google cast \(disable\)
+  - google cast (disable)
 - Storage template
   - `{{y}}/{{MM}}/{{y}}{{MM}}{{dd}}_{{hh}}{{mm}}{{ss}}`
 - Backups

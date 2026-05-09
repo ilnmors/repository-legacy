@@ -2,11 +2,11 @@
 
 ## Console
 
-- OS: WSL2 \(Debian 13\)
+- OS: WSL2 (Debian 13)
 - Processor: 4vCPU
 - Memory: 4GiB
 - Disk:
-    - 32GiB for `/` \(VHD file\)
+    - 32GiB for `/` (VHD file)
 - Services:
     - [x] Terminal
     - [x] Step-CLI
@@ -15,25 +15,25 @@
     - [x] Kopia
     - [x] cloud-image-utils
 
-## vmm \(Hypervisor\)
+## vmm (Hypervisor)
 
 - OS: Debian13
-- Processor: pCPU \(N150\)
-- Memory: 3GiB \(margin\)
+- Processor: pCPU (N150)
+- Memory: 3GiB (margin)
     - KSM allows more than 3GiB for vmm
 - MAC:
     - c8:ff:bf:05:aa:b0
     - c8:ff:bf:05:aa:b1
 - Disk:
     - SSD:
-        - 64GiB for `/` \(ext4 in LVM\)
-        - 700GiB for `/var/lib/libvirt` \(ext4 in LVM\)
+        - 64GiB for `/` (ext4 in LVM)
+        - 700GiB for `/var/lib/libvirt` (ext4 in LVM)
 - Services:
     - [x] QEMU/KVM
     - [x] libvirtd
     - [x] ksmtuned
 
-## fw \(Firewall\)
+## fw (Firewall)
 
 - OS: Debian13
 - Processor: 2vCPU
@@ -43,20 +43,20 @@
     - 0a:49:6e:4d:00:00
     - 0a:49:6e:4d:00:01
 - Disk:
-    - SSD: 64GiB for `/` \(ext4 in qcow2 file\)
+    - SSD: 64GiB for `/` (ext4 in qcow2 file)
 - Services:
     - native packages:
-        - [x] nftables \(firewall based on ZONE\)
-        - [x] Suricata \(IDS\)
-        - [x] CrowdSec LAPI \(IPS\)
+        - [x] nftables (firewall based on ZONE)
+        - [x] Suricata (IDS)
+        - [x] CrowdSec LAPI (IPS)
         - [x] Kea DHCP
         - [x] Wireguard-tool
-        - [x] BIND9 \(Local authoritative DNS\)
-        - [x] Blocky \(Resolver DNS\)
+        - [x] BIND9 (Local authoritative DNS)
+        - [x] Blocky (Resolver DNS)
     - Scripts:
         - [x] ddns.sh
 
-## infra \(Infrastructure\)
+## infra (Infrastructure)
 
 - OS: Debian13
 - Processor: 2vCPU
@@ -64,15 +64,15 @@
 - Memory: 6GiB
 - MAC: 0a:49:6e:4d:01:00
 - Disk:
-    - SSD: 256GiB for `/` \(ext4 in qcow2 file\)
+    - SSD: 256GiB for `/` (ext4 in qcow2 file)
 - Services:
     - Rootless containers:
         - [x] PostgreSQL
         - [x] lldap
         - [x] Step-CA
-        - [x] Caddy \(with nsupdate\)
-        - [x] Prometheus \(alloy - push\)
-        - [x] Loki \(alloy\)
+        - [x] Caddy (with nsupdate)
+        - [x] Prometheus (alloy - push)
+        - [x] Loki (alloy)
         - [x] Grafana 
     <!-- 
         Mail service is not needed, especially Diun is not needed.
@@ -80,12 +80,12 @@
         - Dovecot
         - mbsync
         - Diun
-    - Study \(Rootless container\):
+    - Study (Rootless container):
         - Kali
         - Debian 
     -->
 
-## auth \(Authorization\)
+## auth (Authorization)
 
 - OS: Debian13
 - Processor: 2vCPU
@@ -93,13 +93,13 @@
 - Memory: 2GiB
 - MAC: 0a:49:6e:4d:02:00
 - Disk:
-    - SSD: 64GiB for `/` \(ext4 in qcow2 file\)
+    - SSD: 64GiB for `/` (ext4 in qcow2 file)
 - Services:
     - Rootless containers:
-        - [x] Caddy \(with nsupdate, crowdsec-http, crowdsec-bouncer module\)
+        - [x] Caddy (with nsupdate, crowdsec-http, crowdsec-bouncer module)
         - [x] authelia
 
-## app \(Application\)
+## app (Application)
 
 - OS: Debian13
 - Processor: 4vCPU
@@ -107,9 +107,9 @@
 - Memory: 16GiB
 - MAC: 0a:49:6e:4d:03:00
 - Disk:
-    - SSD: 256GiB for `/` \(ext4 in qcow2 file\)
-    - HDD: 4TB for `/home/app/data` \(btrfs\)
-- VFIO \(Hardware passthrough):
+    - SSD: 256GiB for `/` (ext4 in qcow2 file)
+    - HDD: 4TB for `/home/app/data` (btrfs)
+- VFIO (Hardware passthrough):
     - Graphic: N150 iGPU
     - Disk: SATA Controller
 - Services:
@@ -121,9 +121,9 @@
         - [x] Paperless-ngx
         - [x] vikunja (Comparing to Nextcloud deck)
         - [x] OpenCloud (Comparing to Nextcloud)
-        - [x] affine \(Notion substitution\)
-        - [x] Nextcloud \(Use nextcloud as CalDAV and CardDav, kanban and todo\)
-        - [x] Collabora office \(Link to Nextcloud, it works well\)
+        - [x] affine (Notion substitution)
+        - [x] Nextcloud (Use nextcloud as CalDAV and CardDav, kanban and todo)
+        - [x] Collabora office (Link to Nextcloud, it works well)
         - [x] ezBookkeeping 
             - use budget.ilnmors.com for ezBookkeeping, actual budget domain is changed as actualbudget.ilnmors.com
         - [x] sure
@@ -153,8 +153,8 @@
 
 ## External Backup server
 
-- OS: DSM \(Synology\)
-- Processor: pCPU \(Realtek RTD1619B\)
+- OS: DSM (Synology)
+- Processor: pCPU (Realtek RTD1619B)
 - Memory: 1GiB
 - MAC: 90:09:d0:65:a9:db
 - Disk:
@@ -162,4 +162,4 @@
 - Services:
     - SFTP
     - Kopia repository server
-    - CloudSync \(Upload backup files to Cloud\)
+    - CloudSync (Upload backup files to Cloud)

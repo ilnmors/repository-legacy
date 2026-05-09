@@ -1,6 +1,6 @@
 ## Operation
 Refer to Ansible playbook
-\(Postgresql user and DB is needed\)
+(Postgresql user and DB is needed)
 
 Integrate configuration with various app: https://github.com/lldap/lldap/blob/main/example_configs
 
@@ -8,7 +8,7 @@ Integrate configuration with various app: https://github.com/lldap/lldap/blob/ma
 ### DB URL
 
 Jinja2 `urlencode` module doesn't replace `/` as `%2F`. replace('/', '%2F') is necessary.
-ex\) {{ var | urlencode | replace('/', '%2F') }}
+ex) {{ var | urlencode | replace('/', '%2F') }}
 
 ### Reset administrator password
 
@@ -28,56 +28,56 @@ systemctl --user restart ldap.service
 
 ### Access web UI and Login
 
-- URL: http://ldap.ilnmors.internal:17170 \(This is temporary access way before Caddy, which is reverse proxy, is set)
+- URL: http://ldap.ilnmors.internal:17170 (This is temporary access way before Caddy, which is reverse proxy, is set)
 - ID: admin
 - PW: $LLDAP_LDAP_USER_PASSWORD
 
 ### Create the groups
 
-- Groups - \[\+\] Create a group
+- Groups - `[+]` Create a group
 	- Group: admins
 	- Group: users
     
 It is necessary to manage ACL via authelia based on groups.
 
-### Create the authelia user for OCID \(OP\)
+### Create the authelia user for OCID (OP)
 
-- Users: \[\+\] Create a user
+- Users: `[+]` Create a user
 	- Username (cn; uid): authelia
 	- Display name: Authelia
 	- First Name: Authelia
 	- Last Name (sn): Service
 	- Email (mail): authelia@ilnmors.internal
 	- Password: "$(openssl rand -base64 32)"
-- Groups:lldap_strict_readonly: \[Add to group\]
+- Groups:lldap_strict_readonly: `[Add to group]`
 	- This group allow search authority.
-- Users: \[\+\] Create a user
+- Users: `[+]` Create a user
 	- Username (cn; uid): grafana
 	- Display name: Grafana
 	- First Name: Grafana
 	- Last Name (sn): Service
 	- Email (mail): grafana@ilnmors.internal
 	- Password: "$(openssl rand -base64 32)"
-- Groups:lldap_strict_readonly: \[Add to group\]
+- Groups:lldap_strict_readonly: `[Add to group]`
 	- This group allow search authority.
 > Save the password in .secret.yaml
 
 ### Create the normal users
 
-- Users: \[\+\] Create a user
+- Users: `[+]` Create a user
 	- Username (cn; uid): il
 	- First Name: Il
 	- Last Name (sn): Lee
 	- Email (mail): il@ilnmors.internal
 	- Password: "$PASSWORD"
-- Groups:lldap_admin&admins&users: \[Add to group\]
-- Users: \[\+\] Create a user
+- Groups:lldap_admin&admins&users: `[Add to group]`
+- Users: `[+]` Create a user
 	- Username (cn; uid): user
 	- First Name: John
 	- Last Name (sn): Doe
 	- Email (mail): john_doe@ilnmors.internal
 	- Password: "$PASSWORD"
-- Groups:(admins|users): \[Add to group\]
+- Groups:(admins|users): `[Add to group]`
 
 > Custom schema in `User schema`, `Group schema` doesn't need to be added. This is for advanced function to add additional value such as `identity number` or `phone number`. Hardcoded schema, which means basic schema the lldap provides is enough to use Authelia.
 

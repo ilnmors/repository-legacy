@@ -1,6 +1,6 @@
 # DHCP (Dynamic Host Configuration Protocol)
 
-Before DHCP emerged, every client had to set their own static IP or using RARP\(Reverse Address Resolution Protocol\). They have critical problems. 
+Before DHCP emerged, every client had to set their own static IP or using RARP(Reverse Address Resolution Protocol). They have critical problems. 
 
 - Static IP
     - Each host has their own IP regardless they run or not. It cause lack of IP address.

@@ -4,7 +4,7 @@
 - link file
     Link file links hardware interface and kernel while booting
 - netdev file
-    netdev file defines virtual interface \(port, bridge\)
+    netdev file defines virtual interface (port, bridge)
 - network file
     network file defines network option above interfaces
 
@@ -12,7 +12,7 @@
 
 - reload
   - networkctl reload
-  - networkctl reconfigure \[interface name\]
+  - networkctl reconfigure [interface name]
 
 ## references
 
@@ -24,10 +24,10 @@
 ## Plans
 
 - Hypervisor's linux bridges work as L2 switch
-  - br0 is completely L2 switch \(LinkLocalAddressing=no\)
+  - br0 is completely L2 switch (LinkLocalAddressing=no)
   - br1 has ip address for hypervisor itself, but basically works as L2 switch whitch can deal with VLAN tags; id=1,10
-- Firewall's port \(wan\) works as Gateway which can conduct NAT
-- Firewall's port \(clients\) works as trunk port which can deal with VLAN tags; id=1,10,20
+- Firewall's port (wan) works as Gateway which can conduct NAT
+- Firewall's port (clients) works as trunk port which can deal with VLAN tags; id=1,10,20
 - Firewall's port
   - client, id = 1
   - server, id = 10

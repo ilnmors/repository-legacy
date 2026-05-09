@@ -27,7 +27,7 @@
     - Removing
     - Formatting
     - Destroying
-    - Certificates and CA \([ADR-003](./003-pki.md)\)
+    - Certificates and CA ([ADR-003](./003-pki.md))
     - Etc. what operator decides that is sensitive
 
 ## Consequences

@@ -11,7 +11,7 @@
 
 ## Context
 
-- App VM needs GPU for heavy workloads like Immich \(hardware transcoding and machine learning\)
+- App VM needs GPU for heavy workloads like Immich (hardware transcoding and machine learning)
 - App VM needs huge data storage for its own services 
 
 ## Considerations

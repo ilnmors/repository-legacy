@@ -36,7 +36,7 @@ Forward zone has basically information of the pair of domain and IP address. The
 
 - Reverse zone
 
-Reverse zone also has basically information of the pair of IP address and domain. The role of this zone is change IP address to domain name. To change domain to IP address it uses specific domain name. \[reversed_ip_address\].in_addr.arpa (i.e. 1.168.192.in-addr.arpa)
+Reverse zone also has basically information of the pair of IP address and domain. The role of this zone is change IP address to domain name. To change domain to IP address it uses specific domain name. `[reversed_ip_address].in_addr.arpa` (i.e. 1.168.192.in-addr.arpa)
 
 ### Records
 

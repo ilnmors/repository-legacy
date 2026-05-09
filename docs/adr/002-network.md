@@ -23,15 +23,15 @@
 
 - OPNSense/pfSense
     - vendor lock-in
-    - GUI environment \(WebGUI\) can contain vulnerability
+    - GUI environment (WebGUI) can contain vulnerability
     - It is hard to manage configurations by IaC
 - iptables
     - Previous standard of Linux
-    - IPv4 and IPv6 configuration is separated \(no inet\)
+    - IPv4 and IPv6 configuration is separated (no inet)
 - nftables
     - New standard of Linux
     - English grammar friendly
-    - IPv4 and IPv6 configuration can be set on the same table \(inet\)
+    - IPv4 and IPv6 configuration can be set on the same table (inet)
 
 ### Flat network structure
 - LAN only
@@ -48,8 +48,8 @@
     - VLAN 20: user (DHCP allocated devices)
     - wg0: VPN connections
 - Manage the rules based on roles fundamentally, furthermore manage them based on ip and ports when it is needed
-- All L3 communication which needs to pass gateway should be on control of firewall \(fw\)
-- All nodes including firewall uses nftables \(modern standard\) to manage the packets based on zone concept
+- All L3 communication which needs to pass gateway should be on control of firewall (fw)
+- All nodes including firewall uses nftables (modern standard) to manage the packets based on zone concept
 - IPv6 has two track strategy
     - Client and server, wg nodes has static ULA IP, and use NAT66 for permanency
     - User nodes has GUA SLAAC IP from ISP for compatibility
