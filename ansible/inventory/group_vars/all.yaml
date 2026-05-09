@@ -191,7 +191,7 @@ version:
     caddy: "2.11.2"
     # infra
     step: "0.30.2"
-    ldap: "v0.6.2"
+    ldap: "v0.6.3"
     x509-exporter: "3.21.0"
     prometheus: "v3.9.1"
     loki: "3.6.5"
