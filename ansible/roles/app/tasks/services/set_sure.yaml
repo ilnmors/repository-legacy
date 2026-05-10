@@ -108,3 +108,36 @@
   loop:
     - "sure-web.service"
     - "sure-worker.service"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
+  loop:
+    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+      file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
+    - image: "ghcr.io/we-promise/sure:{{ version['containers']['sure'] }}"
+      file: "ghcr.io_we-promise_sure_{{ version['containers']['sure'] }}"
+  loop_control:
+    label: "{{ item.file }}"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "{{ item.item.image }}"
+    dest: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    format: "oci-archive"
+    force: false
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"
+  when: not item.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"

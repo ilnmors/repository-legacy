@@ -172,3 +172,26 @@
     daemon_reload: true
     scope: "user"
   loop: "{{ connected_services }}"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/\
+      ilnmors.internal_{{ node['name'] }}_postgres_pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "ilnmors.internal/{{ node['name'] }}/postgres:pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/\
+      ilnmors.internal_{{ node['name'] }}_postgres_pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/\
+      ilnmors.internal_{{ node['name'] }}_postgres_pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

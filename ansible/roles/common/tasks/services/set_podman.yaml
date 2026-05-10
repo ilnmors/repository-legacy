@@ -24,6 +24,17 @@
     mode: "0770"
   when: node['name'] == "app"
 
+- name: Create container image archive directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    state: "directory"
+    mode: "0700"
+  loop:
+    - "{{ node['home_path'] }}/archives"
+    - "{{ node['home_path'] }}/archives/containers"
+
 - name: Install podman and reset ssh connection for initiating
   when: is_podman_installed.rc != 0
   become: true

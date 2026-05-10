@@ -2,6 +2,8 @@
 data/bin/*
 data/volumes/*
 data/images/*
+!data/images/containers
+data/images/containers/*
 docs/archives/textfiles/
 docs/notes/*
 *.sql
