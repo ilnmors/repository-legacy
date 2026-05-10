@@ -74,3 +74,10 @@
     enabled: true
     daemon_reload: true
   become: true
+
+- name: Fetch deb bin file
+  ansible.builtin.fetch:
+    src: "/var/cache/apt/archives/alloy-{{ version['packages']['alloy'] }}.deb"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/bin/"
+    flat: true
+  become: true
