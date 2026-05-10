@@ -63,7 +63,7 @@
     content: |
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/sure/ssl/{{ root_cert_filename }}"
-    owner: "{{ services['paperless']['subuid'] }}"
+    owner: "{{ services['sure']['subuid'] }}"
     group: "svadmins"
     mode: "0440"
   become: true
@@ -98,7 +98,7 @@
     - "sure-worker.container"
   notify: "notification_restart_sure"
 
-- name: Enable paperless.service
+- name: Enable sure.service
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: "started"
