@@ -21,7 +21,7 @@ Volume=%h/containers/postgresql/ssl:/etc/ssl/postgresql:ro
 Volume=%h/containers/postgresql/init:/docker-entrypoint-initdb.d/:ro
 Volume=%h/containers/postgresql/backups:/backups:rw
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 # This option is only for init process, after init custom config file `pg_hba.conf` will control this option.
 Environment="POSTGRES_HOST_AUTH_METHOD=trust"
 

@@ -19,7 +19,7 @@ Volume=%h/containers/prometheus/data:/prometheus:rw
 Volume=%h/containers/prometheus/etc:/etc/prometheus:ro
 Volume=%h/containers/prometheus/ssl:/etc/ssl/prometheus:ro
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 Exec=--config.file=/etc/prometheus/prometheus.yaml \
      --web.config.file=/etc/prometheus/web-config.yaml \

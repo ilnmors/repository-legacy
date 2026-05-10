@@ -19,7 +19,7 @@ Volume=%h/containers/affine/config:/root/.affine/config
 Volume=%h/containers/affine/ssl:/etc/ssl/affine:ro
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 ## OIDC callback URIs
 Environment="AFFINE_SERVER_HOST={{ services['affine']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="AFFINE_SERVER_EXTERNAL_URL=https://{{ services['affine']['domain']['public'] }}.{{ domain['public'] }}"

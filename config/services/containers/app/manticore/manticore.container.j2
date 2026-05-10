@@ -14,7 +14,7 @@ PublishPort={{ services[manticore_service]['ports']['manticore'] }}:9308
 Volume=%h/data/containers/manticore/{{ manticore_service }}:/var/lib/manticore:rw
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 [Service]
 Restart=always

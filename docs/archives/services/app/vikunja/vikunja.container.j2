@@ -18,9 +18,9 @@ Volume=%h/data/containers/vikunja:/app/vikunja/files:rw
 Volume=%h/containers/vikunja/ssl:/etc/ssl/vikunja:ro
 
 # General
-Environment="TZ=Asia/Seoul"
-Environment="VIKUNJA_DEFAULTSETTINGS_TIMEZONE=Asia/Seoul"
-Environment="VIKUNJA_SERVICE_TIMEZONE=Asia/Seoul"
+Environment="TZ={{ timezone }}"
+Environment="VIKUNJA_DEFAULTSETTINGS_TIMEZONE={{ timezone }}"
+Environment="VIKUNJA_SERVICE_TIMEZONE={{ timezone }}"
 Environment="VIKUNJA_SERVICE_PUBLICURL=https://{{ services['vikunja']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="VIKUNJA_SERVICE_ENABLEREGISTRATION=false"
 Secret=VIKUNJA_SERVICE_JWTSECRET,type=env

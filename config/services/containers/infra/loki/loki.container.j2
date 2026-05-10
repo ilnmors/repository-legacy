@@ -19,7 +19,7 @@ Volume=%h/containers/loki/data:/loki:rw
 Volume=%h/containers/loki/etc:/etc/loki:ro
 Volume=%h/containers/loki/ssl:/etc/ssl/loki:ro
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 Exec=--config.file=/etc/loki/loki.yaml
 

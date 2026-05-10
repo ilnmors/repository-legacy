@@ -21,7 +21,7 @@ Volume=%h/containers/ca/config:/home/step/config:rw
 Volume=%h/containers/ca/db:/home/step/db:rw
 Volume=%h/containers/ca/templates:/home/step/templates:rw
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 # Since 0.30.0, Docker CMD no longer expands PWDPATH.
 #Environment="PWDPATH=/run/secrets/STEP_CA_PASSWORD"
 

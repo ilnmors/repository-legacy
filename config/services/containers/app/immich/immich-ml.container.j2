@@ -21,7 +21,7 @@ PodmanArgs=--group-add keep-groups
 
 Volume=%h/containers/immich/ml/cache:/cache:rw
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 [Service]
 Restart=always

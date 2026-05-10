@@ -33,7 +33,7 @@ Volume=%h/containers/caddy/data:/data:rw
 Volume=/var/log/caddy:/log:rw
 {% endif %}
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 Secret=CADDY_ACME_KEY,target=/run/secrets/CADDY_ACME_KEY
 {% if node['name'] == 'auth' %}

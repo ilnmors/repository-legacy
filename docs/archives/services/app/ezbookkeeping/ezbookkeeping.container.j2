@@ -18,7 +18,7 @@ Volume=%h/data/containers/ezbookkeeping/data:/data:rw
 Volume=%h/containers/ezbookkeeping/ssl:/etc/ssl/ezbookkeeping:ro
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="EBK_SERVER_DOMAIN={{ services['ezbookkeeping']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="EBK_SERVER_ROOT_URL=https://{{ services['ezbookkeeping']['domain']['public'] }}.{{ domain['public'] }}/"
 Environment="EBK_LOG_MODE=console"

@@ -18,7 +18,7 @@ PublishPort={{ services['trilium']['ports']['http'] }}:8080/tcp
 Volume=%h/data/containers/trilium/data:/home/node/trilium-data:rw
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="TRILIUM_DATA_DIR=/home/node/trilium-data"
 Environment="TRILIUM_NO_UPLOAD_LIMIT=true"
 

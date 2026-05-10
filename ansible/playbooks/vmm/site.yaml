@@ -30,9 +30,9 @@
       tags: ["always"]
   tasks:
     # init
-    - name: Set timezone to Asia/Seoul
+    - name: Set timezone
       community.general.timezone:
-        name: Asia/Seoul
+        name: "{{ timezone }}"
       become: true
       tags: ["init", "timezone"]
 

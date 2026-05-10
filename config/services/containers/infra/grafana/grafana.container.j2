@@ -24,7 +24,7 @@ Volume=%h/containers/grafana/data:/var/lib/grafana:rw
 Volume=%h/containers/grafana/etc:/etc/grafana:ro
 Volume=%h/containers/grafana/ssl:/etc/ssl/grafana:ro
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="GF_PATHS_CONFIG=/etc/grafana/grafana.ini"
 # plugin
 # Environment="GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource"

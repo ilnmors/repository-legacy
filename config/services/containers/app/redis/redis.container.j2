@@ -20,7 +20,7 @@ Volume=%h/containers/redis/{{ redis_service }}/redis.conf:/usr/local/etc/redis/r
 
 Exec=redis-server /usr/local/etc/redis/redis.conf
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 [Service]
 Restart=always

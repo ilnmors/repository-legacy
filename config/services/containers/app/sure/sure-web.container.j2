@@ -18,7 +18,7 @@ Volume=%h/data/containers/sure/storage:/rails/storage:rw
 Volume=%h/containers/sure/ssl:/etc/ssl/sure:ro
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="SELF_HOSTED=true"
 Environment="ONBOARDING_STATE=closed"
 Environment="RAILS_FORCE_SSL=false"

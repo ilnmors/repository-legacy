@@ -24,7 +24,7 @@ Volume=%h/data/containers/immich:/data:rw
 Volume=%h/containers/immich/ssl:/etc/ssl/immich:ro
 
 # Environment
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 # The new environment from version 2.7.0 to enable CSP
 Environment="IMMICH_HELMET_FILE=true"
 

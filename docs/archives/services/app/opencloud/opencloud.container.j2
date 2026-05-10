@@ -15,7 +15,7 @@ Volume=%h/containers/opencloud:/etc/opencloud:rw
 Volume=%h/data/containers/opencloud:/var/lib/opencloud:rw
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 # Log level info
 Environment="OC_LOG_LEVEL=info"
 # TLS configuration

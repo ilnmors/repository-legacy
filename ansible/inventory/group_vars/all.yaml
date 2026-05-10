@@ -1,6 +1,7 @@
 ---
 # Global vars
 ansible_ssh_private_key_file: "/etc/secrets/{{ hostvars['console']['node']['uid'] }}/id_console"
+timezone: "Asia/Seoul"
 
 # CA
 root_cert_filename: "ilnmors_root_ca.crt"

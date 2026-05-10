@@ -20,8 +20,8 @@ Volume=%h/data/containers/paperless/consume:/usr/src/paperless/consume:rw
 Volume=%h/containers/paperless/ssl:/etc/ssl/paperless:ro
 
 # General
-Environment="TZ=Asia/Seoul"
-Environment="PAPERLESS_TIME_ZONE=Asia/Seoul"
+Environment="TZ={{ timezone }}"
+Environment="PAPERLESS_TIME_ZONE={{ timezone }}"
 Environment="PAPERLESS_URL=https://{{ services['paperless']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="PAPERLESS_OCR_LANGUAGE=kor+eng"
 Environment="PAPERLESS_OCR_LANGUAGES=kor"

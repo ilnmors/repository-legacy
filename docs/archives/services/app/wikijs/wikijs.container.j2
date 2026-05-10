@@ -19,7 +19,7 @@ Volume=%h/data/containers/wikijs/export:/wiki/export:rw
 Volume=%h/containers/wikijs/ssl:/etc/ssl/wiki:ro
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 # Database
 Environment="DB_TYPE=postgres"

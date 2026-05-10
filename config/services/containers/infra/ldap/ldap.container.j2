@@ -24,7 +24,7 @@ Volume=%h/containers/ldap/data:/data:rw
 Volume=%h/containers/ldap/ssl:/etc/ssl/ldap:ro
 
 # Default
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 
 # Domain
 Environment="LLDAP_LDAP_BASE_DN={{ domain['dc'] }}"

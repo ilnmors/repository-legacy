@@ -17,7 +17,7 @@ Volume=%h/containers/nextcloud/ini/upload.ini:/usr/local/etc/php/conf.d/upload.i
 Volume=%h/data/containers/nextcloud/html:/var/www/html:rw
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 # PostgreSQL
 Environment="PGSSLMODE=verify-full"
 Environment="PGSSLROOTCERT=/etc/ssl/nextcloud/{{ root_cert_filename }}"

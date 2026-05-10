@@ -22,7 +22,7 @@ Volume=%h/containers/authelia/config:/config:rw
 Volume=%h/containers/authelia/certs:/etc/ssl/authelia:ro
 
 # Default
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 # Enable Go template engine
 # !CAUTION!
 {% raw %}# If this environment were enabled, you would have to use {{/* ... /*}} for {{ go_filter }} options. Go engine always processes its own grammar first.

@@ -75,7 +75,7 @@
         rm: true
         detach: false
         env:
-          TZ: "Asia/Seoul"
+          TZ: "{{ timezone }}"
           LLDAP_LDAP_BASE_DN: "{{ domain['dc'] }}"
         secrets:
           - "LLDAP_DATABASE_URL,type=env"

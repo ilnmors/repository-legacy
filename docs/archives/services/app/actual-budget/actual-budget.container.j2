@@ -13,7 +13,7 @@ PublishPort={{ services['actualbudget']['ports']['http'] }}:5006
 
 Volume=%h/data/containers/actual-budget:/data:rw
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="ACTUAL_OPENID_DISCOVERY_URL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
 Environment="ACTUAL_OPENID_CLIENT_ID=actual-budget"
 Environment="ACTUAL_OPENID_SERVER_HOSTNAME=https://{{ services['actualbudget']['domain']['public'] }}.{{ domain['public'] }}"

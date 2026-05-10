@@ -18,7 +18,7 @@ PublishPort={{ services['vaultwarden']['ports']['http'] }}:80/tcp
 Volume=%h/data/containers/vaultwarden:/data:rw
 Volume=%h/containers/vaultwarden/ssl:/etc/ssl/vaultwarden:ro
 
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="DOMAIN=https://{{ services['vaultwarden']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="SIGNUPS_ALLOWED=false"
 Secret=VW_ADMIN_TOKEN,type=env,target=ADMIN_TOKEN

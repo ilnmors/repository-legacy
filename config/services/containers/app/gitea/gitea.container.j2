@@ -19,7 +19,7 @@ Volume=%h/data/containers/gitea:/data:rw
 Volume=%h/containers/gitea/ssl:/etc/ssl/gitea:ro
 
 # General
-Environment="TZ=Asia/Seoul"
+Environment="TZ={{ timezone }}"
 Environment="GITEA__server__DISABLE_SSH=true"
 # Database
 Environment="GITEA__database__DB_TYPE=postgres"
