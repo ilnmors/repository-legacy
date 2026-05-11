@@ -1,0 +1,13 @@
+FROM ghcr.io/paperless-ngx/paperless-ngx:{{ version['containers']['paperless'] }}
+
+USER root
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && curl -fsSL https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/main/kor.traineddata \
+    -o /usr/share/tesseract-ocr/5/tessdata/kor.traineddata \
+  && curl -fsSL https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/main/eng.traineddata \
+    -o /usr/share/tesseract-ocr/5/tessdata/eng.traineddata \
+  && rm -rf /var/lib/apt/lists/*
+
+USER paperless

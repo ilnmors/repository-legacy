@@ -45,6 +45,11 @@ ALTER DATABASE paperless_db OWNER TO paperless;
       - "paperless"
 ```
 
+### Paperless custom build
+
+- paperless-ngx uses 'tesseract_fast' model
+- building custom container to use 'tesseract_best' model to improve OCR accuracy.
+
 ## Configuration
 
 ### Access to paperless

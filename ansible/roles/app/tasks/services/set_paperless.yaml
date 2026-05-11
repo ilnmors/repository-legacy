@@ -57,8 +57,16 @@
     - "data/containers/paperless/consume"
     - "containers/paperless"
     - "containers/paperless/ssl"
+    - "containers/paperless/build"
   become: true
 
+- name: Deploy containerfile for build
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/paperless/build/paperless.containerfile.j2"
+    dest: "{{ node['home_path'] }}/containers/paperless/build/Containerfile"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0640"
 
 - name: Deploy root certificate
   ansible.builtin.copy:
@@ -71,6 +79,18 @@
   become: true
   notify: "notification_restart_paperless"
   no_log: true
+
+- name: Build paperless container image
+  containers.podman.podman_image:
+    name: "{{ domain['internal'] }}/{{ node['name'] }}/paperless-ngx"
+    # check tags from container file
+    tag: "{{ version['containers']['paperless'] }}"
+    state: "build"
+    path: "{{ node['home_path'] }}/containers/paperless/build"
+
+- name: Prune paperless dangling images
+  containers.podman.podman_prune:
+    image: true
 
 - name: Register secret value to podman secret
   containers.podman.podman_secret:
@@ -129,8 +149,8 @@
   loop:
     - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "ghcr.io/paperless-ngx/paperless-ngx:{{ version['containers']['paperless'] }}"
-      file: "ghcr.io_paperless-ngx_paperless-ngx_{{ version['containers']['paperless'] }}"
+    - image: "ilnmors.internal/{{ node['name'] }}/paperless-ngx:{{ version['containers']['paperless'] }}"
+      file: "ilnmors.internal_{{ node['name'] }}_paperless-ngx_{{ version['containers']['paperless'] }}"
   loop_control:
     label: "{{ item.file }}"
   register: container_archive_images
