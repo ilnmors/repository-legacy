@@ -8,7 +8,7 @@ After=redis_paperless.service
 Wants=redis_paperless.service
 
 [Container]
-Image=ilnmors.internal/app/paperless-ngx:{{ version['containers']['paperless'] }}
+Image={{ domain['internal'] }}/{{ node['name'] }}/paperless-ngx:{{ version['containers']['paperless'] }}
 ContainerName=paperless
 HostName=paperless
 PublishPort={{ services['paperless']['ports']['http'] }}:8000/tcp

@@ -149,8 +149,8 @@
   loop:
     - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "ilnmors.internal/{{ node['name'] }}/paperless-ngx:{{ version['containers']['paperless'] }}"
-      file: "ilnmors.internal_{{ node['name'] }}_paperless-ngx_{{ version['containers']['paperless'] }}"
+    - image: "{{ domain['internal'] }}/{{ node['name'] }}/paperless-ngx:{{ version['containers']['paperless'] }}"
+      file: "{{ domain['internal'] }}_{{ node['name'] }}_paperless-ngx_{{ version['containers']['paperless'] }}"
   loop_control:
     label: "{{ item.file }}"
   register: container_archive_images
