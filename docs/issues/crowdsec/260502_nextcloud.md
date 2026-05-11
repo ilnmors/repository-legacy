@@ -23,11 +23,14 @@
 - 2026-05-03: Make previous expressions annotation
 - 2026-05-07: Find the false positive case, which is not on `crowdsecurity/nextcloud-whitelist`
 - 2026-05-07: Set whitelist expression
+- 2026-05-11: Find the false positive case, which is not on `crowdsec/nextcloud-whitelist`
+- 2026-05-11: Set whitelist expression
 
 ## Solution
 - Install crowdsecurity/nextcloud-whitelist on auth node
 - Add expression on whitelist
-  - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' &&  evt.Meta.http_path startsWith '/index.php/core/preview?'
+  - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' && evt.Meta.http_path startsWith '/index.php/core/preview?'
+  - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains 'chunks.mjs'
 
 ### Deprecated solution
 - Access to fw
