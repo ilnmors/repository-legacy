@@ -30,7 +30,7 @@
 - Install crowdsecurity/nextcloud-whitelist on auth node
 - Add expression on whitelist
   - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' && evt.Meta.http_path startsWith '/index.php/core/preview?'
-  - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains 'chunks.mjs'
+  - evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains 'chunk.mjs'
 
 ### Deprecated solution
 - Access to fw
