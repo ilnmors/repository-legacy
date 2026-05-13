@@ -2,7 +2,16 @@
 
 This homelab project implements single-node On-premise IaaS system. The homelab contains virtual machines which are divided by their roles, such as private firewall, DNS, PKI, LDAP and database, SSO(OIDC). The standard domain is used to implement this system without specific vendors. All components are defined as code and initiated by IaC (Ansible) except hypervisor initial configuration.
 
-## RTO times
+## RTO and RPO
+
+### RPO
+- Each backup guarantees 24 hours RPO
+    - DB dumps are backed up at 12:00 AM
+    - Stateful data in app vm is backed up at 03:00 AM
+- The maximum inconsistency window between DB dumps and stateful data can be 27 hours.
+    - The different backup time.
+
+### RTO
 - Feb/25/2026 - Reprovisioning Hypervisor and vms
     - RTO: 1 hour 30 min - verified
         - Manual install and set vmm: 20 min
