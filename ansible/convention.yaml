@@ -33,6 +33,6 @@
   tags:
     - "always"
     - "init"
+    - "site"
     - "[service_name]"
-
 # when: "'tags' is not in ansible_run_tags"
