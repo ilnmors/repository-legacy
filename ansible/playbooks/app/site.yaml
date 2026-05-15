@@ -142,8 +142,8 @@
         name: "common"
         tasks_from: "services/set_alloy"
         apply:
-          tags: ["init", "update", "alloy"]
-      tags: ["init", "update", "alloy"]
+          tags: ["init", "alloy"]
+      tags: ["init", "alloy"]
 
     - name: Set kopia
       ansible.builtin.include_role:

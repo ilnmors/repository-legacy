@@ -162,8 +162,8 @@
         name: "fw"
         tasks_from: "services/set_bind"
         apply:
-          tags: ["init", "update", "bind"]
-      tags: ["init", "update", "bind"]
+          tags: ["init", "bind"]
+      tags: ["init", "bind"]
 
     - name: Set blocky
       ansible.builtin.include_role:
