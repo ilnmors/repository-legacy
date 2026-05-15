@@ -19,7 +19,11 @@ log() {
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local level="$1"
     local msg="$2"
-    echo "time=\"$timestamp\" level=\"$level\" msg=\"$msg\" source=\"edit_secret.sh\"">&2
+    if [ "$level" == "error" ]; then
+        echo "time=\"$timestamp\" level=\"$level\" msg=\"$msg\" source=\"edit_secret.sh\"">&2
+    else
+        echo "time=\"$timestamp\" level=\"$level\" msg=\"$msg\" source=\"edit_secret.sh\"">&1
+    fi
 }
 
 # Secret file check
@@ -58,9 +62,9 @@ cleanup() {
 trap cleanup EXIT
 
 # Get GPG password from prompt
-echo -n "Enter GPG passphrase: " >&2
+echo -n "Enter GPG passphrase: " >&1
 read -s GPG_PASSPHRASE
-echo "" >&2
+echo "" >&1
 
 # Decrypt age-key on the tmpfs (memory)
 echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 \
