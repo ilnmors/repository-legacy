@@ -225,6 +225,14 @@
           tags: ["site", "sure"]
       tags: ["site", "sure"]
 
+    - name: Set outline
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_outline"
+        apply:
+          tags: ["site", "outline"]
+      tags: ["site", "outline"]
+
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"
 

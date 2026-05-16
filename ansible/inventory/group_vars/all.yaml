@@ -151,6 +151,14 @@ services:
       http: "3001"
       redis: "6383"
     subuid: "100999"
+  outline:
+    domain:
+      public: "outline"
+      internal: "outline.app"
+    ports:
+      http: "3002"
+      redis: "6384"
+    subuid: "101000"
 
 version:
   packages:
@@ -187,3 +195,4 @@ version:
     nextcloud: "33.0.3"
     collabora: "25.04.9.4.1"
     sure: "0.7.0-hotfix.2"
+    outline: "1.7.1"

@@ -126,6 +126,8 @@
             - Link to Nextcloud
         - [x] sure
             - budget and finance
+        - [x] outline
+            - Compare to affine, the whiteboard and canvas functions are not useful enough
         - [ ] memos
         - WriteFreely or directus + frontend(Astro)
         - MediaCMS or PeerTube

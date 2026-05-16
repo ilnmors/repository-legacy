@@ -1,0 +1,152 @@
+---
+- name: Set redis service name
+  ansible.builtin.set_fact:
+    redis_service: "outline"
+
+- name: Create redis_outline directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['redis']['subuid'] }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "containers/redis"
+    - "containers/redis/{{ redis_service }}"
+    - "containers/redis/{{ redis_service }}/data"
+  become: true
+
+- name: Deploy redis config file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  register: "is_redis_conf"
+
+- name: Deploy redis container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  register: "is_redis_containerfile"
+
+- name: Enable (Restart) redis service
+  ansible.builtin.systemd:
+    name: "redis_{{ redis_service }}.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
+
+- name: Create outline directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['outline']['subuid'] }}"
+    group: "svadmins"
+    mode: "0770"
+  loop:
+    - "data/containers/outline"
+    - "data/containers/outline/data"
+    - "containers/outline"
+    - "containers/outline/ssl"
+  become: true
+
+- name: Check data directory empty
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/data/containers/outline/.init"
+  register: "is_outline_init"
+
+- name: Create .init file
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/data/containers/outline/.init"
+    state: "touch"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+  when: not is_outline_init.stat.exists
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/outline/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['outline']['subuid'] }}"
+    group: "svadmins"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_outline"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "OUTLINE_SECRET_KEY"
+      value: "{{ hostvars['console']['outline']['session_secret'] }}"
+    - name: "OUTLINE_UTILS_SECRET"
+      value: "{{ hostvars['console']['outline']['utils_secret'] }}"
+    - name: "OUTLINE_DATABASE_PASSWORD"
+      value: "{{ hostvars['console']['postgresql']['password']['outline'] }}"
+    - name: "OUTLINE_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['outline']['oidc']['secret'] }}"
+  notify: "notification_restart_outline"
+  no_log: true
+
+- name: Deploy outline.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/outline/outline.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/outline.container"
+    owner: "{{ ansible_user }}"
+    group: "svadmins"
+    mode: "0644"
+  notify: "notification_restart_outline"
+
+- name: Enable outline.service
+  ansible.builtin.systemd:
+    name: "outline.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
+  loop:
+    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+      file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
+    - image: "docker.io/outlinewiki/outline:{{ version['containers']['outline'] }}"
+      file: "docker.io_outlinewiki_outline_{{ version['containers']['outline'] }}"
+  loop_control:
+    label: "{{ item.file }}"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "{{ item.item.image }}"
+    dest: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    format: "oci-archive"
+    force: false
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"
+  when: not item.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"

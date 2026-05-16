@@ -1,0 +1,77 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Outline
+
+After=redis_outline.service
+Wants=redis_outline.service
+
+[Container]
+Image=docker.io/outlinewiki/outline:{{ version['containers']['outline'] }}
+ContainerName=outline
+HostName=outline
+PublishPort={{ services['outline']['ports']['http'] }}:3000/tcp
+
+# Volumes
+Volume=%h/data/containers/outline/data:/var/lib/outline/data:rw
+Volume=%h/containers/outline/ssl:/etc/ssl/outline:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="NODE_ENV=production"
+Environment="URL=https://{{ services['outline']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="PORT=3000"
+#Environment="FORCE_HTTPS=true" #HTST function is not required
+
+# Secrets
+Secret=OUTLINE_SECRET_KEY,type=env,target=SECRET_KEY
+Secret=OUTLINE_UTILS_SECRET,type=env,target=UTILS_SECRET
+
+# Database
+Environment="DATABASE_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="DATABASE_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="DATABASE_NAME=outline_db"
+Environment="DATABASE_USER=outline"
+Environment="PGSSLMODE=verify-full"
+Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/outline/{{ root_cert_filename }}"
+Secret=OUTLINE_DATABASE_PASSWORD,type=env,target=DATABASE_PASSWORD
+
+# Redis
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['outline']['ports']['redis'] }}"
+
+# Storage
+Environment="FILE_STORAGE=local"
+Environment="FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data"
+Environment="FILE_STORAGE_UPLOAD_MAX_SIZE=262144000"
+
+# OIDC
+Environment="OIDC_CLIENT_ID=outline"
+Environment="OIDC_AUTH_URI=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/api/oidc/authorization"
+Environment="OIDC_TOKEN_URI=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/api/oidc/token"
+Environment="OIDC_USERINFO_URI=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/api/oidc/userinfo"
+Environment="OIDC_USERNAME_CLAIM=preferred_username"
+Environment="OIDC_DISPLAY_NAME=Authelia"
+Environment="OIDC_SCOPES=openid offline_access profile email"
+Secret=OUTLINE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+# Mail
+#Environment="SMTP_HOST=smtp.example.com"
+#Environment="SMTP_PORT=587"
+#Environment="SMTP_USERNAME=outline@example.com"
+#Environment="SMTP_PASSWORD=change_me"
+#Environment="SMTP_FROM_EMAIL=outline@example.com"
+#Environment="SMTP_REPLY_EMAIL=outline@example.com"
+#Environment="SMTP_SECURE=false"
+
+# Optional
+Environment="LOG_LEVEL=warn"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
