@@ -128,7 +128,8 @@
             - budget and finance
         - [x] outline
             - Compare to affine, the whiteboard and canvas functions are not useful enough
-        - [ ] memos
+        - [x] memos
+            - Check outline and memos can be substituded for affine
         - WriteFreely or directus + frontend(Astro)
         - MediaCMS or PeerTube
         - Funkwhale or Navidrome or Jellyfin

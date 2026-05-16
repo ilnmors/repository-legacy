@@ -114,3 +114,14 @@
   changed_when: false
   listen: "notification_restart_outline"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart memos
+  ansible.builtin.systemd:
+    name: "memos.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_memos"
+  ignore_errors: true # noqa: ignore-errors

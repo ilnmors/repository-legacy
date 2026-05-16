@@ -13,6 +13,7 @@
       - "nextcloud"
       - "sure"
       - "outline"
+      - "memos"
 
 - name: Create postgresql directory
   ansible.builtin.file:

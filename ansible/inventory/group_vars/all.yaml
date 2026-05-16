@@ -159,6 +159,13 @@ services:
       http: "3002"
       redis: "6384"
     subuid: "101000"
+  memos:
+    domain:
+      public: "memos"
+      internal: "memos.app"
+    ports:
+      http: "3004"
+    subuid: "110000"
 
 version:
   packages:
@@ -196,3 +203,4 @@ version:
     collabora: "25.04.9.4.1"
     sure: "0.7.0-hotfix.2"
     outline: "1.7.1"
+    memos: "0.28.0"

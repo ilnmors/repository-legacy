@@ -1,0 +1,34 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Memos
+
+[Container]
+Image=docker.io/neosmemo/memos:{{ version['containers']['memos'] }}
+ContainerName=memos
+HostName=memos
+PublishPort={{ services['memos']['ports']['http'] }}:5230/tcp
+
+# Volumes
+Volume=%h/data/containers/memos/data:/var/opt/memos:rw
+Volume=%h/containers/memos/ssl:/etc/ssl/memos:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="MEMOS_MODE=prod"
+Environment="MEMOS_PORT=5230"
+Environment="MEMOS_INSTANCE_URL=https://{{ services['memos']['domain']['public'] }}.{{ domain['public'] }}"
+
+# Database (PostgreSQL)
+Environment="MEMOS_DRIVER=postgres"
+Secret=MEMOS_DSN,type=env
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
