@@ -18,4 +18,7 @@ whitelist:
         - "evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' &&  evt.Meta.http_path startsWith '/index.php/core/preview?'"
         # nextcloud chunks.mjs request false positive
         - "evt.Meta.target_fqdn == '{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status in ['200', '304'] && evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains 'chunk.mjs'"
+        # outline POST 401 errors false positive
+        - "evt.Meta.target_fqdn == '{{ services['outline']['domain']['public'] }}.{{ domain['public'] }}' && evt.Meta.http_status == '401' && evt.Meta.http_verb == 'POST' && evt.Meta.http_path startsWith '/api/'"
+
 {% endif %}
