@@ -22,7 +22,7 @@ Environment="TZ={{ timezone }}"
 Environment="NODE_ENV=production"
 Environment="URL=https://{{ services['outline']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="PORT=3000"
-#Environment="FORCE_HTTPS=true" #HTST function is not required
+#Environment="FORCE_HTTPS=true" #HSTS function is not required
 
 # Secrets
 Secret=OUTLINE_SECRET_KEY,type=env,target=SECRET_KEY
