@@ -20,11 +20,8 @@ ProtectSystem=strict
 ProtectHome=tmpfs
 InaccessiblePaths=/boot /root
 
-{% if node['name'] == 'infra' %}
-BindReadOnlyPaths={{ node['home_path'] }}/containers/postgresql/backups
-{% elif node['name'] == 'app' %}
 BindReadOnlyPaths={{ node['home_path'] }}/data
-{% endif %}
+
 # In root namescope, %u always bring 0
 BindPaths=/etc/kopia
 BindPaths=/etc/secrets/{{ kopia_uid }}
@@ -36,14 +33,8 @@ ExecStartPre=/usr/bin/kopia repository connect server \
     --override-username={{ node['name'] }} \
     --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
 
-{% if node['name'] == 'infra' %}
-ExecStart=/usr/bin/kopia snapshot create \
-    {{ node['home_path'] }}/containers/postgresql/backups
-{% elif node['name'] == 'app' %}
 ExecStart=/usr/bin/kopia snapshot create \
     {{ node['home_path'] }}/data
-{% endif %}
-
 
 [Install]
 WantedBy=multi-user.target

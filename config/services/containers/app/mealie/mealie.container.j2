@@ -1,0 +1,49 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Mealie
+
+[Container]
+Image=ghcr.io/mealie-recipes/mealie:{{ version['containers']['mealie'] }}
+ContainerName=mealie
+HostName=mealie
+PublishPort={{ services['mealie']['ports']['http'] }}:9000/tcp
+
+# Volumes
+Volume=%h/data/containers/mealie/data:/app/data:rw
+Volume=%h/containers/mealie/ssl:/etc/ssl/mealie:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="BASE_URL=https://{{ services['mealie']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="ALLOW_PASSWORD_LOGIN=false"
+
+# Database (PostgreSQL)
+Environment="DB_ENGINE=postgres"
+Environment="POSTGRES_SERVER={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="POSTGRES_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="POSTGRES_USER=mealie"
+Environment="POSTGRES_DB=mealie_db"
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/mealie/{{ root_cert_filename }}"
+Secret=MEALIE_POSTGRES_PASSWORD,type=env,target=POSTGRES_PASSWORD
+
+# OIDC
+Environment="OIDC_AUTH_ENABLED=true"
+Environment="OIDC_SIGNUP_ENABLED=true"
+Environment="OIDC_CONFIGURATION_URL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
+Environment="OIDC_CLIENT_ID=mealie"
+Environment="OIDC_AUTO_REDIRECT=false"
+Environment="OIDC_ADMIN_GROUP=admins"
+Environment="OIDC_USER_GROUP=users"
+Secret=MEALIE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

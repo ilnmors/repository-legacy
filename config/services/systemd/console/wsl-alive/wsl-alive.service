@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep Distro Alive
+
+[Service]
+ExecStart=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -WindowStyle Hidden -NonInteractive -NoProfile -Command "while ($true) { Start-Sleep -Seconds 3600 }"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

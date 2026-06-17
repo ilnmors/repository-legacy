@@ -3,7 +3,7 @@
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     owner: "{{ services['ldap']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     state: "directory"
     mode: "0770"
   loop:
@@ -18,7 +18,7 @@
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/ldap/ssl/{{ item.name }}"
     owner: "{{ services['ldap']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "{{ item.mode }}"
   loop:
     - name: "{{ root_cert_filename }}"
@@ -33,8 +33,8 @@
       value: "{{ hostvars['console']['ldap']['key'] }}"
       mode: "0400"
   become: true
-  notify: "notification_restart_ldap"
   no_log: true
+  notify: "notification_restart_ldap"
 
 - name: Register secret value to podman secret
   containers.podman.podman_secret:
@@ -51,14 +51,15 @@
       value: "{{ hostvars['console']['ldap']['seed_key'] }}"
     - name: "LLDAP_JWT_SECRET"
       value: "{{ hostvars['console']['ldap']['jwt_secret'] }}"
-  notify: "notification_restart_ldap"
   no_log: true
+  notify: "notification_restart_ldap"
 
 - name: Initiate ldap (When = false, If DB data does not exist in postgresql, activate this block)
 # The reason why this task doesn't use the way to check ".init" file is this tasks can override original database.
 # Absent of ".init" file cannot guarantee DB is empty.
   when: false
   become: true
+  no_log: true
   block:
     - name: Register extra secret value to podman secret
       containers.podman.podman_secret:
@@ -97,7 +98,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ldap/ldap.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/ldap.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_ldap"
 

@@ -3,11 +3,14 @@
 #------------------------------------------------------------------------------
 
 # Add settings for extensions here
-# Listen_address
+
+# Listen address
 listen_addresses = '*'
+
 # Max connections
 max_connections = 250
-# listen_port
+
+# Listen port
 port = {{ services['postgresql']['ports']['tcp'] }}
 
 # SSL
@@ -18,7 +21,7 @@ ssl_key_file = '/etc/ssl/postgresql/postgresql.key'
 ssl_ciphers = 'HIGH:!aNULL:!MD5'
 ssl_prefer_server_ciphers = on
 
-# log
+# Log
 log_destination = 'stderr'
 log_checkpoints = on
 log_temp_files = 0
@@ -27,7 +30,7 @@ log_min_duration_statement = 500
 # IO
 track_io_timing = on
 
-## immich_config
+# immich_config
 shared_preload_libraries = 'vchord.so'
 search_path = '"$user", public'
 max_wal_size = 5GB

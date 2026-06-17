@@ -1,16 +1,16 @@
 ---
 - name: Check vm cloud-init
   ansible.builtin.stat:
-    path: "/var/lib/libvirt/images/debian-13.qcow2"
+    path: "{{ node['libvirt_path'] }}/images/debian-13.qcow2"
   become: true
   register: is_cloud_init_file
 
 - name: Deploy vm cloud-init
   ansible.builtin.copy:
     src: "{{ hostvars['console']['node']['data_path'] }}/images/debian-13-generic-amd64.qcow2"
-    dest: "/var/lib/libvirt/images/debian-13.qcow2"
+    dest: "{{ node['libvirt_path'] }}/images/debian-13.qcow2"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
     force: false
   become: true
@@ -18,10 +18,10 @@
 
 - name: Remote copy vm cloud-init file
   ansible.builtin.copy:
-    src: "/var/lib/libvirt/images/debian-13.qcow2"
-    dest: "/var/lib/libvirt/images/{{ target_vm }}.qcow2"
+    src: "{{ node['libvirt_path'] }}/images/debian-13.qcow2"
+    dest: "{{ node['libvirt_path'] }}/images/{{ target_vm }}.qcow2"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
     remote_src: true
     force: false
@@ -29,7 +29,7 @@
 
 - name: Check deployed cloud-init file info
   ansible.builtin.command:
-    cmd: "qemu-img info /var/lib/libvirt/images/{{ target_vm }}.qcow2 --output json"
+    cmd: "qemu-img info {{ node['libvirt_path'] }}/images/{{ target_vm }}.qcow2 --output json"
   changed_when: false
   failed_when:
     - deployed_cloudfile_info.rc != 0
@@ -38,18 +38,37 @@
 
 - name: Resize deployed cloud-init file
   ansible.builtin.command:
-    cmd: "qemu-img resize /var/lib/libvirt/images/{{ target_vm }}.qcow2 {{ hostvars[target_vm]['vm']['storage'] }}G"
+    cmd: "qemu-img resize {{ node['libvirt_path'] }}/images/{{ target_vm }}.qcow2 {{ hostvars[target_vm]['vm']['storage'] }}G"
   when:
     - deployed_cloudfile_info.rc == 0
     - (deployed_cloudfile_info.stdout | from_json)['virtual-size'] < (hostvars[target_vm]['vm']['storage'] | int * 1024 * 1024 * 1024)
   changed_when: true
 
+- name: Check app data raw image
+  ansible.builtin.stat:
+    path: "{{ hardware['btrfs']['mount_point'] }}/{{ target_vm }}.raw"
+    get_checksum: false
+    get_mime: false
+    get_attributes: false
+  when: target_vm == "app"
+  register: "is_app_data"
+
+- name: Create app data raw image
+  ansible.builtin.command:
+    # 3.5T
+    cmd: "qemu-img create -f raw {{ hardware['btrfs']['mount_point'] }}/{{ target_vm }}.raw {{ hostvars[target_vm]['vm']['data_storage']['size'] }}T"
+  become: true
+  when:
+    - target_vm == "app"
+    - not is_app_data.stat.exists
+  changed_when: true
+
 - name: Deploy vm seed.iso
   ansible.builtin.copy:
     src: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/seed.iso"
-    dest: "/var/lib/libvirt/seeds/{{ target_vm }}_seed.iso"
+    dest: "{{ node['libvirt_path'] }}/seeds/{{ target_vm }}_seed.iso"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   become: true
   when: deployed_cloudfile_info.rc == 0

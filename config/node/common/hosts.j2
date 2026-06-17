@@ -16,6 +16,9 @@
 {{ hostvars['fw']['network6']['infra']['server'] }} infra.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['auth']['server'] }} auth.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['app']['server'] }} app.{{ domain['internal'] }}
+# kopia repository
+{{ hostvars['fw']['network4']['nas']['client'] }} nas.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['nas']['client'] }} nas.{{ domain['internal'] }}
 {% else %}
 # IPv4
 # Crowdsec, blocky, bind(fw)

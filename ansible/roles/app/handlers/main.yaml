@@ -54,18 +54,6 @@
   listen: "notification_restart_paperless"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart affine
-  ansible.builtin.systemd:
-    name: "affine.service"
-    state: "restarted"
-    enabled: true
-    daemon_reload: true
-    scope: "user"
-  when: is_affine_init.stat.exists
-  changed_when: false
-  listen: "notification_restart_affine"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart nextcloud
   ansible.builtin.systemd:
     name: "nextcloud.service"
@@ -124,4 +112,15 @@
     daemon_reload: true
   changed_when: false
   listen: "notification_restart_memos"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart mealie
+  ansible.builtin.systemd:
+    name: "mealie.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_mealie"
   ignore_errors: true # noqa: ignore-errors

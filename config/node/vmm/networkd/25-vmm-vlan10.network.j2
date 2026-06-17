@@ -1,0 +1,32 @@
+[Match]
+Name=vlan10
+[Network]
+RequiredForOnline=false
+# IPv4
+Address={{ hostvars['fw']['network4']['vmm']['server'] }}/24
+Gateway={{ hostvars['fw']['network4']['firewall']['server'] }}
+DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+# IPv6
+Address={{ hostvars['fw']['network6']['vmm']['server'] }}/64
+Gateway={{ hostvars['fw']['network6']['firewall']['server'] }}
+DNS={{ hostvars['fw']['network6']['blocky']['server'] }}
+
+[RoutingPolicyRule]
+From={{ hostvars['fw']['network4']['vmm']['server'] }}/32
+Table=2
+Priority=100
+
+[Route]
+Destination=0.0.0.0/0
+Gateway={{ hostvars['fw']['network4']['firewall']['server'] }}
+Table=2
+
+[RoutingPolicyRule]
+From={{ hostvars['fw']['network6']['vmm']['server'] }}/128
+Table=62
+Priority=100
+
+[Route]
+Destination=::/0
+Gateway={{ hostvars['fw']['network6']['firewall']['server'] }}
+Table=62

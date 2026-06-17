@@ -10,17 +10,17 @@ age_key: !vault |
           33653638373537323363316363646534323362353836373665636265663939353862663532313230
           30643038313138626464626161373835646665326334393834616234643931656536343130316238
           61656264643830616639
-# Node Factors
+
 node:
   name: "console"
+  group: "svadmins"
   uid: 2999
   home_path: "/home/console"
-  workspace_path: "{{ node.home_path }}/workspace"
-  homelab_path: "{{ node.home_path }}/workspace/homelab"
-  data_path: "{{ node.homelab_path }}/data"
-  config_path: "{{ node.homelab_path }}/config"
-  ssh_san: "console,console.ilnmors.internal"
+  workspace_path: "{{ node['home_path'] }}/workspace"
+  homelab_path: "{{ node['home_path'] }}/workspace/homelab"
+  data_path: "{{ node['homelab_path'] }}/data"
+  config_path: "{{ node['homelab_path'] }}/config"
+  ssh_san: "{{ node['name'] }},{{ node['name'] }}.{{ domain['internal'] }}"
   ssh_users: "vmm,fw,infra,auth,app"
   # add the hostname of wsl, it is needed to improve the sudo problem
-  local_san: "localhost console.ilnmors.internal surface"
-# ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  local_san: "localhost {{ node['name'] }} {{ node['name'] }}.{{ domain['internal'] }}"

@@ -36,6 +36,7 @@
     - name: Set become password
       ansible.builtin.set_fact:
         ansible_become_pass: "{{ hostvars['console']['sudo']['password']['vmm'] }}"
+      no_log: true
 
     - name: Create seed file
       ansible.builtin.include_role:

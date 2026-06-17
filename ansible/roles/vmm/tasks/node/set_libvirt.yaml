@@ -9,15 +9,16 @@
 
 - name: Check libvirt directory
   ansible.builtin.stat:
-    path: "/var/lib/libvirt/{{ item }}"
+    path: "{{ node['libvirt_path'] }}/{{ item }}"
   loop:
     - "images"
     - "seeds"
+    - "data"
   register: "is_libvirt_dir"
 
 - name: Create libvirt directory
   ansible.builtin.file:
-    path: "/var/lib/libvirt/{{ item.item }}"
+    path: "{{ node['libvirt_path'] }}/{{ item.item }}"
     state: "directory"
     owner: "root"
     group: "root"
@@ -72,6 +73,7 @@
   loop:
     - "images-pool"
     - "seeds-pool"
+    - "data-pool"
 
 - name: Start virtual storage pool
   community.libvirt.virt_pool:
@@ -81,6 +83,7 @@
   loop:
     - "images-pool"
     - "seeds-pool"
+    - "data-pool"
 
 - name: Autostart virtual storage pool
   community.libvirt.virt_pool:
@@ -90,3 +93,4 @@
   loop:
     - "images-pool"
     - "seeds-pool"
+    - "data-pool"

@@ -1,13 +1,13 @@
 ---
 # This task is located in vmm roles because of its attributes,
 # but all process should be run in "console".
-# At the playbook, `delegate_to: "console"` option is applyed by `apply:`.
+# At the playbook, `delegate_to: "console"` option is applied by `apply:`.
 - name: Create images directory
   ansible.builtin.file:
     path: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}"
     state: "directory"
-    owner: "console"
-    group: "svadmins"
+    owner: "{{ hostvars['console']['node']['name'] }}"
+    group: "{{ hostvars['console']['node']['group'] }}"
     mode: "0700"
 
 - name: Create temp meta-data
@@ -16,8 +16,8 @@
       instance-id: vm-{{ target_vm }}
       local-hostname: {{ target_vm }}
     dest: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/meta-data"
-    owner: "console"
-    group: "svadmins"
+    owner: "{{ hostvars['console']['node']['name'] }}"
+    group: "{{ hostvars['console']['node']['group'] }}"
     mode: "0600"
   register: "vm_meta_data"
   no_log: true
@@ -26,8 +26,8 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/vmm/libvirt/seeds/user-data.j2"
     dest: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/user-data"
-    owner: "console"
-    group: "svadmins"
+    owner: "{{ hostvars['console']['node']['name'] }}"
+    group: "{{ hostvars['console']['node']['group'] }}"
     mode: "0600"
   register: "vm_user_data"
   no_log: true
@@ -37,8 +37,8 @@
     content: |
       network: {config: disabled}
     dest: "{{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/network-config"
-    owner: "console"
-    group: "svadmins"
+    owner: "{{ hostvars['console']['node']['name'] }}"
+    group: "{{ hostvars['console']['node']['group'] }}"
     mode: "0600"
   register: "vm_network_config"
   no_log: true

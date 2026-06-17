@@ -3,33 +3,33 @@
   ansible.builtin.set_fact:
     connected_services:
       - "ldap"
-      - "authelia"
       - "grafana"
+      - "authelia"
       - "vaultwarden"
       - "gitea"
       - "immich"
       - "paperless"
-      - "affine"
       - "nextcloud"
       - "sure"
       - "outline"
       - "memos"
+      - "mealie"
 
 - name: Create postgresql directory
   ansible.builtin.file:
-    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['postgresql']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
-    - "postgresql"
-    - "postgresql/data"
-    - "postgresql/config"
-    - "postgresql/ssl"
-    - "postgresql/init"
-    - "postgresql/backups"
-    - "postgresql/build"
+    - "data/containers/postgresql/backups"
+    - "containers/postgresql"
+    - "containers/postgresql/data"
+    - "containers/postgresql/config"
+    - "containers/postgresql/ssl"
+    - "containers/postgresql/init"
+    - "containers/postgresql/build"
   become: true
 
 - name: Deploy containerfile for build
@@ -37,7 +37,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/build/postgresql.containerfile.j2"
     dest: "{{ node['home_path'] }}/containers/postgresql/build/Containerfile"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0640"
 
 - name: Build postgresql container image
@@ -57,7 +57,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/config/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/postgresql/config/{{ item }}"
     owner: "{{ services['postgresql']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"
   loop:
     - "postgresql.conf"
@@ -72,7 +72,7 @@
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/postgresql/ssl/{{ item.name }}"
     owner: "{{ services['postgresql']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "{{ item.mode }}"
   loop:
     - name: "{{ root_cert_filename }}"
@@ -97,24 +97,26 @@
   register: "is_postgresql_init"
 
 - name: Prepare initiating DB
-  when: not is_postgresql_init.stat.exists
+  when:
+    - not is_postgresql_init.stat.exists
+    - (connected_services | default([]) | length) > 0
   become: true
   block:
     # `init/pg_cluster.sql` should be fetched from postgresql's backup directory before running initiating
     - name: Deploy init cluster sql file
       ansible.builtin.copy:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_cluster.sql"
-        dest: "{{ node['home_path'] }}/containers/postgresql/init/0_pg_cluster.sql"
+        dest: "{{ node['home_path'] }}/containers/postgresql/init/00_pg_cluster.sql"
         owner: "{{ services['postgresql']['subuid'] }}"
-        group: "svadmins"
+        group: "{{ node['group'] }}"
         mode: "0600"
 
     - name: Deploy restoring data sql files
       ansible.builtin.copy:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_{{ item }}.sql"
-        dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ index_num + 1 }}_pg_{{ item }}.sql"
+        dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ '%02d' | format(index_num + 1) }}_pg_{{ item }}.sql"
         owner: "{{ services['postgresql']['subuid'] }}"
-        group: "svadmins"
+        group: "{{ node['group'] }}"
         mode: "0600"
       loop: "{{ connected_services }}"
       loop_control:
@@ -126,14 +128,14 @@
         state: "touch"
         mode: "0644"
         owner: "{{ ansible_user }}"
-        group: "svadmins"
+        group: "{{ node['group'] }}"
 
 - name: Deploy container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/postgresql.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/postgresql.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_postgresql"
 
@@ -142,7 +144,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/services/{{ item }}"
     dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   loop:
     - "postgresql-cluster-backup.service"

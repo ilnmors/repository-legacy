@@ -1,0 +1,90 @@
+---
+- name: Create vmm_init directory
+  ansible.builtin.file:
+    path: "{{ node['data_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0750"
+  loop:
+    - "vmm_init"
+    - "vmm_init/grub.d"
+    - "vmm_init/modprobe.d"
+    - "vmm_init/networkd"
+    - "vmm_init/ssh"
+    - "vmm_init/ssh/sshd_config.d"
+    - "vmm_init/sysctl.d"
+
+- name: Create nftables.conf
+  ansible.builtin.template:
+    src: "{{ node['config_path'] }}/node/vmm/nftables.conf.j2"
+    dest: "{{ node['data_path'] }}/vmm_init/nftables.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+
+- name: Create grub.d iommu config
+  ansible.builtin.copy:
+    content: |
+      GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"
+    dest: "{{ node['data_path'] }}/vmm_init/grub.d/iommu.cfg"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+
+- name: Create modprobe.d vfio config
+  ansible.builtin.copy:
+    content: |
+      options vfio-pci ids={{ hostvars['vmm']['hardware']['igpu']['id'] }}
+      softdep i915 pre: vfio-pci
+      # softdep ahci pre: vfio-pci # sata controller
+    dest: "{{ node['data_path'] }}/vmm_init/modprobe.d/vfio.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+
+- name: Create networkd network config
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ node['data_path'] }}/vmm_init/networkd/{{ item | basename | replace('.j2', '') }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  loop: "{{ query('fileglob', hostvars['console']['node']['config_path'] + '/node/vmm/networkd/*') | sort }}"
+
+- name: Create ssh CA
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ssh']['ca']['pub'] }}
+    dest: "{{ node['data_path'] }}/vmm_init/ssh/local_ssh_ca.pub"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+
+- name: Create ssh config
+  ansible.builtin.copy:
+    content: "{{ item.value }}"
+    dest: "{{ node['data_path'] }}/vmm_init/ssh/sshd_config.d/{{ item.name }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  loop:
+    - name: "prohibit_root.conf"
+      value: |
+        PermitRootLogin no
+    - name: "ssh_ca.conf"
+      value: |
+        TrustedUserCAKeys /etc/ssh/local_ssh_ca.pub
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create sysctl.d bridge config
+  ansible.builtin.copy:
+    content: |
+      net.bridge.bridge-nf-call-ip6tables = 0
+      net.bridge.bridge-nf-call-iptables = 0
+      net.bridge.bridge-nf-call-arptables = 0
+    dest: "{{ node['data_path'] }}/vmm_init/sysctl.d/bridge.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"

@@ -4,5 +4,5 @@
   <name>seeds-pool</name>
   <target>
     <path>/var/lib/libvirt/seeds</path>
-  </target>    
+  </target>
 </pool>

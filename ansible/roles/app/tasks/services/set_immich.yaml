@@ -8,7 +8,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['redis']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "containers/redis"
@@ -21,7 +21,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
     dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   register: "is_redis_conf"
 
@@ -30,7 +30,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   register: "is_redis_containerfile"
 
@@ -56,7 +56,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "data/containers/immich"
@@ -71,7 +71,7 @@
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/immich/ssl/{{ root_cert_filename }}"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0440"
   notify: "notification_restart_immich"
   no_log: true
@@ -90,7 +90,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/immich/immich.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/immich.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_immich"
 
@@ -99,7 +99,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/immich/immich-ml.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/immich-ml.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_immich-ml"
 

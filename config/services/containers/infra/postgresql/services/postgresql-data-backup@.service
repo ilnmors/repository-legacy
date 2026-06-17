@@ -13,7 +13,13 @@ StandardError=journal
 ExecStartPre=/usr/bin/podman exec postgresql sh -c "mkdir -p /backups/%i && chown postgres:root /backups/%i && chmod 770 /backups/%i"
 
 # Run the script
+## DB Connection
 ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'printf "\\connect %i_db\n" > /backups/%i/pg_%i_$(date "+%%Y-%%m-%%d").sql'
+## Avoiding FK/trigger checks
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'printf "SET session_replication_role = replica;\n" >> /backups/%i/pg_%i_$(date "+%%Y-%%m-%%d").sql'
+## Data
 ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'pg_dump -U postgres -d %i_db --data-only >> /backups/%i/pg_%i_$(date "+%%Y-%%m-%%d").sql'
+## reset session replication role
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'printf "SET session_replication_role = origin;\n" >> /backups/%i/pg_%i_$(date "+%%Y-%%m-%%d").sql'
 ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c "find /backups/%i -maxdepth 1 -type f -mtime +7 -delete"
 ExecStart=/usr/bin/podman exec postgresql sh -c "chown -R postgres:root /backups/%i && chmod 660 /backups/%i/*"

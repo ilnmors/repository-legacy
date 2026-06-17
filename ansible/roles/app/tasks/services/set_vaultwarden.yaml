@@ -4,7 +4,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "data/containers/vaultwarden"
@@ -17,7 +17,7 @@
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/vaultwarden/ssl/{{ root_cert_filename }}"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0440"
   become: true
   notify: "notification_restart_vaultwarden"
@@ -44,7 +44,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/vaultwarden/vaultwarden.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/vaultwarden.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_vaultwarden"
 

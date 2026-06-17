@@ -2,7 +2,7 @@
   ansible.builtin.systemd:
     name: "ca.service"
     state: "restarted"
-    enabled: "true"
+    enabled: true
     daemon_reload: true
     scope: "user"
   changed_when: false

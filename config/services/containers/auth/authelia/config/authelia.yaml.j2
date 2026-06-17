@@ -4,7 +4,7 @@
 # certificates setting
 certificates_directory: '/etc/ssl/authelia/'
 
-# them setting - light, dark, grey, auto.
+# theme setting - light, dark, grey, auto.
 theme: 'auto'
 
 # Server configuration
@@ -22,7 +22,7 @@ totp:
   # issure option is for 2FA app. It works as identifier. "My homelab' or 'ilnmors.internal', 'Authelia - ilnmors'
   issuer: '{{ domain['internal'] }}'
 
-# Identity validation confituration
+# Identity validation configuration
 identity_validation:
   reset_password:
     jwt_secret: '' # $AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE option is designated in container file
@@ -33,7 +33,7 @@ authentication_backend:
     # ldaps uses 636 -> NAT automatically change port 636 in output packet -> 2636 which lldap server uses.
     address: 'ldaps://{{ services['ldap']['domain'] }}.{{ domain['internal'] }}'
     implementation: 'lldap'
-    # tls configruation, it uses certificates_directory's /etc/ssl/authelia/{{ root_cert_filename }}
+    # tls configuration, it uses certificates_directory's /etc/ssl/authelia/{{ root_cert_filename }}
     tls:
       server_name: '{{ services['ldap']['domain'] }}.{{ domain['internal'] }}'
       skip_verify: false
@@ -59,6 +59,7 @@ access_control:
 #      policy: 'one_factor'
 #      subject:
 #        - 'group:admins'
+
 # Session provider configuration
 session:
   secret: '' # $AUTHELIA_SESSION_SECRET_FILE  is designated in container file
@@ -99,15 +100,20 @@ identity_providers:
         key: {{ secret "/run/secrets/AUTHELIA_JWKS_RS256" | mindent 10 "|" | msquote }}
       - algorithm: 'ES256'
         use: 'sig'
-        key: {{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %} 
+        key: {{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %}
+    lifespans:
+      access_token: '1h'
+      id_token: '1h'
+      refresh_token: '720h'
     clients:
       # https://www.authelia.com/integration/openid-connect/clients/synology-dsm/
       - client_id: 'dsm'
         client_name: 'dsm'
+        consent_mode: 'implicit'
         # It depends on application
-        # hash vaule generate: 
-	      # podman exec -it authelia sh
-	      # authelia crypto hash generate pbkdf2 --password 'password'
+        # hash value generate:
+        # podman exec -it authelia sh
+        # authelia crypto hash generate pbkdf2 --password 'password'
         client_secret: '{{ hostvars['console']['dsm']['oidc']['hash'] }}'
         # If there were not client secret, public should be `true` [true | false]
         public: false
@@ -132,6 +138,7 @@ identity_providers:
       # https://www.authelia.com/integration/openid-connect/clients/gitea/
       - client_id: 'gitea'
         client_name: 'gitea'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['gitea']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -153,6 +160,7 @@ identity_providers:
       # https://www.authelia.com/integration/openid-connect/clients/immich/
       - client_id: 'immich'
         client_name: 'immich'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['immich']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -176,6 +184,7 @@ identity_providers:
       # https://www.authelia.com/integration/openid-connect/clients/paperless/
       - client_id: 'paperless'
         client_name: 'Paperless'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['paperless']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -195,30 +204,10 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
-      # https://docs.affine.pro/self-host-affine/administer/oauth-2-0
-      - client_id: 'affine'
-        client_name: 'Affine'
-        client_secret: '{{ hostvars['console']['affine']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['affine']['domain']['public'] }}.{{ domain['public'] }}/oauth/callback'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_post'
       # https://www.authelia.com/integration/openid-connect/clients/nextcloud/#openid-connect-user-backend-app
       - client_id: 'nextcloud'
         client_name: 'Nextcloud'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['nextcloud']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -241,6 +230,7 @@ identity_providers:
       # https://www.authelia.com/integration/openid-connect/clients/sure/
       - client_id: 'sure'
         client_name: 'Sure'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['sure']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -263,6 +253,7 @@ identity_providers:
       # https://www.authelia.com/integration/openid-connect/clients/outline/
       - client_id: 'outline'
         client_name: 'Outline'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['outline']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -286,6 +277,7 @@ identity_providers:
       # https://www.authelia.com/integration/openid-connect/clients/memos/
       - client_id: 'memos'
         client_name: 'Memos'
+        consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['memos']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
@@ -304,3 +296,26 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
+      # https://www.authelia.com/integration/openid-connect/clients/mealie/
+      - client_id: 'mealie'
+        client_name: 'Mealie'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['mealie']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['mealie']['domain']['public'] }}.{{ domain['public'] }}/login'
+        scopes:
+          - 'openid'
+          - 'email'
+          - 'profile'
+          - 'groups'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'

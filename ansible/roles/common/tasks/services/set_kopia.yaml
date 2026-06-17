@@ -14,7 +14,7 @@
           kopia_{{ version['packages']['kopia'] }}_linux_{{ item }}.deb"
         dest: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-{{ item }}.deb"
         owner: "{{ ansible_user }}"
-        group: "svadmins"
+        group: "{{ node['group'] }}"
         mode: "0600"
       loop:
         - "amd64"
@@ -36,7 +36,7 @@
 
     - name: Connect console kopia server
       environment:
-        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['user']['console'] }}"
+        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['users']['console'] }}"
       ansible.builtin.shell: |
         /usr/bin/kopia repository connect server \
         --url=https://{{ services['kopia']['domain'] }}.{{ domain['internal'] }}:{{ services['kopia']['ports']['https'] }} \

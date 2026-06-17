@@ -53,6 +53,7 @@ Environment="OIDC_USERINFO_URI=https://{{ services['authelia']['domain'] }}.{{ d
 Environment="OIDC_USERNAME_CLAIM=preferred_username"
 Environment="OIDC_DISPLAY_NAME=Authelia"
 Environment="OIDC_SCOPES=openid offline_access profile email"
+Environment="OIDC_DISABLE_REDIRECT=true"
 Secret=OUTLINE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
 
 # Mail

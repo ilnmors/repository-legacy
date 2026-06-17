@@ -2,16 +2,23 @@
 # Node Factors
 node:
   name: "infra"
+  group: "svadmins"
   uid: 2002
   home_path: "/home/infra"
-  ssh_san: "infra,infra.ilnmors.internal"
-  local_san: "localhost infra.ilnmors.internal"
+  ssh_san: "{{ node['name'] }},{{ node['name'] }}.{{ domain['internal'] }}"
+  local_san: "localhost {{ node['name'] }}.{{ domain['internal'] }}"
 
 # VM Factors
 vm:
   name: "infra"
-  cpu: 2
-  shares: 1024
+  cpu: 4
+  cpu_pin: |
+    <vcpupin vcpu='0' cpuset='2'/>
+    <vcpupin vcpu='1' cpuset='3'/>
+    <vcpupin vcpu='2' cpuset='6'/>
+    <vcpupin vcpu='3' cpuset='7'/>
+    <emulatorpin cpuset='6-7'/>
+  shares: 2048
   memory: 6
   storage: 256
   lan_mac: "0a:49:6e:4d:01:00"

@@ -1,5 +1,5 @@
 ---
-- name: Gather system facts (hardware)
+- name: Gather ystem facts (hardware)
   ansible.builtin.setup:
     gather_subset:
       - hardware
@@ -66,6 +66,19 @@
     mode: "0644"
   become: true
   notify: "notification_restart_alloy"
+
+- name: Set ACL for data directory
+  ansible.posix.acl:
+    path: "{{ item }}"
+    entity: "alloy"
+    etype: "user"
+    permissions: "x"
+    state: "present"
+  loop:
+    - "{{ node['home_path'] }}"
+    - "{{ node['home_path'] }}/data"
+  become: true
+  when: node['name'] == "app"
 
 - name: Enable alloy service
   ansible.builtin.systemd:

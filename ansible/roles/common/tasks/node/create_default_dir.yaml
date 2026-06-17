@@ -22,7 +22,7 @@
     path: "{{ node['home_path'] }}/.config/systemd/user"
     state: "directory"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0700"
 
 - name: Create quadlet directory
@@ -30,5 +30,14 @@
     path: "{{ node['home_path'] }}/.config/containers/systemd"
     state: "directory"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0700"
+
+- name: Set data volume path
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/data"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  when: node['name'] in ["infra", "app"]

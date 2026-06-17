@@ -8,7 +8,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['redis']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "containers/redis"
@@ -21,7 +21,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
     dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   register: "is_redis_conf"
 
@@ -30,7 +30,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   register: "is_redis_containerfile"
 
@@ -48,7 +48,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['outline']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "data/containers/outline"
@@ -68,7 +68,7 @@
     state: "touch"
     mode: "0644"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
   when: not is_outline_init.stat.exists
 
 - name: Deploy root certificate
@@ -77,7 +77,7 @@
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/outline/ssl/{{ root_cert_filename }}"
     owner: "{{ services['outline']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0440"
   become: true
   notify: "notification_restart_outline"
@@ -106,7 +106,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/outline/outline.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/outline.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_outline"
 

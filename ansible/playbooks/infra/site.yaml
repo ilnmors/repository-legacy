@@ -20,6 +20,7 @@
     - name: Set become password
       ansible.builtin.set_fact:
         ansible_become_pass: "{{ hostvars['console']['sudo']['password']['infra'] }}"
+      no_log: true
       tags: ["always"]
 
   tasks:

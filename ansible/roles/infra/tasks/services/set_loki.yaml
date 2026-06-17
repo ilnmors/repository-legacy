@@ -4,7 +4,7 @@
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     state: "directory"
     owner: "{{ services['loki']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "loki"
@@ -18,7 +18,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/etc/loki.yaml.j2"
     dest: "{{ node['home_path'] }}/containers/loki/etc/loki.yaml"
     owner: "{{ services['loki']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"
   become: true
   notify: "notification_restart_loki"
@@ -30,7 +30,7 @@
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/loki/ssl/{{ item.name }}"
     owner: "{{ services['loki']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "{{ item.mode }}"
   loop:
     - name: "{{ root_cert_filename }}"
@@ -53,7 +53,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/loki.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/loki.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_loki"
 

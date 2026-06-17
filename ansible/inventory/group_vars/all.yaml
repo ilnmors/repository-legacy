@@ -1,15 +1,14 @@
 ---
 # Global vars
-ansible_ssh_private_key_file: "/etc/secrets/{{ hostvars['console']['node']['uid'] }}/id_console"
 timezone: "Asia/Seoul"
+ansible_ssh_private_key_file: "/etc/secrets/{{ hostvars['console']['node']['uid'] }}/id_console"
 
 # CA
 root_cert_filename: "ilnmors_root_ca.crt"
 intermediate_cert_filename: "ilnmors_intermediate_ca.crt"
 intermediate_key_filename: "ilnmors_intermediate_ca.key"
 
-
-# local SAN and SSH SAN should be updated manually on host_vars
+# Domains
 domain:
   public: "ilnmors.com"
   internal: "ilnmors.internal"
@@ -67,7 +66,7 @@ services:
   grafana:
     domain: "grafana"
     ports:
-      http: "3000" # Infra server: Internal ports
+      http: "3000"
     subuid: "100471"
   caddy:
     ports:
@@ -98,7 +97,7 @@ services:
       public: "gitea"
       internal: "gitea.app"
     ports:
-      http: "3000" # App server: Public ports
+      http: "3001"
     subuid: "100999"
   immich:
     domain:
@@ -118,16 +117,6 @@ services:
       http: "8001"
       redis: "6380"
     subuid: "100999"
-  manticore:
-    subuid: "100998"
-  affine:
-    domain:
-      public: "affine"
-      internal: "affine.app"
-    ports:
-      http: "3010"
-      redis: "6381"
-      manticore: "9308"
   nextcloud:
     domain:
       public: "nextcloud"
@@ -148,7 +137,7 @@ services:
       public: "sure"
       internal: "sure.app"
     ports:
-      http: "3001"
+      http: "3002"
       redis: "6383"
     subuid: "100999"
   outline:
@@ -156,7 +145,7 @@ services:
       public: "outline"
       internal: "outline.app"
     ports:
-      http: "3002"
+      http: "3004"
       redis: "6384"
     subuid: "101000"
   memos:
@@ -164,43 +153,49 @@ services:
       public: "memos"
       internal: "memos.app"
     ports:
-      http: "3004"
+      http: "3005"
     subuid: "110000"
+  mealie:
+    domain:
+      public: "mealie"
+      internal: "mealie.app"
+    ports:
+      http: "9001"
+    subuid: "100910"
 
 version:
   packages:
-    sops: "3.12.1"
+    sops: "3.13.1"
     step: "0.30.2"
-    kopia: "0.22.3"
+    kopia: "0.23.0"
     blocky: "0.29.0"
     alloy: "1.16.1"
   containers:
     # common
-    caddy: "2.11.2"
+    caddy: "2.11.4"
     # infra
     step: "0.30.2"
     ldap: "v0.6.3"
     x509-exporter: "4.1.0"
-    prometheus: "v3.11.3"
+    prometheus: "v3.12.0"
     loki: "3.7.1"
     grafana: "13.0.1"
     ## Postgresql
-    postgresql: "18.3"
+    postgresql: "18.4"
     # For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
 #    pgvector: "v0.8.1"
     vectorchord: "1.1.1"
     # Auth
-    authelia: "4.39.19"
+    authelia: "4.39.20"
     # App
     vaultwarden: "1.36.0"
     gitea: "1.26.1"
-    redis: "8.6.3"
+    redis: "8.8.0"
     immich: "v2.7.5"
     paperless: "2.20.15"
-    manticore: "25.0.0"
-    affine: "0.26.3"
-    nextcloud: "33.0.3"
-    collabora: "25.04.9.4.1"
-    sure: "0.7.0-hotfix.2"
-    outline: "1.7.1"
-    memos: "0.28.0"
+    nextcloud: "33.0.5"
+    collabora: "25.04.10.3.1"
+    sure: "0.7.1"
+    outline: "1.8.1"
+    memos: "0.29.1"
+    mealie: "v3.19.2"

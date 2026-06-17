@@ -78,7 +78,7 @@ table inet filter {
         set crowdsec6-blacklists {
                 type ipv6_addr
                 flags timeout
-        }        
+        }
         chain global {
                 # invalid packets
                 ct state invalid drop comment "deny invalid connection"
@@ -114,7 +114,7 @@ table inet filter {
                 iifname "lo" accept comment "allow local connection: FW > FW"
                 udp dport $PORTS_VPN accept comment "allow vpn connection: > FW"
                 iifname { $IF_CLIENT, $IF_SERVER, $IF_USER, $IF_WG } meta l4proto { icmp, icmpv6 } accept comment "allow icmp, icmpv6 connection: CLIENT/SERVER/USER/WG > FW"
-                iifname { $IF_CLIENT, $IF_SERVER, $IF_USER, $IF_WG } udp dport $PORTS_NTP accept comment "allow ntp connection: CLIENT/SERVER/USER/WG > FW"
+                iifname { $IF_CLIENT, $IF_SERVER, $IF_WG } udp dport $PORTS_NTP accept comment "allow ntp connection: CLIENT/SERVER/USER/WG > FW"
                 # Global chain contains "WAN !> :SSH_PORT"
                 ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv4 ssh connection: CONSOLE > FW"
                 ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv6 ssh connection: CONSOLE > FW"

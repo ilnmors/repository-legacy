@@ -1,7 +1,33 @@
 ---
 node:
   name: "vmm"
+  group: "svadmins"
   uid: 2000
   home_path: "/home/vmm"
-  ssh_san: "vmm,vmm_init,vmm.ilnmors.internal,init.vmm.ilnmors.internal"
-  local_san: "localhost vmm.ilnmors.internal"
+  libvirt_path: "/var/lib/libvirt"
+  ssh_san: "{{ node['name'] }},{{ node['name'] }}_init,{{ node['name'] }}.{{ domain['internal'] }},init.{{ node['name'] }}.{{ domain['internal'] }}"
+  local_san: "localhost {{ node['name'] }}.{{ domain['internal'] }}"
+
+hardware:
+  mac:
+    nic0: "c8:ff:bf:07:02:34"
+    nic1: "c8:ff:bf:07:02:33"
+    sfpp0: "c8:ff:bf:07:02:31"
+    sfpp1: "c8:ff:bf:07:02:32"
+  igpu:
+    id: "8086:4628"
+    address: "0000:00:02.0"
+    domain: "0x0000"
+    bus: "0x00"
+    slot: "0x02"
+    function: "0x0"
+  hdd:
+    data:
+      hdd0: "WMC6N0E617S8"
+      hdd1: "P6HVTL0W"
+      hdd2: "P2GH354H"
+      hdd3: "P6GJKSMP"
+  btrfs:
+    label: "DATA"
+    level: "raid10"
+    mount_point: "{{ node['libvirt_path'] }}/data"

@@ -1,0 +1,8 @@
+<!-- Storage pool define -->
+<!-- data-pool.xml -->
+<pool type='dir'>
+  <name>data-pool</name>
+  <target>
+    <path>/var/lib/libvirt/data</path>
+  </target>
+</pool>

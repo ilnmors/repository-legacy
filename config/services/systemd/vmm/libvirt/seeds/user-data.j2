@@ -11,7 +11,7 @@ users:
     - name: {{ target_vm }}
       uid: {{ hostvars[target_vm]['node']['uid'] }}
       gecos: {{ target_vm }}
-      primary_group: svadmins
+      primary_group: {{ hostvars[target_vm]['node']['group'] }}
       groups: sudo
       lock_passwd: false
       passwd: {{ hostvars['console']['sudo']['hash'][target_vm] }}

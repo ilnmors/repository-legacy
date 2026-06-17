@@ -2,17 +2,29 @@
 # Node Factors
 node:
   name: "app"
+  group: "svadmins"
   uid: 2004
   home_path: "/home/app"
-  ssh_san: "app,app.ilnmors.internal"
-  local_san: "localhost app.ilnmors.internal"
+  ssh_san: "{{ node['name'] }},{{ node['name'] }}.{{ domain['internal'] }}"
+  local_san: "localhost {{ node['name'] }}.{{ domain['internal'] }}"
 # VM Factors
 vm:
   name: "app"
-  cpu: 4
+  cpu: 6
+  cpu_pin: |
+    <vcpupin vcpu='0' cpuset='0'/>
+    <vcpupin vcpu='1' cpuset='1'/>
+    <vcpupin vcpu='2' cpuset='2'/>
+    <vcpupin vcpu='3' cpuset='3'/>
+    <vcpupin vcpu='4' cpuset='10'/>
+    <vcpupin vcpu='5' cpuset='11'/>
+    <emulatorpin cpuset='10-11'/>
   shares: 1024
   memory: 16
   storage: 256
+  data_storage:
+    name: "vdb"
+    size: 3.5
   lan_mac: "0a:49:6e:4d:03:00"
   lan_net: "lan-net"
   lan_group: "vlan10-access"
@@ -26,16 +38,3 @@ vm:
       bus: "0x00"
       slot: "0x02"
       function: "0x0"
-    sata_controller: # Additional SATA Controller
-      address: "0000:04:00.0"
-      domain: "0x0000"
-      bus: "0x04"
-      slot: "0x00"
-      function: "0x0"
-
-# BTRFS configuration for hdd which is passthroughed
-storage:
-  btrfs:
-    label: "APP_DATA"
-    level: "raid10"
-    mount_point: "/home/app/data"

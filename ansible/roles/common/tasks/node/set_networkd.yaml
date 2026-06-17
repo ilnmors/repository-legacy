@@ -11,7 +11,7 @@
 - name: Deploy networkd files
   ansible.builtin.template:
     src: "{{ item }}"
-    dest: "/etc/systemd/network/{{ item | basename }}"
+    dest: "/etc/systemd/network/{{ item | basename | replace('.j2', '') }}"
     owner: "root"
     group: "systemd-network"
     mode: "0640"

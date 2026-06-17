@@ -3,7 +3,7 @@
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     owner: "{{ services['grafana']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     state: "directory"
     mode: "0770"
   loop:
@@ -11,6 +11,7 @@
     - "grafana/data"
     - "grafana/etc"
     - "grafana/etc/provisioning"
+    - "grafana/etc/provisioning/datasources"
     - "grafana/etc/dashboards"
     - "grafana/ssl"
   become: true
@@ -21,7 +22,7 @@
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/grafana/ssl/{{ root_cert_filename }}"
     owner: "{{ services['grafana']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0400"
   become: true
   notify: "notification_restart_grafana"
@@ -39,16 +40,16 @@
     - name: "LDAP_BIND_PASSWORD"
       value: "{{ hostvars['console']['ldap']['password']['grafana'] }}"
     - name: "GF_ADMIN_PASSWORD"
-      value: "{{ hostvars['console']['grafana']['user']['password'] }}"
+      value: "{{ hostvars['console']['grafana']['admin']['password'] }}"
   notify: "notification_restart_grafana"
   no_log: true
 
-- name: Deploy configruation files
+- name: Deploy configuration files
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/grafana/etc/{{ item }}"
     owner: "{{ services['grafana']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0400"
   loop:
     - "grafana.ini"
@@ -62,7 +63,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/provisioning/datasources/datasources.yaml.j2"
     dest: "{{ node['home_path'] }}/containers/grafana/etc/provisioning/datasources/datasources.yaml"
     owner: "{{ services['grafana']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0400"
   become: true
   notify: "notification_restart_grafana"
@@ -72,7 +73,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/grafana.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/grafana.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_grafana"
 

@@ -1,7 +1,7 @@
 {
         # CrowdSec LAPI connection
         crowdsec {
-                api_url https://{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:{{ services['crowdsec']['ports']['https'] }} 
+                api_url https://{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:{{ services['crowdsec']['ports']['https'] }}
                 api_key "{file./run/secrets/CADDY_CROWDSEC_KEY}"
         }
 }
@@ -98,15 +98,6 @@
                 reverse_proxy https://{{ services['paperless']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
-        }  
-}
-{{ services['affine']['domain']['public'] }}.{{ domain['public'] }} {
-        import crowdsec_log
-        route {
-                crowdsec
-                reverse_proxy https://{{ services['affine']['domain']['internal'] }}.{{ domain['internal'] }} {
-                        header_up Host {http.reverse_proxy.upstream.host}
-                }
         }
 }
 {{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }} {
@@ -150,6 +141,15 @@
         route {
                 crowdsec
                 reverse_proxy https://{{services['memos']['domain']['internal'] }}.{{ domain['internal'] }} {
+                        header_up Host {http.reverse_proxy.upstream.host}
+                }
+        }
+}
+{{ services['mealie']['domain']['public'] }}.{{ domain['public'] }} {
+        import crowdsec_log
+        route {
+                crowdsec
+                reverse_proxy https://{{services['mealie']['domain']['internal'] }}.{{ domain['internal'] }} {
                         header_up Host {http.reverse_proxy.upstream.host}
                 }
         }

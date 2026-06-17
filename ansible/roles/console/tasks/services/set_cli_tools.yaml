@@ -31,7 +31,7 @@
       sops_{{ version['packages']['sops'] }}_{{ item }}.deb"
     dest: "{{ node['data_path'] }}/bin/sops-{{ version['packages']['sops'] }}-{{ item }}.deb"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"
   loop:
     - "amd64"
@@ -43,7 +43,7 @@
       step-cli_{{ version['packages']['step'] }}-1_{{ item }}.deb"
     dest: "{{ node['data_path'] }}/bin/step-{{ version['packages']['step'] }}-{{ item }}.deb"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"
   loop:
     - "amd64"

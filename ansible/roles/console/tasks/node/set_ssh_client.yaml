@@ -66,8 +66,8 @@
         content: |
           {{ hostvars['console']['ssh']['ca']['key'] }}
         dest: "/run/user/{{ node['uid'] }}/local_ssh_ca_private_key"
-        owner: "console"
-        group: "svadmins"
+        owner: "{{ ansible_user }}"
+        group: "{{ node['group'] }}"
         mode: "0400"
       no_log: true
     - name: Sign on ssh console key (pub file)
@@ -91,7 +91,7 @@
     path: "{{ node['home_path'] }}/.ssh"
     state: "directory"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0700"
 
 - name: Create ssh config file
@@ -105,5 +105,5 @@
       {% endfor %}
     dest: "{{ node['home_path'] }}/.ssh/config"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"

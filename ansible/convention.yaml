@@ -1,27 +1,28 @@
 ---
-# `""` should be used for every string values
-# except name, boolean, varible(environment) name, number (only for decimal)
+# String values need `""`
+# Task names, boolean values, environment names, decimal numbers don't need `""`
 - name: Convention task
   delegate_to: "host"
   delegate_facts: true
   environment:
-    env: "environment"
+    env: "value"
   ansible.builtin.file:
-    # Identifier: name:, src, dest, url
-    path: "/path/of/example"
-    # State
+    # Identifier: name, src, dest, url, etc.
+    path: "/example/path"
+    # state parameters
     state: "directory"
     owner: "root"
     group: "root"
     mode: "0640"
-    # optional data
+    # optional parameters
     recurse: true
   loop:
     - "list"
   loop_control:
     label: "{{ item }}"
   become: true
-  # become_user: "root"
+  # default become user is root
+  become_user: "user"
   when: condition.stat.exists
   changed_when: condition.rc != 0
   failed_when: condition.rc == 0
@@ -30,6 +31,8 @@
   listen: "notification_example"
   no_log: true
   run_once: true
+  # Ensure execution even if it fails (it prints errors on the screen, but it ignores them)
+  ignore_errors: true
   tags:
     - "always"
     - "init"

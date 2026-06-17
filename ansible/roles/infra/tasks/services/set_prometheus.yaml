@@ -4,7 +4,7 @@
     path: "{{ node['home_path'] }}/containers/{{ item }}"
     state: "directory"
     owner: "{{ services['prometheus']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "prometheus"
@@ -18,7 +18,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/prometheus/etc/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/containers/prometheus/etc/{{ item }}"
     owner: "{{ services['prometheus']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"
   loop:
     - "prometheus.yaml"
@@ -34,7 +34,7 @@
       {{ item.value }}
     dest: "{{ node['home_path'] }}/containers/prometheus/ssl/{{ item.name }}"
     owner: "{{ services['prometheus']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "{{ item.mode }}"
   loop:
     - name: "{{ root_cert_filename }}"
@@ -57,7 +57,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/prometheus/prometheus.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/prometheus.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_prometheus"
 

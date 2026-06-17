@@ -2,15 +2,22 @@
 # Node Factors
 node:
   name: "fw"
+  group: "svadmins"
   uid: 2001
   home_path: "/home/fw"
-  ssh_san: "fw,fw.ilnmors.internal"
-  local_san: "localhost fw.ilnmors.internal"
+  ssh_san: "{{ node['name'] }},{{ node['name'] }}.{{ domain['internal'] }}"
+  local_san: "localhost {{ node['name'] }}.{{ domain['internal'] }}"
 
 # VM Factors
 vm:
   name: "fw"
-  cpu: 2
+  cpu: 4
+  cpu_pin: |
+    <vcpupin vcpu='0' cpuset='0'/>
+    <vcpupin vcpu='1' cpuset='1'/>
+    <vcpupin vcpu='2' cpuset='4'/>
+    <vcpupin vcpu='3' cpuset='5'/>
+    <emulatorpin cpuset='4-5'/>
   shares: 2048
   memory: 4
   storage: 64
@@ -21,7 +28,7 @@ vm:
   lan_group: "vlan-trunk"
 
 # Network Factors
-# LLA is like MAC address for L3 (Network layer). Usually, subnet is used to seperate network.
+# LLA is like MAC address for L3 (Network layer). Usually, subnet is used to separate network.
 network4:
   subnet:
     client: "192.168.1.0/24"

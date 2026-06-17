@@ -11,7 +11,7 @@
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     state: "directory"
     mode: "0700"
 
@@ -19,7 +19,7 @@
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/data/containers"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     state: "directory"
     mode: "0770"
   when: node['name'] == "app"
@@ -28,7 +28,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     state: "directory"
     mode: "0700"
   loop:

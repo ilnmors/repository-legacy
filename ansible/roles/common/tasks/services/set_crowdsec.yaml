@@ -315,7 +315,3 @@
     enabled: true
     daemon_reload: true
   become: true
-
-# cscli bouncers list
-# cscli machines list
-# cscli metrics

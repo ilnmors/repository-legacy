@@ -20,6 +20,7 @@
     - name: Set become password
       ansible.builtin.set_fact:
         ansible_become_pass: "{{ hostvars['console']['sudo']['password']['app'] }}"
+      no_log: true
       tags: ["always"]
 
   tasks:
@@ -97,10 +98,10 @@
       become: true
       tags: ["init", "install-packages"]
 
-    - name: Set raid
+    - name: Set data volume
       ansible.builtin.include_role:
         name: "app"
-        tasks_from: "node/set_raid"
+        tasks_from: "node/set_data_volume"
         apply:
           tags: ["init", "raid"]
       tags: ["init", "raid"]
@@ -193,14 +194,6 @@
           tags: ["site", "paperless"]
       tags: ["site", "paperless"]
 
-    - name: Set affine
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_affine"
-        apply:
-          tags: ["site", "affine"]
-      tags: ["site", "affine"]
-
     - name: Set nextcloud
       ansible.builtin.include_role:
         name: "app"
@@ -240,6 +233,14 @@
         apply:
           tags: ["site", "memos"]
       tags: ["site", "memos"]
+
+    - name: Set mealie
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_mealie"
+        apply:
+          tags: ["site", "mealie"]
+      tags: ["site", "mealie"]
 
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"

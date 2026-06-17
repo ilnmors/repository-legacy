@@ -3,7 +3,7 @@
 
 set -e
 
-# Varibles
+# Variables
 KEY_PATH="$HOME/workspace/homelab/config/secrets"
 TMP_PATH="/run/user/$UID"
 SECRET_FILE="$1"
@@ -110,7 +110,7 @@ echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 \
 --decrypt "$KEY_PATH/age-key.gpg" &&\
 chmod 600 "$TMP_PATH/age-key"
   
-# Unset environment varibles
+# Unset environment Variables
 unset GPG_PASSPHRASE
 
 # Check the key on memory

@@ -207,7 +207,7 @@ loki.process "journal_parser" {
             // Regex to extract the log level from the content.
             expression = "(?i)(?:level[\"\\s:=]+|\\[|\\s|^)(?P<content_level>info|warn|warning|error|debug|fatal|critical|trace)(?:[\"\\]\\s]|$)"
         }
-        
+
         stage.labels {
             values = {
                 "level" = "content_level",
@@ -237,7 +237,7 @@ loki.process "journal_parser" {
 loki.process "suricata_json" {
     forward_to = [loki.write.loki.receiver]
     stage.json {
-        expressions = { 
+        expressions = {
             event_type = "event_type",
             src_ip     = "src_ip",
             severity   = "alert.severity",
@@ -253,7 +253,7 @@ loki.process "suricata_json" {
 loki.process "caddy_json" {
     forward_to = [loki.write.loki.receiver]
     stage.json {
-        expressions = { 
+        expressions = {
             status      = "status",
             method      = "method",
             remote_ip   = "remote_ip",

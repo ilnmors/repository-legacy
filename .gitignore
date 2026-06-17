@@ -1,10 +1,10 @@
-.ansible
 data/bin/*
-data/volumes/*
-data/images/*
-!data/images/containers
 data/images/containers/*
-docs/archives/textfiles/
-docs/notes/*
+data/images/seeds/*
+data/vmm_init/*
+*.raw
+*.tar
+*.qcow2
 *.sql
+*.iso
 !.gitkeep

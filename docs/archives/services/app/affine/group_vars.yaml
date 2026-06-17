@@ -1,0 +1,16 @@
+---
+services:
+  manticore:
+    subuid: ""
+  affine:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+      redis: ""
+      manticore: ""
+
+version:
+    affine: "0.26.3"
+    manticore: "25.0.0"

@@ -6,7 +6,7 @@
       API_KEY={{ hostvars['console']['ddns']['api_key'] }}
     dest: "/etc/secrets/{{ node['uid'] }}/ddns.env"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0400"
   become: true
   no_log: true
@@ -16,7 +16,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/ddns/ddns.sh"
     dest: "/usr/local/bin"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0711"
   become: true
 
@@ -25,7 +25,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/ddns/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0600"
     validate: "/usr/bin/systemd-analyze verify %s"
   loop:

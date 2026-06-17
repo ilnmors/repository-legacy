@@ -1,0 +1,28 @@
+{
+    "python.useEnvironmentsExtension": false,
+    "ansible.lightspeed.enabled": false,
+    "ansible.lightspeed.suggestions.enabled": false,
+    "ansible.validation.enabled": true,
+    "ansible.validation.lint.enabled": true,
+    "files.associations": {
+        "**/ansible/**/*.yaml": "ansible",
+        "*.container*": "ini",
+        "*.service*": "ini",
+        "*.timer*": "ini",
+        "*containerfile*": "dockerfile",
+        "*.link*": "ini",
+        "*.netdev*": "ini",
+        "*.network*": "ini",
+        "*.xml*": "xml",
+        "named.conf*": "cpp",
+        "*.conf*": "ini",
+        "*.toml": "ini",
+        "*.json.*": "json",
+        "*.alloy.*": "cpp"
+    },
+    "ansible.python.interpreterPath": "/bin/python3",
+    "yaml.customTags": [
+        "!vault scalar"
+    ],
+    "workbench.hover.delay": 9999999,
+}

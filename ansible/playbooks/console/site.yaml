@@ -20,6 +20,7 @@
     - name: Set become password
       ansible.builtin.set_fact:
         ansible_become_pass: "{{ hostvars['console']['sudo']['password']['console'] }}"
+      no_log: true
       tags: ["always"]
 
   tasks:
@@ -70,32 +71,6 @@
           tags: ["init", "ssh_client"]
       tags: ["init", "ssh_client"]
 
-    - name: Check file permissions
-      ansible.builtin.file:
-        path: "{{ node['workspace_path'] }}/{{ item }}"
-        state: "directory"
-        owner: "{{ ansible_user }}"
-        group: "svadmins"
-        mode: "u=rwX,g=,o="
-        recurse: true
-      loop:
-        - "homelab/ansible"
-        - "homelab/config"
-        - "homelab/docs"
-        - "university"
-      tags: ["init", "site", "file_permission"]
-      # kopia snashot is mounted on homelab/data/volumes.
-      # NEVER CHANGE permission and owners
-
-    - name: Download vm cloud-init
-      ansible.builtin.get_url:
-        url: "https://cdimage.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
-        dest: "{{ node['data_path'] }}/images/debian-13-generic-amd64.qcow2"
-        owner: "console"
-        group: "svadmins"
-        mode: "0600"
-      tags: ["init", "site", "cloud-init-image"]
-
     - name: Install packages
       ansible.builtin.apt:
         name:
@@ -108,8 +83,6 @@
           - "logrotate"
           - "nftables"
           - "build-essential"
-          - "g++"
-          - "gcc"
           - "fuse3"
         state: "present"
       become: true
@@ -122,6 +95,23 @@
         apply:
           tags: ["init", "site", "tools"]
       tags: ["init", "site", "tools"]
+
+    - name: Set vmm_init config
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/create_vmm_init"
+        apply:
+          tags: ["site", "vmm_init"]
+      tags: ["site", "vmm_init"]
+
+    - name: Download vm cloud-init
+      ansible.builtin.get_url:
+        url: "https://cdimage.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
+        dest: "{{ node['data_path'] }}/images/debian-13-generic-amd64.qcow2"
+        owner: "console"
+        group: "svadmins"
+        mode: "0600"
+      tags: ["init", "site", "cloud-init-image"]
 
     - name: Set kopia
       ansible.builtin.include_role:

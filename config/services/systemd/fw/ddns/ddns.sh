@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Change Log format as logfmt (refactoring)
-# ddns.sh -d domain [-t <ttl>] [-p] [-r] [-c]
+# ddns.sh -d domain [-t <ttl>] [-p] [-r]
 
 # Default Information
 DOMAIN=""
@@ -17,7 +17,7 @@ CURRENT_IP=""
 
 # usage() function
 usage() {
-        echo "Usage: $0 -d \"domain\" [-t \"ttl\"] [-p] [-r] [-c]"
+        echo "Usage: $0 -d \"domain\" [-t \"ttl\"] [-p] [-r]"
         echo "-d <domain>: Specify the domain to update"
         echo "-t <ttl>: Specify the TTL(Time to live)"
         echo "-p: Specify the cloudflare proxy to use"
@@ -109,7 +109,7 @@ if [[ -z "$CURRENT_IP" || "$CURRENT_IP" =~ ^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|
     CURRENT_IP=$(curl -sf "https://api.ipify.org")
 fi
 if [ "$CURRENT_IP" == "" ]; then
-    log "Error" "Can't get an IP"
+    log "error" "Can't get an IP"
     exit 1
 fi
 
@@ -218,8 +218,8 @@ delete_dns_record()
 
 # Get DNS A, and CNAME record
 A_DNS_RECORD=$(get_dns_record "A" "$DOMAIN")
-S_DNS_RECORD=$(get_dns_record "cname" "*.$DOMAIN")
-W_DNS_RECORD=$(get_dns_record "cname" "www.$DOMAIN")
+S_DNS_RECORD=$(get_dns_record "CNAME" "*.$DOMAIN")
+W_DNS_RECORD=$(get_dns_record "CNAME" "www.$DOMAIN")
 
 # Delete DNS record with Delete flag
 if [ "$DELETE_FLAG" == "true" ]; then
@@ -232,13 +232,13 @@ if [ "$DELETE_FLAG" == "true" ]; then
     fi
     if [ "$(echo $S_DNS_RECORD | jq -r '.result | length')" -eq 1 ]; then
         S_DNS_ID="$(echo $S_DNS_RECORD | jq -r '.result[0].id')"
-        delete_dns_record "cname" "$S_DNS_ID"
+        delete_dns_record "CNAME" "$S_DNS_ID"
         log "info" "sub DNS record is deleted"
         FLAG="true"
     fi
     if [ "$(echo $W_DNS_RECORD | jq -r '.result | length')" -eq 1 ]; then
         W_DNS_ID="$(echo $W_DNS_RECORD | jq -r '.result[0].id')"
-        delete_dns_record "cname" "$W_DNS_ID"
+        delete_dns_record "CNAME" "$W_DNS_ID"
         log "info" "www DNS record is deleted"
         FLAG="true"
     fi
@@ -272,14 +272,14 @@ if [ "$(echo $S_DNS_RECORD | jq -r '.result | length')" -eq 1 ]; then # sub DNS 
     S_DNS_TTL="$(echo $S_DNS_RECORD | jq -r '.result[0].ttl')"
     S_DNS_PROXIED="$(echo $S_DNS_RECORD | jq -r '.result[0].proxied')"
     if [ "$S_DNS_CONTENT" != "$DOMAIN" -o "$S_DNS_TTL" != "$C_TTL" -o "$S_DNS_PROXIED" != "$PROXIED" ]; then
-        update_dns_record "cname" "*.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): sub domain from ddns.sh" "$DOMAIN" "$S_DNS_ID"
-        log "info" "Sub DNS record is successfully changed Domain: $S_DNS_CONTENT to *.$DOMAIN cname: $DOMAIN  TTL: $S_DNS_TTL to $C_TTL proxied: $S_DNS_PROXIED to $PROXIED"
+        update_dns_record "CNAME" "*.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): sub domain from ddns.sh" "$DOMAIN" "$S_DNS_ID"
+        log "info" "Sub DNS record is successfully changed Domain: $S_DNS_CONTENT to *.$DOMAIN CNAME: $DOMAIN  TTL: $S_DNS_TTL to $C_TTL proxied: $S_DNS_PROXIED to $PROXIED"
     else
-        log "info" "Sub DNS record is not changed Domain: *.$DOMAIN cname: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
+        log "info" "Sub DNS record is not changed Domain: *.$DOMAIN CNAME: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
     fi
 else # sub DNS record does not exist
-    create_dns_record "cname" "*.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): sub domain from ddns.sh" "$DOMAIN"
-    log "info" "Sub DNS record is successfully created Domain: *.$DOMAIN cname: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
+    create_dns_record "CNAME" "*.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): sub domain from ddns.sh" "$DOMAIN"
+    log "info" "Sub DNS record is successfully created Domain: *.$DOMAIN CNAME: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
 fi
 
 if [ "$(echo $W_DNS_RECORD | jq -r '.result | length')" -eq 1 ]; then # www DNS record exist
@@ -288,12 +288,12 @@ if [ "$(echo $W_DNS_RECORD | jq -r '.result | length')" -eq 1 ]; then # www DNS 
     W_DNS_TTL="$(echo $W_DNS_RECORD | jq -r '.result[0].ttl')"
     W_DNS_PROXIED="$(echo $W_DNS_RECORD | jq -r '.result[0].proxied')"
     if [ "$W_DNS_CONTENT" != "$DOMAIN" -o "$W_DNS_TTL" != "$C_TTL" -o "$W_DNS_PROXIED" != "$PROXIED" ]; then
-        update_dns_record "cname" "www.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): www domain from ddns.sh" "$DOMAIN" "$W_DNS_ID"
-        log "info" "www DNS record is successfully changed Domain: $W_DNS_CONTENT to www.$DOMAIN cname: $DOMAIN TTL: $W_DNS_TTL to $C_TTL proxied: $W_DNS_PROXIED to $PROXIED"
+        update_dns_record "CNAME" "www.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): www domain from ddns.sh" "$DOMAIN" "$W_DNS_ID"
+        log "info" "www DNS record is successfully changed Domain: $W_DNS_CONTENT to www.$DOMAIN CNAME: $DOMAIN TTL: $W_DNS_TTL to $C_TTL proxied: $W_DNS_PROXIED to $PROXIED"
     else
-        log "info" "www DNS record is not changed Domain: www.$DOMAIN cname: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
+        log "info" "www DNS record is not changed Domain: www.$DOMAIN CNAME: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
     fi
 else # www DNS record does not exist
-    create_dns_record "cname" "www.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): www domain from ddns.sh" "$DOMAIN"
-    log "info" "www DNS record is successfully created Domain: www.$DOMAIN cname: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
+    create_dns_record "CNAME" "www.$DOMAIN" "$C_TTL" "$(date "+%Y-%m-%d %H:%M:%S"): www domain from ddns.sh" "$DOMAIN"
+    log "info" "www DNS record is successfully created Domain: www.$DOMAIN CNAME: $DOMAIN TTL: $C_TTL proxied: $PROXIED"
 fi

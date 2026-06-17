@@ -8,7 +8,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['redis']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "containers/redis"
@@ -21,7 +21,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
     dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   register: "is_redis_conf"
 
@@ -30,7 +30,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   register: "is_redis_containerfile"
 
@@ -48,7 +48,7 @@
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['nextcloud']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0770"
   loop:
     - "data/containers/nextcloud"
@@ -69,7 +69,7 @@
       {{ hostvars['console']['ca']['root']['crt'] }}
     dest: "{{ node['home_path'] }}/containers/nextcloud/ssl/{{ root_cert_filename }}"
     owner: "{{ services['nextcloud']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0440"
   become: true
   notify: "notification_restart_nextcloud"
@@ -88,8 +88,8 @@
         detach: false
         env:
           NEXTCLOUD_UPDATE: "1"
-          NEXTCLOUD_ADMIN_USER: "admin-local"
-          NEXTCLOUD_ADMIN_PASSWORD: "{{ hostvars['console']['nextcloud']['admin-local']['password'] }}"
+          NEXTCLOUD_ADMIN_USER: "{{ hostvars['console']['nextcloud']['admin']['id'] }}"
+          NEXTCLOUD_ADMIN_PASSWORD: "{{ hostvars['console']['nextcloud']['admin']['password'] }}"
           POSTGRES_HOST: "{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
           POSTGRES_DB: "nextcloud_db"
           POSTGRES_USER: "nextcloud"
@@ -110,14 +110,14 @@
         state: "touch"
         mode: "0644"
         owner: "{{ ansible_user }}"
-        group: "svadmins"
+        group: "{{ node['group'] }}"
 
 - name: Deploy config files
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/config/{{ item }}.j2"
     dest: "{{ node['home_path'] }}/data/containers/nextcloud/html/config/{{ item }}"
     owner: "{{ services['nextcloud']['subuid'] }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0640"
   loop:
     - "background.config.php"
@@ -132,7 +132,7 @@
   ansible.builtin.copy:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/ini/{{ item }}"
     dest: "{{ node['home_path'] }}/containers/nextcloud/ini/{{ item }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   loop:
     - "opcache.ini"
@@ -144,7 +144,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/nextcloud.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/nextcloud.container"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   notify: "notification_restart_nextcloud"
 
@@ -153,7 +153,7 @@
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/systemd/{{ item }}"
     dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
     owner: "{{ ansible_user }}"
-    group: "svadmins"
+    group: "{{ node['group'] }}"
     mode: "0644"
   loop:
     - "nextcloud-cron.service"
