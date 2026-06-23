@@ -49,8 +49,7 @@
   register: "is_seediso"
 
 - name: Create seed.iso
-  ansible.builtin.shell:
-    cmd: |
+  ansible.builtin.shell: |
       cloud-localds -N {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/network-config \
       {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/seed.iso \
       {{ hostvars['console']['node']['data_path'] }}/images/seeds/{{ target_vm }}/user-data \

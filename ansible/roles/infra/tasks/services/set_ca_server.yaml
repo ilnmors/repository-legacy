@@ -24,16 +24,20 @@
   notify: "notification_restart_ca"
   no_log: true
 
-- name: Deploy ca config files
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/smallstep/step-ca"
+    tag: "{{ version['containers']['step'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy ca config file
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ca/config/{{ item }}.j2"
-    dest: "{{ node['home_path'] }}/containers/ca/config/{{ item }}"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ca/config/ca.json.j2"
+    dest: "{{ node['home_path'] }}/containers/ca/config/ca.json"
     owner: "{{ services['ca']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0400"
-  loop:
-    - "ca.json"
-    - "defaults.json"
   become: true
   notify: "notification_restart_ca"
 

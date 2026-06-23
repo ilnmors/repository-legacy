@@ -68,6 +68,13 @@
   become: true
   notify: "notification_restart_grafana"
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/grafana/grafana"
+    tag: "{{ version['containers']['grafana'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/grafana.container.j2"

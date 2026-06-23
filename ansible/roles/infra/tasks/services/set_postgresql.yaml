@@ -1,19 +1,19 @@
 ---
+- name: Initialize connected services list
+  ansible.builtin.set_fact:
+    connected_services: []
+
 - name: Set connected services list
   ansible.builtin.set_fact:
-    connected_services:
-      - "ldap"
-      - "grafana"
-      - "authelia"
-      - "vaultwarden"
-      - "gitea"
-      - "immich"
-      - "paperless"
-      - "nextcloud"
-      - "sure"
-      - "outline"
-      - "memos"
-      - "mealie"
+    connected_services: >-
+      {{
+        services
+        | dict2items
+        | selectattr('value.dependency.db', 'defined')
+        | selectattr('value.dependency.db', 'equalto', 'postgresql')
+        | map(attribute='key')
+        | list
+      }}
 
 - name: Create postgresql directory
   ansible.builtin.file:
@@ -39,6 +39,8 @@
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0640"
+  register: "is_postgresql_containerfile"
+  notify: "notification_restart_postgresql"
 
 - name: Build postgresql container image
   containers.podman.podman_image:
@@ -47,6 +49,7 @@
     tag: "pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}"
     state: "build"
     path: "{{ node['home_path'] }}/containers/postgresql/build"
+    force: "{{ is_postgresql_containerfile.changed }}"
 
 - name: Prune postgresql dangling images
   containers.podman.podman_prune:
@@ -96,16 +99,33 @@
   become: true
   register: "is_postgresql_init"
 
+- name: Check init directory empty
+  ansible.builtin.find:
+    path: "{{ node['home_path'] }}/containers/postgresql/init/"
+    file_type: "any"
+    patterns:
+      - "*.sql"
+  become: true
+  register: "is_init_dir_empty"
+
+- name: Check pg_cluster.sql on console
+  delegate_to: "console"
+  ansible.builtin.stat:
+    path: "{{ hostvars['console']['node']['data_path'] }}/sql/postgresql/pg_cluster.sql"
+  register: is_console_pg_cluster_sql
+
 - name: Prepare initiating DB
   when:
     - not is_postgresql_init.stat.exists
+    - is_init_dir_empty.matched == 0
+    - is_console_pg_cluster_sql.stat.exists
     - (connected_services | default([]) | length) > 0
   become: true
   block:
     # `init/pg_cluster.sql` should be fetched from postgresql's backup directory before running initiating
     - name: Deploy init cluster sql file
       ansible.builtin.copy:
-        src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_cluster.sql"
+        src: "{{ hostvars['console']['node']['data_path'] }}/sql/postgresql/pg_cluster.sql"
         dest: "{{ node['home_path'] }}/containers/postgresql/init/00_pg_cluster.sql"
         owner: "{{ services['postgresql']['subuid'] }}"
         group: "{{ node['group'] }}"
@@ -113,7 +133,7 @@
 
     - name: Deploy restoring data sql files
       ansible.builtin.copy:
-        src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/init/pg_{{ item }}.sql"
+        src: "{{ hostvars['console']['node']['data_path'] }}/sql/postgresql/pg_{{ item }}.sql"
         dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ '%02d' | format(index_num + 1) }}_pg_{{ item }}.sql"
         owner: "{{ services['postgresql']['subuid'] }}"
         group: "{{ node['group'] }}"
@@ -192,8 +212,8 @@
       {{ domain['internal'] }}_{{ node['name'] }}_postgres_\
       pg{{ version['containers']['postgresql'] }}-vectorchord{{ version['containers']['vectorchord'] }}.tar"
     format: "oci-archive"
-    force: false
-  when: not container_archive_images.stat.exists
+    force: "{{ is_postgresql_containerfile.changed }}"
+  when: not container_archive_images.stat.exists or is_postgresql_containerfile.changed
 
 - name: Fetch container archive images
   ansible.builtin.fetch:

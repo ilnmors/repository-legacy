@@ -1,5 +1,5 @@
 ---
-- name: Gather ystem facts (hardware)
+- name: Gather system facts (hardware)
   ansible.builtin.setup:
     gather_subset:
       - hardware
@@ -78,7 +78,7 @@
     - "{{ node['home_path'] }}"
     - "{{ node['home_path'] }}/data"
   become: true
-  when: node['name'] == "app"
+  when: node['name'] in ["bk", "app"]
 
 - name: Enable alloy service
   ansible.builtin.systemd:
@@ -88,9 +88,16 @@
     daemon_reload: true
   become: true
 
+- name: Check alloy.deb on console
+  delegate_to: "console"
+  ansible.builtin.stat:
+    path: "{{ hostvars['console']['node']['data_path'] }}/bin/alloy-{{ version['packages']['alloy'] }}.deb"
+  register: is_console_alloy_deb
+
 - name: Fetch deb bin file
   ansible.builtin.fetch:
     src: "/var/cache/apt/archives/alloy-{{ version['packages']['alloy'] }}.deb"
     dest: "{{ hostvars['console']['node']['data_path'] }}/bin/"
     flat: true
+  when: not is_console_alloy_deb.stat.exists
   become: true

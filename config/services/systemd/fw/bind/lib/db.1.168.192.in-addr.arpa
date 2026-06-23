@@ -9,5 +9,6 @@ $TTL    86400
             )
             IN      NS      bind.ilnmors.internal.
 1           IN      PTR     fw.ilnmors.internal.
-11          IN      PTR     nas.ilnmors.internal.
+2           IN      PTR     switch.ilnmors.internal.
 20          IN      PTR     console.ilnmors.internal.
+101         IN      PTR     printer.ilnmors.internal.

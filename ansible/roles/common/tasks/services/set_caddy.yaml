@@ -1,5 +1,48 @@
 ---
+- name: Initialize Caddy services list
+  ansible.builtin.set_fact:
+    caddy_services: []
+
 # infra, auth, app (vmm, fw has no podman in it)
+- name: Set Caddy infra services list
+  ansible.builtin.set_fact:
+    caddy_services: >-
+      {{
+        services
+        | dict2items
+        | selectattr('value.dependency.web', 'defined')
+        | selectattr('value.dependency.web', 'in', ['infra-internal', 'infra-public'])
+        | map(attribute='key')
+        | list
+      }}
+  when: node['name'] == 'infra'
+
+- name: Set Caddy auth services list
+  ansible.builtin.set_fact:
+    caddy_services: >-
+      {{
+        services
+        | dict2items
+        | selectattr('value.dependency.web', 'defined')
+        | selectattr('value.dependency.web', 'in', ['auth-public', 'infra-public', 'app-public'])
+        | map(attribute='key')
+        | list
+      }}
+  when: node['name'] == 'auth'
+
+- name: Set Caddy app services list
+  ansible.builtin.set_fact:
+    caddy_services: >-
+      {{
+        services
+        | dict2items
+        | selectattr('value.dependency.web', 'defined')
+        | selectattr('value.dependency.web', 'in', ['app-internal', 'app-public'])
+        | map(attribute='key')
+        | list
+      }}
+  when: node['name'] == 'app'
+
 - name: Create caddy directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
@@ -50,6 +93,8 @@
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0640"
+  register: "is_caddy_containerfile"
+  notify: "notification_restart_caddy"
 
 - name: Deploy root crt for build
   ansible.builtin.copy:
@@ -58,6 +103,8 @@
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0640"
+  register: "is_caddy_root_crt"
+  notify: "notification_restart_caddy"
   no_log: true
 
 - name: Build caddy container image
@@ -67,6 +114,7 @@
     tag: "{{ version['containers']['caddy'] }}"
     state: "build"
     path: "{{ node['home_path'] }}/containers/caddy/build"
+    force: "{{ is_caddy_root_crt.changed or is_caddy_containerfile.changed }}"
 
 - name: Prune caddy dangling images
   containers.podman.podman_prune:
@@ -74,7 +122,7 @@
 
 - name: Deploy caddyfile
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/common/caddy/etc/{{ node['name'] }}/Caddyfile.j2"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/common/caddy/etc/Caddyfile.j2"
     dest: "{{ node['home_path'] }}/containers/caddy/etc/Caddyfile"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
@@ -109,8 +157,8 @@
       - "{{ domain['internal'] }}/{{ node['name'] }}/caddy:{{ version['containers']['caddy'] }}"
     dest: "{{ node['home_path'] }}/archives/containers/{{ domain['internal'] }}_{{ node['name'] }}_caddy_{{ version['containers']['caddy'] }}.tar"
     format: "oci-archive"
-    force: false
-  when: not container_archive_images.stat.exists
+    force: "{{ is_caddy_root_crt.changed or is_caddy_containerfile.changed }}"
+  when: not container_archive_images.stat.exists or is_caddy_root_crt.changed or is_caddy_containerfile.changed
 
 - name: Fetch container archive images
   ansible.builtin.fetch:

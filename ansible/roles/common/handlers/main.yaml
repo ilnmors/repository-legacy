@@ -99,3 +99,14 @@
   changed_when: false
   listen: "notification_restart_alloy"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart kopia server
+  ansible.builtin.systemd:
+    name: "kopia-server.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_kopia_server"
+  ignore_errors: true # noqa: ignore-errors

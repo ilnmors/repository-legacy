@@ -1,0 +1,48 @@
+#!/usr/sbin/nft -f
+flush ruleset
+
+define NET4_SERVER = {{ hostvars['fw']['network4']['subnet']['server'] }}
+define NET6_SERVER = {{ hostvars['fw']['network6']['subnet']['server'] }}
+define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | join(', ') }} }
+define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
+define HOSTS4_INFRA = {{ hostvars['fw']['network4']['infra']['server'] }}
+define HOSTS6_INFRA = {{ hostvars['fw']['network6']['infra']['server'] }}
+define HOSTS4_APP = {{ hostvars['fw']['network4']['app']['server'] }}
+define HOSTS6_APP = {{ hostvars['fw']['network6']['app']['server'] }}
+define PORTS_SSH = 22
+define PORTS_HTTPS = 443
+define PORTS_KOPIA = {{ services['kopia']['ports']['https'] }}
+
+table inet nat {
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+        tcp dport $PORTS_HTTPS dnat to :$PORTS_KOPIA comment "dnat https ports to $PORTS_KOPIA"
+    }
+    chain postrouting {
+
+    }
+    chain output {
+        type nat hook output priority dstnat; policy accept;
+        oifname "lo" tcp dport $PORTS_HTTPS dnat to :$PORTS_KOPIA comment "dnat https ports to $PORTS_KOPIA out of LOCALHOST"
+    }
+}
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+        ct state invalid drop comment "deny invalid connection"
+        ct state established, related accept comment "allow all connection already existing"
+        iifname "lo" accept comment "allow local connection: BK > BK"
+        meta l4proto { icmp, icmpv6 } accept comment "allow icmp connection: BK"
+        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv4 ssh connection: CONSOLE > BK"
+        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv6 ssh connection: CONSOLE > BK"
+        ip saddr { $HOSTS4_CONSOLE, $HOSTS4_INFRA, $HOSTS4_APP } tcp dport $PORTS_KOPIA ct original proto-dst $PORTS_HTTPS accept comment "allow ipv4 https connection: > BK"
+        ip6 saddr { $HOSTS6_CONSOLE, $HOSTS6_INFRA, $HOSTS6_APP } tcp dport $PORTS_KOPIA ct original proto-dst $PORTS_HTTPS accept comment "allow ipv6 https connection: > BK"
+    }
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

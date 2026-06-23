@@ -86,6 +86,13 @@
   notify: "notification_restart_sure"
   no_log: true
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/we-promise/sure"
+    tag: "{{ version['containers']['sure'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy sure.container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/sure/{{ item }}.j2"
@@ -113,12 +120,14 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "ghcr.io/we-promise/sure:{{ version['containers']['sure'] }}"
+    - name: "sure"
+      image: "ghcr.io/we-promise/sure:{{ version['containers']['sure'] }}"
       file: "ghcr.io_we-promise_sure_{{ version['containers']['sure'] }}"
   loop_control:
-    label: "{{ item.file }}"
+    label: "{{ item.name }}"
   register: container_archive_images
 
 - name: Save container archive images

@@ -108,8 +108,8 @@
       ansible.builtin.get_url:
         url: "https://cdimage.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
         dest: "{{ node['data_path'] }}/images/debian-13-generic-amd64.qcow2"
-        owner: "console"
-        group: "svadmins"
+        owner: "{{ ansible_user }}"
+        group: "{{ node['group'] }}"
         mode: "0600"
       tags: ["init", "site", "cloud-init-image"]
 

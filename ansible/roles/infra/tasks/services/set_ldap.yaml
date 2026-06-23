@@ -46,7 +46,8 @@
     # urlencode doesn't fix `/` as `%2F`. It needs replace
     - name: "LLDAP_DATABASE_URL"
       value: "postgres://ldap:{{ hostvars['console']['postgresql']['password']['ldap'] | urlencode | replace('/', '%2F') }}\
-        @{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}/ldap_db?sslmode=verify-full&sslrootcert=/etc/ssl/ldap/{{ root_cert_filename }}"
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/\
+        ldap_db?sslmode=verify-full&sslrootcert=/etc/ssl/ldap/{{ root_cert_filename }}"
     - name: "LLDAP_KEY_SEED"
       value: "{{ hostvars['console']['ldap']['seed_key'] }}"
     - name: "LLDAP_JWT_SECRET"
@@ -92,6 +93,13 @@
       containers.podman.podman_secret:
         name: "LLDAP_LDAP_USER_PASSWORD"
         state: "absent"
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/lldap/lldap"
+    tag: "{{ version['containers']['ldap'] }}"
+    state: "present"
+    pull: true
 
 - name: Deploy container file
   ansible.builtin.template:

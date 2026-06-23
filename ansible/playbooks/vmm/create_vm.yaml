@@ -19,6 +19,7 @@
   vars:
     valid_vm_names:
       - "fw"
+      - "bk"
       - "infra"
       - "auth"
       - "app"

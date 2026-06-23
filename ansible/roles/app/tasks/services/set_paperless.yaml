@@ -67,6 +67,8 @@
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0640"
+  register: "is_paperless_containerfile"
+  notify: "notification_restart_paperless"
 
 - name: Deploy root certificate
   ansible.builtin.copy:
@@ -87,6 +89,7 @@
     tag: "{{ version['containers']['paperless'] }}"
     state: "build"
     path: "{{ node['home_path'] }}/containers/paperless/build"
+    force: "{{ is_paperless_containerfile.changed }}"
 
 - name: Prune paperless dangling images
   containers.podman.podman_prune:
@@ -116,7 +119,7 @@
                 "client_id": "paperless",
                 "secret": "{{ hostvars['console']['paperless']['oidc']['secret'] }}",
                 "settings": {
-                  "server_url": "https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/.well-known/openid-configuration",
+                  "server_url": "https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration",
                   "token_auth_method": "client_secret_post"
                 }
               }
@@ -147,12 +150,14 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "{{ domain['internal'] }}/{{ node['name'] }}/paperless-ngx:{{ version['containers']['paperless'] }}"
+    - name: "paperless"
+      image: "{{ domain['internal'] }}/{{ node['name'] }}/paperless-ngx:{{ version['containers']['paperless'] }}"
       file: "{{ domain['internal'] }}_{{ node['name'] }}_paperless-ngx_{{ version['containers']['paperless'] }}"
   loop_control:
-    label: "{{ item.file }}"
+    label: "{{ item.name }}"
   register: container_archive_images
 
 - name: Save container archive images
@@ -161,11 +166,11 @@
       - "{{ item.item.image }}"
     dest: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
     format: "oci-archive"
-    force: false
+    force: "{{ is_paperless_containerfile.changed }}"
   loop: "{{ container_archive_images.results }}"
   loop_control:
     label: "{{ item.item.file }}"
-  when: not item.stat.exists
+  when: not item.stat.exists or (item.item.name == 'paperless' and is_paperless_containerfile.changed)
 
 - name: Fetch container archive images
   ansible.builtin.fetch:

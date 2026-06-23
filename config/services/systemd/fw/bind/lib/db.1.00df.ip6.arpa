@@ -9,5 +9,4 @@ $TTL    86400
                                     )
                                     IN      NS      bind.ilnmors.internal.
 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0     IN      PTR     fw.ilnmors.internal.
-1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0     IN      PTR     nas.ilnmors.internal.
 0.2.0.0.0.0.0.0.0.0.0.0.0.0.0.0     IN      PTR     console.ilnmors.internal.

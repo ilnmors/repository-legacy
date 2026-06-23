@@ -60,6 +60,7 @@
     mode: "0770"
   loop:
     - "data/containers/immich"
+    - "data/containers/immich/data"
     - "containers/immich"
     - "containers/immich/ssl"
     - "containers/immich/ml"
@@ -84,6 +85,22 @@
     force: true
   notify: "notification_restart_immich"
   no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "{{ item.image }}"
+    tag: "{{ item.tag }}"
+    state: "present"
+    pull: true
+  loop:
+    - name: "immich_ml"
+      image: "ghcr.io/immich-app/immich-machine-learning"
+      tag: "{{ version['containers']['immich'] }}-openvino"
+    - name: "immich"
+      image: "ghcr.io/immich-app/immich-server"
+      tag: "{{ version['containers']['immich'] }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Deploy immich.container file
   ansible.builtin.template:
@@ -123,14 +140,17 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "ghcr.io/immich-app/immich-machine-learning:{{ version['containers']['immich'] }}-openvino"
+    - name: "immich_ml"
+      image: "ghcr.io/immich-app/immich-machine-learning:{{ version['containers']['immich'] }}-openvino"
       file: "ghcr.io_immich-app_immich-machine-learning_{{ version['containers']['immich'] }}-openvino"
-    - image: "ghcr.io/immich-app/immich-server:{{ version['containers']['immich'] }}"
+    - name: "immich"
+      image: "ghcr.io/immich-app/immich-server:{{ version['containers']['immich'] }}"
       file: "ghcr.io_immich-app_immich-server_{{ version['containers']['immich'] }}"
   loop_control:
-    label: "{{ item.file }}"
+    label: "{{ item.name }}"
   register: container_archive_images
 
 - name: Save container archive images

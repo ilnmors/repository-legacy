@@ -29,7 +29,7 @@ Secret=SURE_SECRET_KEY_BASE,type=env,target=SECRET_KEY_BASE
 # PostgreSQL
 Environment="POSTGRES_USER=sure"
 Environment="POSTGRES_DB=sure_db"
-Environment="DB_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
 Environment="DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
 Environment="PGSSLMODE=verify-full"
 Environment="PGSSLROOTCERT=/etc/ssl/sure/{{ root_cert_filename }}"
@@ -40,7 +40,7 @@ Environment="REDIS_URL=redis://host.containers.internal:{{ services['sure']['por
 
 # OIDC - Authelia
 Environment="OIDC_CLIENT_ID=sure"
-Environment="OIDC_ISSUER=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="OIDC_ISSUER=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="OIDC_REDIRECT_URI=https://{{ services['sure']['domain']['public'] }}.{{ domain['public'] }}/auth/openid_connect/callback"
 Secret=SURE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
 Environment="OIDC_BUTTON_LABEL=Sign in with Authelia"
@@ -58,7 +58,7 @@ Environment="EXCHANGE_RATE_PROVIDER=yahoo_finance"
 Environment="SECURITIES_PROVIDER=yahoo_finance"
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

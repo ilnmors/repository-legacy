@@ -23,7 +23,7 @@ Environment="TZ={{ timezone }}"
 
 # Database
 Environment="DB_TYPE=postgres"
-Environment="DB_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
 Environment="DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
 Environment="DB_USER=wikijs"
 Environment="DB_NAME=wikijs_db"
@@ -32,7 +32,7 @@ Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/wiki/{{ root_cert_filename }}"
 Secret=WIKIJS_DB_PASS,type=env,target=DB_PASS
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

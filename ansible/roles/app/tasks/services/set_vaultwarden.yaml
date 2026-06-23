@@ -8,6 +8,7 @@
     mode: "0770"
   loop:
     - "data/containers/vaultwarden"
+    - "data/containers/vaultwarden/data"
     - "containers/vaultwarden"
     - "containers/vaultwarden/ssl"
 
@@ -34,10 +35,17 @@
       value: "{{ hostvars['console']['vaultwarden']['admin']['hash'] }}"
     - name: "VW_DATABASE_URL"
       value: "postgresql://vaultwarden:{{ hostvars['console']['postgresql']['password']['vaultwarden'] | urlencode | replace('/', '%2F') }}\
-        @{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}/vaultwarden_db?sslmode=verify-full&\
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/vaultwarden_db?sslmode=verify-full&\
         sslrootcert=/etc/ssl/vaultwarden/{{ root_cert_filename }}"
   notify: "notification_restart_vaultwarden"
   no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/vaultwarden/server"
+    tag: "{{ version['containers']['vaultwarden'] }}"
+    state: "present"
+    pull: true
 
 - name: Deploy container file
   ansible.builtin.template:

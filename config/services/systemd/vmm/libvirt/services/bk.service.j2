@@ -1,0 +1,25 @@
+[Unit]
+Description=bk vm
+After=network-online.target libvirtd.service fw.service
+Wants=fw.service
+ConditionPathIsMountPoint={{ hardware['disk']['backup']['fs']['mount_point'] }}
+RequiresMountsFor={{ hardware['disk']['backup']['fs']['mount_point'] }}
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=360
+
+ExecStart=/usr/bin/virsh -c qemu:///system start bk
+
+ExecStartPost=/bin/sleep 30
+
+ExecStop=/bin/bash -c '\
+  /usr/bin/virsh -c qemu:///system shutdown bk; \
+  while /usr/bin/virsh -c qemu:///system list --state-running --name | grep -q "bk"; do \
+    echo "Waiting for bk to shutdown..."; \
+    sleep 2; \
+  done'
+
+[Install]
+WantedBy=default.target

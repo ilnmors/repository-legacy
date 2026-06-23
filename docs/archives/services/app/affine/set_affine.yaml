@@ -112,7 +112,7 @@
       value: "{{ hostvars['console']['affine']['secret_key'] }}"
     - name: "AFFINE_DATABASE_URL"
       value: "postgresql://affine:{{ hostvars['console']['postgresql']['password']['affine'] | urlencode | replace('/', '%2F') }}\
-        @{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}/affine_db?sslmode=verify-full&\
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/affine_db?sslmode=verify-full&\
         sslrootcert=/etc/ssl/affine/{{ root_cert_filename }}"
   notify: "notification_restart_affine"
   no_log: true
@@ -166,14 +166,17 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - image: "docker.io/manticoresearch/manticore:{{ version['containers']['manticore'] }}"
+    - name: "manticore"
+      image: "docker.io/manticoresearch/manticore:{{ version['containers']['manticore'] }}"
       file: "docker.io_manticoresearch_manticore_{{ version['containers']['manticore'] }}"
-    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "ghcr.io/toeverything/affine:{{ version['containers']['affine'] }}"
+    - name: affine
+      image: "ghcr.io/toeverything/affine:{{ version['containers']['affine'] }}"
       file: "ghcr.io_toeverything_affine_{{ version['containers']['affine'] }}"
   loop_control:
-    label: "{{ item.file }}"
+    label: "{{ item.name }}"
   register: container_archive_images
 
 - name: Save container archive images

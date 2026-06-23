@@ -78,6 +78,14 @@
           tags: ["init", "resolved"]
       tags: ["init", "resolved"]
 
+    - name: Set timesyncd
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_timesyncd"
+        apply:
+          tags: ["init", "timesyncd"]
+      tags: ["init", "timesyncd"]
+
     - name: Update and upgrade apt
       ansible.builtin.apt:
         upgrade: "dist"

@@ -28,8 +28,10 @@ BindPaths=/etc/secrets/{{ kopia_uid }}
 BindPaths=/var/cache/kopia
 EnvironmentFile=/etc/secrets/{{ kopia_uid }}/kopia.env
 
+ExecStartPre=/usr/bin/nc -zv {{ services['kopia']['domain']['internal'] }}.{{ domain['internal'] }} 443
+
 ExecStartPre=/usr/bin/kopia repository connect server \
-    --url=https://{{ services['kopia']['domain'] }}.{{ domain['internal'] }}:{{ services['kopia']['ports']['https'] }} \
+    --url=https://{{ services['kopia']['domain']['internal'] }}.{{ domain['internal'] }}:443 \
     --override-username={{ node['name'] }} \
     --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
 

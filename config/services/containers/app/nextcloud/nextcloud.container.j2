@@ -4,6 +4,9 @@ DefaultDependencies=false
 [Unit]
 Description=Nextcloud
 
+After=redis_nextcloud.service
+Wants=redis_nextcloud.service
+
 [Container]
 Image=docker.io/library/nextcloud:{{ version['containers']['nextcloud'] }}
 ContainerName=nextcloud

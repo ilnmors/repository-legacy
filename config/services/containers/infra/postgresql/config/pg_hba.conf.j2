@@ -1,29 +1,28 @@
 # @authcomment@
-# TYPE  DATABASE  USER   ADDRESS                                      METHOD
-
+# TYPE DATABASE USER ADDRESS METHOD
 # Local host `trust`
-local   all       all                                                 trust
+local all all trust
 
 # Local monitoring connection (host - infra VM) `trust`
-hostssl postgres  alloy  {{ hostvars['fw']['network4']['infra']['server'] }}/32   trust
-hostssl postgres  alloy  {{ hostvars['fw']['network6']['infra']['server'] }}/128  trust
-hostssl postgres  alloy  {{ hostvars['fw']['network4']['subnet']['lla'] }}        trust
-hostssl postgres  alloy  {{ hostvars['fw']['network6']['subnet']['lla'] }}        trust
+hostssl postgres alloy {{ hostvars['fw']['network4']['infra']['server'] }}/32 trust
+hostssl postgres alloy {{ hostvars['fw']['network6']['infra']['server'] }}/128 trust
+hostssl postgres alloy {{ hostvars['fw']['network4']['subnet']['lla'] }} trust
+hostssl postgres alloy {{ hostvars['fw']['network6']['subnet']['lla'] }} trust
 
 # Local connection (in postgresql container) needs password (127.0.0.1 - container loopback)
-host    all       all    127.0.0.1/32                                scram-sha-256
-host    all       all    ::1/128                                      scram-sha-256
+host all all 127.0.0.1/32 scram-sha-256
+host all all ::1/128 scram-sha-256
 
 # Local connection (host - infra VM) needs password (169.254.1.0/24 - link_local subnet for containers in pasta mode)
-hostssl all       all    {{ hostvars['fw']['network4']['infra']['server'] }}/32   scram-sha-256
-hostssl all       all    {{ hostvars['fw']['network6']['infra']['server'] }}/128  scram-sha-256
-hostssl all       all    {{ hostvars['fw']['network4']['subnet']['lla'] }}        scram-sha-256
-hostssl all       all    {{ hostvars['fw']['network6']['subnet']['lla'] }}        scram-sha-256
+hostssl all all {{ hostvars['fw']['network4']['infra']['server'] }}/32 scram-sha-256
+hostssl all all {{ hostvars['fw']['network6']['infra']['server'] }}/128 scram-sha-256
+hostssl all all {{ hostvars['fw']['network4']['subnet']['lla'] }} scram-sha-256
+hostssl all all {{ hostvars['fw']['network6']['subnet']['lla'] }} scram-sha-256
 
 # auth VM
-hostssl all       all    {{ hostvars['fw']['network4']['auth']['server'] }}/32    scram-sha-256
-hostssl all       all    {{ hostvars['fw']['network6']['auth']['server'] }}/128   scram-sha-256
+hostssl all all {{ hostvars['fw']['network4']['auth']['server'] }}/32 scram-sha-256
+hostssl all all {{ hostvars['fw']['network6']['auth']['server'] }}/128 scram-sha-256
 
 # app VM (Applications, 192.168.10.13)
-hostssl all       all    {{ hostvars['fw']['network4']['app']['server'] }}/32     scram-sha-256
-hostssl all       all    {{ hostvars['fw']['network6']['app']['server'] }}/128    scram-sha-256
+hostssl all all {{ hostvars['fw']['network4']['app']['server'] }}/32 scram-sha-256
+hostssl all all {{ hostvars['fw']['network6']['app']['server'] }}/128 scram-sha-256

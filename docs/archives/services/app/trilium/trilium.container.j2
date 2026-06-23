@@ -26,13 +26,13 @@ Environment="TRILIUM_NO_UPLOAD_LIMIT=true"
 ## Short Alias doesn't work now.
 #Environment="TRILIUM_OAUTH_BASE_URL=https://{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }}"
 #Environment="TRILIUM_OAUTH_CLIENT_ID=trilium"
-#Environment="TRILIUM_OAUTH_ISSUER_BASE_URL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+#Environment="TRILIUM_OAUTH_ISSUER_BASE_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 #Environment="TRILIUM_OAUTH_ISSUER_NAME=Authelia"
 #Environment="TRILIUM_OAUTH_ISSUER_ICON=https://www.authelia.com/images/branding/logo-cropped.png"
 #Secret="TRILIUM_OAUTH_CLIENT_SECRET",type=env
 Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHBASEURL=https://{{ services['trilium']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTID=trilium"
-Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERBASEURL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERBASEURL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERNAME=Authelia"
 Environment="TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERICON=https://www.authelia.com/images/branding/logo-cropped.png"
 Secret="TRILIUM_OAUTH_CLIENT_SECRET",type=env,target=TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTSECRET

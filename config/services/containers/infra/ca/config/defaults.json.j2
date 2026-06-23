@@ -1,6 +1,6 @@
 {
-	"ca-url": "https://{{ services['ca']['domain'] }}.{{ domain['internal'] }}:{{ services['ca']['ports']['https'] }}",
+	"ca-url": "https://{{ services['ca']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['ca']['ports']['https'] }}",
 	"ca-config": "/home/step/config/ca.json",
-	"fingerprint": "215c851d2d0d2dbf90fc3507425207c29696ffd587c640c94a68dddb1d84d8e8",
+	"fingerprint": "",
 	"root": "/home/step/certs/{{ root_cert_filename }}"
 }

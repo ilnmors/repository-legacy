@@ -70,10 +70,14 @@
             </source>
             <address type='pci' domain='{{ device['domain'] }}' bus='{{ device['bus'] }}' slot='{{ device['slot'] }}' function='{{ device['function'] }}'/>
         </hostdev>
+{% endif %}
+{% if hostvars[target_vm]['vm']['data_storage'] is defined %}
+{% set pool = hostvars[target_vm]['vm']['data_storage']['pool'] %}
+{% set disk = hostvars['vmm']['hardware']['disk'][pool]['fs'] %}
         <disk type='file' device='disk'>
             <driver name='qemu' type='raw' />
-            <source file='{{ hardware['btrfs']['mount_point'] }}/{{ target_vm }}.raw' />
-            <target dev='vdb' bus='virtio' />
+            <source file='{{ disk['mount_point'] }}/{{ hostvars[target_vm]['vm']['name'] }}.raw' />
+            <target dev='{{ hostvars[target_vm]['vm']['data_storage']['name'] }}' bus='virtio' />
         </disk>
 {% endif %}
         <tpm model='tpm-crb'>

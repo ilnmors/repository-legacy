@@ -1,0 +1,54 @@
+---
+- name: Check rclone installation
+  ansible.builtin.shell: |
+    command -v rclone
+  changed_when: false
+  failed_when: false
+  register: "is_rclone_installed"
+  ignore_errors: true
+
+- name: Install rclone
+  ansible.builtin.apt:
+    name:
+      - "rclone"
+    state: "present"
+  become: true
+  when: is_rclone_installed.rc != 0
+
+- name: Create rclone config directory
+  ansible.builtin.file:
+    path: "/etc/secrets/{{ node['uid'] }}/rclone"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "root"
+    mode: "0700"
+  become: true
+
+- name: Deploy rclone config
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/bk/rclone/config/rclone.config.j2"
+    dest: "/etc/secrets/{{ node['uid'] }}/rclone/rclone.config"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0600"
+  no_log: true
+
+- name: Deploy rclone backup service files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/bk/rclone/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+    validate: "/usr/bin/systemd-analyze verify %s"
+  loop:
+    - "rclone.service"
+    - "rclone.timer"
+
+- name: Enable rclone timer
+  ansible.builtin.systemd:
+    name: "rclone.timer"
+    state: "started"
+    enabled: true
+    scope: "user"
+    daemon_reload: true

@@ -26,10 +26,11 @@ define HOSTS4_BLOCKY = {{ hostvars['fw']['network4']['blocky']['server'] }}
 define HOSTS4_BIND = {{ hostvars['fw']['network4']['bind']['server'] }}
 define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | join(', ') }} }
 define HOSTS4_VMM = { {{ hostvars['fw']['network4']['vmm'].values() | join(', ') }} }
+define HOSTS4_BK = {{ hostvars['fw']['network4']['bk']['server'] }}
 define HOSTS4_INFRA = {{ hostvars['fw']['network4']['infra']['server'] }}
 define HOSTS4_AUTH = {{ hostvars['fw']['network4']['auth']['server'] }}
 define HOSTS4_APP = {{ hostvars['fw']['network4']['app']['server'] }}
-define HOSTS4_NAS = {{ hostvars['fw']['network4']['nas']['client'] }}
+define HOSTS4_SWITCH = {{ hostvars['fw']['network4']['switch']['client'] }}
 define HOSTS4_PRINTER = {{ hostvars['fw']['network4']['printer']['client'] }}
 
 define HOSTS6_FW = { {{ hostvars['fw']['network6']['firewall'].values() | join(', ') }} }
@@ -37,10 +38,10 @@ define HOSTS6_BLOCKY = {{ hostvars['fw']['network6']['blocky']['server'] }}
 define HOSTS6_BIND = {{ hostvars['fw']['network6']['bind']['server'] }}
 define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
 define HOSTS6_VMM = { {{ hostvars['fw']['network6']['vmm'].values() | join(', ') }} }
+define HOSTS6_BK = {{ hostvars['fw']['network6']['bk']['server'] }}
 define HOSTS6_INFRA = {{ hostvars['fw']['network6']['infra']['server'] }}
 define HOSTS6_AUTH = {{ hostvars['fw']['network6']['auth']['server'] }}
 define HOSTS6_APP = {{ hostvars['fw']['network6']['app']['server'] }}
-define HOSTS6_NAS = {{ hostvars['fw']['network6']['nas']['client'] }}
 
 define PORTS_SSH = 22
 define PORTS_WEB = { 80, 443 }
@@ -50,7 +51,6 @@ define PORTS_NTP = 123
 define PORTS_VPN = 11290
 define PORTS_CROWDSEC = 8080
 define PORTS_NAS = { 5000, 5001 }
-define PORTS_KOPIA = 51515
 
 table inet nat {
         chain prerouting {
@@ -114,12 +114,12 @@ table inet filter {
                 iifname "lo" accept comment "allow local connection: FW > FW"
                 udp dport $PORTS_VPN accept comment "allow vpn connection: > FW"
                 iifname { $IF_CLIENT, $IF_SERVER, $IF_USER, $IF_WG } meta l4proto { icmp, icmpv6 } accept comment "allow icmp, icmpv6 connection: CLIENT/SERVER/USER/WG > FW"
-                iifname { $IF_CLIENT, $IF_SERVER, $IF_WG } udp dport $PORTS_NTP accept comment "allow ntp connection: CLIENT/SERVER/USER/WG > FW"
+                iifname { $IF_CLIENT, $IF_SERVER, $IF_WG } udp dport $PORTS_NTP accept comment "allow ntp connection: CLIENT/SERVER/WG > FW"
                 # Global chain contains "WAN !> :SSH_PORT"
                 ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv4 ssh connection: CONSOLE > FW"
                 ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv6 ssh connection: CONSOLE > FW"
-                ip saddr { $HOSTS4_VMM, $HOSTS4_INFRA, $HOSTS4_AUTH, $HOSTS4_APP } tcp dport $PORTS_CROWDSEC accept comment "allow ipv4 crowdsec lapi connection: SERVER > FW"
-                ip6 saddr { $HOSTS6_VMM, $HOSTS6_INFRA, $HOSTS6_AUTH, $HOSTS6_APP } tcp dport $PORTS_CROWDSEC accept comment "allow ipv6 crowdsec lapi connection: SERVER > FW"
+                ip saddr { $HOSTS4_VMM, $HOSTS4_BK, $HOSTS4_INFRA, $HOSTS4_AUTH, $HOSTS4_APP } tcp dport $PORTS_CROWDSEC accept comment "allow ipv4 crowdsec lapi connection: SERVER > FW"
+                ip6 saddr { $HOSTS6_VMM, $HOSTS6_BK, $HOSTS6_INFRA, $HOSTS6_AUTH, $HOSTS6_APP } tcp dport $PORTS_CROWDSEC accept comment "allow ipv6 crowdsec lapi connection: SERVER > FW"
                 # Global chain contains "WAN !> :DNS_PORT"
                 ip daddr $HOSTS4_BLOCKY udp dport $PORTS_DNS accept comment "allow ipv4 udp dns connection: !WAN > SERVER BLOCKY(FW)"
                 ip daddr $HOSTS4_BLOCKY tcp dport $PORTS_DNS accept comment "allow ipv4 tcp dns connection: !WAN > SERVER BLOCKY(FW)"
@@ -140,15 +140,12 @@ table inet filter {
                 # SSH connection
                 ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv4 ssh connection: CONSOLE > FW >"
                 ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_SSH accept comment "allow ipv6 ssh connection: CONSOLE > FW >"
-                # Reverse proxy (WAN)
+                # Reverse proxy for all
                 oifname $IF_SERVER ip daddr $HOSTS4_AUTH tcp dport $PORTS_WEB accept comment "allow ipv4 web connection: > FW > SERVER AUTH"
                 oifname $IF_SERVER ip6 daddr $HOSTS6_AUTH tcp dport $PORTS_WEB accept comment "allow ipv6 web connection: > FW > SERVER AUTH"
-                # Reverse proxy (SERVER)
-                oifname $IF_SERVER ip saddr $HOSTS4_CONSOLE ip daddr { $HOSTS4_INFRA, $HOSTS4_APP } tcp dport $PORTS_WEB accept comment "allow ipv4 web connection: CONSOLE > FW > SERVER INFRA/APP"
-                oifname $IF_SERVER ip6 saddr $HOSTS6_CONSOLE ip6 daddr { $HOSTS6_INFRA, $HOSTS6_APP } tcp dport $PORTS_WEB accept comment "allow ipv6 web connection: CONSOLE > FW > SERVER INFRA/APP"
-                # Kopia/NAS Console > NAS
-                oifname $IF_CLIENT ip saddr $HOSTS4_CONSOLE ip daddr $HOSTS4_NAS tcp dport { $PORTS_NAS, $PORTS_KOPIA } accept comment "allow ipv4 web connection (DSM, KOPIA): CONSOLE > FW > CLIENT NAS"
-                oifname $IF_CLIENT ip6 saddr $HOSTS6_CONSOLE ip6 daddr $HOSTS6_NAS tcp dport { $PORTS_NAS, $PORTS_KOPIA } accept comment "allow ipv6 web connection (DSM, KOPIA): CONSOLE > FW > CLIENT NAS"
+                # Reverse proxy (SERVER) and Kopia (SERVER) for CONSOLE
+                oifname $IF_SERVER ip saddr $HOSTS4_CONSOLE ip daddr { $HOSTS4_BK, $HOSTS4_INFRA, $HOSTS4_APP } tcp dport $PORTS_WEB accept comment "allow ipv4 web connection: CONSOLE > FW > SERVER BK/INFRA/APP"
+                oifname $IF_SERVER ip6 saddr $HOSTS6_CONSOLE ip6 daddr { $HOSTS6_BK, $HOSTS6_INFRA, $HOSTS6_APP } tcp dport $PORTS_WEB accept comment "allow ipv6 web connection: CONSOLE > FW > SERVER BK/INFRA/APP"
                 # Printer
                 oifname $IF_CLIENT ip saddr $HOSTS4_CONSOLE ip daddr $HOSTS4_PRINTER accept comment "allow ipv4 printer connection: CONSOLE > FW > PRINTER"
 
@@ -162,19 +159,13 @@ table inet filter {
                 return
         }
         chain client {
-                oifname $IF_WAN ip saddr { $HOSTS4_CONSOLE, $HOSTS4_NAS } accept comment "allow ipv4 internet connection: CLIENT CONSOLE/NAS > FW > WAN"
-                oifname $IF_WAN ip6 saddr { $HOSTS6_CONSOLE, $HOSTS6_NAS } accept comment "allow ipv6 internet connection: CLIENT CONSOLE/NAS > FW > WAN"
+                oifname $IF_WAN ip saddr { $HOSTS4_PRINTER, $HOSTS4_SWITCH } drop comment "deny ipv4 internet connection: CLIENT PRINTER/SWITCH !> FW > WAN"
+                oifname $IF_WAN accept comment "allow internet connection: CLIENT > FW > WAN"
                 return
         }
         chain server {
-                # reverse proxy AUTH > NAS
-                oifname $IF_CLIENT ip saddr $HOSTS4_AUTH ip daddr $HOSTS4_NAS tcp dport $PORTS_NAS accept comment "allow ipv4 web connection(DSM): SERVER AUTH > FW > CLIENT NAS"
-                oifname $IF_CLIENT ip6 saddr $HOSTS6_AUTH ip6 daddr $HOSTS6_NAS tcp dport $PORTS_NAS accept comment "allow ipv6 web connection(DSM): SERVER AUTH > FW > CLIENT NAS"
-                # Kopia INFRA, APP > NAS
-                oifname $IF_CLIENT ip saddr { $HOSTS4_INFRA, $HOSTS4_APP } ip daddr $HOSTS4_NAS tcp dport $PORTS_KOPIA accept comment "allow ipv4 web connection(kopia): SERVER INFRA/APP > FW > CLIENT NAS"
-                oifname $IF_CLIENT ip6 saddr { $HOSTS6_INFRA, $HOSTS6_APP } ip6 daddr $HOSTS6_NAS tcp dport $PORTS_KOPIA accept comment "allow ipv6 web connection(kopia): SERVER INFRA/APP > FW > CLIENT NAS"
-                oifname $IF_WAN ip saddr { $HOSTS4_VMM, $HOSTS4_INFRA, $HOSTS4_AUTH, $HOSTS4_APP } accept comment "allow ipv4 internet connection: SERVER VMM/INFRA/AUTH/APP > FW > WAN"
-                oifname $IF_WAN ip6 saddr { $HOSTS6_VMM, $HOSTS6_INFRA, $HOSTS6_AUTH, $HOSTS6_APP } accept comment "allow ipv6 internet connection: SERVER VMM/INFRA/AUTH/APP > FW > WAN"
+                oifname $IF_WAN ip saddr { $HOSTS4_VMM, $HOSTS4_BK, $HOSTS4_INFRA, $HOSTS4_AUTH, $HOSTS4_APP } accept comment "allow ipv4 internet connection: SERVER VMM/BK/INFRA/AUTH/APP > FW > WAN"
+                oifname $IF_WAN ip6 saddr { $HOSTS6_VMM, $HOSTS6_BK, $HOSTS6_INFRA, $HOSTS6_AUTH, $HOSTS6_APP } accept comment "allow ipv6 internet connection: SERVER VMM/BK/INFRA/AUTH/APP > FW > WAN"
                 return
         }
         chain user {

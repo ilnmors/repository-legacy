@@ -25,7 +25,7 @@ Environment="EBK_LOG_MODE=console"
 
 # Database
 Environment="EBK_DATABASE_TYPE=postgres"
-Environment="EBK_DATABASE_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
+Environment="EBK_DATABASE_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
 Environment="EBK_DATABASE_NAME=ezbookkeeping_db"
 Environment="EBK_DATABASE_USER=ezbookkeeping"
 Secret=EBK_DATABASE_PASSWD,type=env
@@ -38,7 +38,7 @@ Environment="EBK_AUTH_OAUTH2_PROVIDER=oidc"
 Environment="EBK_AUTH_OAUTH2_CLIENT_ID=ezbookkeeping"
 Secret=EBK_AUTH_OAUTH2_CLIENT_SECRET,type=env
 Environment="EBK_AUTH_OAUTH2_USE_PKCE=true"
-Environment="EBK_AUTH_OIDC_PROVIDER_BASE_URL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="EBK_AUTH_OIDC_PROVIDER_BASE_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="EBK_AUTH_ENABLE_OIDC_DISPLAY_NAME=true"
 Environment="EBK_AUTH_OIDC_CUSTOM_DISPLAY_NAME=Authelia"
 
@@ -52,7 +52,7 @@ Environment="EBK_MCP_ENABLE_MCP=false"
 Environment="EBK_LLM_TRANSACTION_FROM_AI_IMAGE_RECOGNITION=false"
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

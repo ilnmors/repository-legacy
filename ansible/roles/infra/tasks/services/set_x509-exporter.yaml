@@ -1,4 +1,20 @@
 ---
+- name: Initialize self-cert services list
+  ansible.builtin.set_fact:
+    cert_services: []
+
+- name: Set self-cert services list
+  ansible.builtin.set_fact:
+    cert_services: >-
+      {{
+        services
+        | dict2items
+        | selectattr('value.dependency.cert', 'defined')
+        | selectattr('value.dependency.cert', 'equalto', true)
+        | map(attribute='key')
+        | list
+      }}
+
 - name: Create x509-exporter directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers/{{ item }}"
@@ -22,7 +38,7 @@
   become: true
   notify: "notification_restart_x509-exporter"
 
-- name: Deploy certificates
+- name: Deploy CA certificates
   ansible.builtin.copy:
     content: |
       {{ item.value }}
@@ -35,22 +51,30 @@
       value: "{{ hostvars['console']['ca']['root']['crt'] }}"
     - name: "intermediate.crt"
       value: "{{ hostvars['console']['ca']['intermediate']['crt'] }}"
-    - name: "crowdsec.crt"
-      value: "{{ hostvars['console']['crowdsec']['crt'] }}"
-    - name: "blocky.crt"
-      value: "{{ hostvars['console']['blocky']['crt'] }}"
-    - name: "postgresql.crt"
-      value: "{{ hostvars['console']['postgresql']['crt'] }}"
-    - name: "ldap.crt"
-      value: "{{ hostvars['console']['ldap']['crt'] }}"
-    - name: "prometheus.crt"
-      value: "{{ hostvars['console']['prometheus']['crt'] }}"
-    - name: "loki.crt"
-      value: "{{ hostvars['console']['loki']['crt'] }}"
-    - name: "dsm.crt"
-      value: "{{ hostvars['console']['dsm']['crt'] }}"
   become: true
+  notify: "notification_restart_x509-exporter"
   no_log: true
+
+- name: Deploy leaf certificates
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console'][item]['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/x509-exporter/certs/{{ item }}.crt"
+    owner: "{{ services['x509-exporter']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  loop: "{{ cert_services }}"
+  become: true
+  notify: "notification_restart_x509-exporter"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/enix/x509-certificate-exporter"
+    tag: "{{ version['containers']['x509-exporter'] }}"
+    state: "present"
+    pull: true
+
 
 - name: Deploy container file
   ansible.builtin.template:

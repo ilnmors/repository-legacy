@@ -52,6 +52,8 @@ network4:
   vmm:
     client: "192.168.1.10"
     server: "192.168.10.10"
+  bk:
+    server: "192.168.10.9"
   infra:
     server: "192.168.10.11"
   auth:
@@ -60,8 +62,6 @@ network4:
     server: "192.168.10.13"
   switch:
     client: "192.168.1.2"
-  nas:
-    client: "192.168.1.11"
   printer:
     client: "192.168.1.101"
 
@@ -85,18 +85,14 @@ network6:
   vmm:
     client: "fd00:1::10"
     server: "fd00:10::10"
+  bk:
+    server: "fd00:10::9"
   infra:
     server: "fd00:10::11"
   auth:
     server: "fd00:10::12"
   app:
     server: "fd00:10::13"
-  switch:
-    client: "fd00:1::2"
-  nas:
-    client: "fd00:1::11"
-  printer:
-    client: "fd00:1::101"
 
 # Suricata Factors
 # suricata_home_net: '[10.0.0.0/8,172.16.0.0/12,192.168.0.0/16]'

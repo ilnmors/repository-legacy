@@ -60,6 +60,13 @@
   notify: "notification_restart_authelia"
   no_log: true
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/authelia/authelia"
+    tag: "{{ version['containers']['authelia'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/auth/authelia/authelia.container.j2"

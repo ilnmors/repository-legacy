@@ -27,7 +27,7 @@ Environment="OC_URL=https://{{ services['opencloud']['domain']['public'] }}.{{ d
 ## CSP file location: allow authelia public domain
 Environment="PROXY_CSP_CONFIG_FILE_LOCATION=/etc/opencloud/csp.yaml"
 # OIDC
-Environment="OC_OIDC_ISSUER=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="OC_OIDC_ISSUER=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="PROXY_OIDC_REWRITE_WELLKNOWN=true"
 ## OIDC CLIENT CONFIGURATION and SCOPES
 Environment="WEB_OIDC_CLIENT_ID=opencloud"
@@ -41,8 +41,8 @@ Environment="GRAPH_USERNAME_MATCH=none"
 
 
 # OIDC standard link environments
-#Environment="WEB_OIDC_AUTHORITY=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
-#Environment="WEBFINGER_OIDC_ISSUER=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+#Environment="WEB_OIDC_AUTHORITY=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+#Environment="WEBFINGER_OIDC_ISSUER=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 #Environment="OC_OIDC_CLIENT_ID=opencloud"
 #Environment="OC_OIDC_CLIENT_SCOPES=openid profile email groups"
 #Environment="WEBFINGER_ANDROID_OIDC_CLIENT_ID=opencloud"

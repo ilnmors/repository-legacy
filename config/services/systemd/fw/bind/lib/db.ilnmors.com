@@ -8,5 +8,7 @@ $TTL    86400
                 86400      ; minimum (1 day)
             )
             IN      NS      bind.ilnmors.internal.
+@           IN      A       192.168.10.12
+@           IN      AAAA    fd00:10::12
 *           IN      A       192.168.10.12
 *           IN      AAAA    fd00:10::12

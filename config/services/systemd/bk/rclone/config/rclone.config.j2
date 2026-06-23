@@ -1,0 +1,13 @@
+[gdrive]
+type = drive
+client_id = {{ hostvars['console']['rclone']['google_drive']['oidc']['id'] }}
+client_secret = {{ hostvars['console']['rclone']['google_drive']['oidc']['secret'] }}
+scope = drive
+token = {{ 
+    {
+        "access_token":"expired",
+        "token_type":"Bearer",
+        "refresh_token":hostvars['console']['rclone']['google_drive']['refresh_token'],
+        "expiry":"1970-01-01T00:00:00Z",
+    } | to_json
+}}

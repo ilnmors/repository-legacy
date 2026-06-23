@@ -39,6 +39,13 @@
   notify: "notification_restart_mealie"
   no_log: true
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/mealie-recipes/mealie"
+    tag: "{{ version['containers']['mealie'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy mealie.container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/mealie/mealie.container.j2"

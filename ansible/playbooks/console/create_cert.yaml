@@ -1,0 +1,223 @@
+---
+- name: Load secret values
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Load secret from secrets.yaml
+      ansible.builtin.include_role:
+        name: "console"
+        tasks_from: "node/load_secret_vars"
+        apply:
+          tags: ["always"]
+      tags: ["always"]
+
+- name: Site console
+  hosts: "console"
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Create root CA
+      tags: ["never", "root"]
+      block:
+        - name: Clean previous CA temporary directory
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/ca"
+            state: "absent"
+          no_log: true
+        - name: Create ca directory
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/ca"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            state: "directory"
+            mode: "0700"
+        - name: Get root CA password
+          ansible.builtin.copy:
+            content: |
+              {{ hostvars['console']['ca']['root']['password'] }}
+            dest: "/run/user/{{ node['uid'] }}/ca/root_ca.password"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            mode: "0400"
+          no_log: true
+        - name: Create root CA
+          ansible.builtin.command: |
+            step certificate create \
+            "{{ domain['internal'] }} Root CA" \
+            /run/user/{{ node['uid'] }}/ca/root_ca.crt \
+            /run/user/{{ node['uid'] }}/ca/root_ca.key \
+            --password-file /run/user/{{ node['uid'] }}/ca/root_ca.password \
+            --profile root-ca \
+            --not-after 87600h
+          changed_when: true
+          no_log: true
+        - name: Update root CA
+          environment:
+            SOPS_AGE_KEY: "{{ hostvars['console']['age_key'] }}"
+          ansible.builtin.shell: |
+            set -euo pipefail
+            jq -Rs . "/run/user/{{ node['uid'] }}/ca/root_ca.crt" \
+            | sops set --value-stdin "{{ hostvars['console']['node']['config_path'] }}/secrets/secrets.yaml" \
+            '["ca"]["root"]["crt"]'
+            jq -Rs . "/run/user/{{ node['uid'] }}/ca/root_ca.key" \
+            | sops set --value-stdin "{{ hostvars['console']['node']['config_path'] }}/secrets/secrets.yaml" \
+            '["ca"]["root"]["key"]'
+          changed_when: true
+          no_log: true
+      always:
+        - name: Clean temporary files
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/ca"
+            state: "absent"
+          no_log: true
+
+    - name: Get root CA and create intermediate CA
+      tags: ["never", "intermediate"]
+      block:
+        - name: Clean previous CA temporary directory
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/ca"
+            state: "absent"
+          no_log: true
+        - name: Create ca certificates directory
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/ca"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            state: "directory"
+            mode: "0700"
+        - name: Get root key and cert and password
+          ansible.builtin.copy:
+            content: |
+              {{ hostvars['console']['ca']['root'][item] }}
+            dest: "/run/user/{{ node['uid'] }}/ca/root_ca.{{ item }}"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            mode: "0400"
+          loop:
+            - "key"
+            - "crt"
+            - "password"
+          no_log: true
+        - name: Get intermediate CA password
+          ansible.builtin.copy:
+            content: |
+              {{ hostvars['console']['ca']['intermediate']['password'] }}
+            dest: "/run/user/{{ node['uid'] }}/ca/intermediate_ca.password"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            mode: "0400"
+          no_log: true
+        - name: Create intermediate CA
+          ansible.builtin.command: |
+            step certificate create \
+            "{{ domain['internal'] }} intermediate CA" \
+            /run/user/{{ node['uid'] }}/ca/intermediate_ca.crt \
+            /run/user/{{ node['uid'] }}/ca/intermediate_ca.key \
+            --password-file /run/user/{{ node['uid'] }}/ca/intermediate_ca.password \
+            --profile intermediate-ca \
+            --ca /run/user/{{ node['uid'] }}/ca/root_ca.crt \
+            --ca-key /run/user/{{ node['uid'] }}/ca/root_ca.key \
+            --ca-password-file /run/user/{{ node['uid'] }}/ca/root_ca.password \
+            --not-after 43800h
+          changed_when: true
+          no_log: true
+        - name: Update intermediate CA
+          environment:
+            SOPS_AGE_KEY: "{{ hostvars['console']['age_key'] }}"
+          ansible.builtin.shell: |
+            set -euo pipefail
+            jq -Rs . "/run/user/{{ node['uid'] }}/ca/intermediate_ca.crt" \
+            | sops set --value-stdin "{{ hostvars['console']['node']['config_path'] }}/secrets/secrets.yaml" \
+            '["ca"]["intermediate"]["crt"]'
+            jq -Rs . "/run/user/{{ node['uid'] }}/ca/intermediate_ca.key" \
+            | sops set --value-stdin "{{ hostvars['console']['node']['config_path'] }}/secrets/secrets.yaml" \
+            '["ca"]["intermediate"]["key"]'
+          changed_when: true
+          no_log: true
+      always:
+        - name: Clean temporary files
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/ca"
+            state: "absent"
+          no_log: true
+
+    - name: Get intermediate CA and create leaf cert
+      tags: ["never", "leaf"]
+      block:
+        - name: Initialize self-cert services list
+          ansible.builtin.set_fact:
+            cert_services: []
+        - name: Set self-cert services list
+          ansible.builtin.set_fact:
+            cert_services: >-
+              {{
+                services
+                | dict2items
+                | selectattr('value.dependency.cert', 'defined')
+                | selectattr('value.dependency.cert', 'equalto', true)
+                | map(attribute='key')
+                | list
+              }}
+        - name: Clean previous leaf temporary directory
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/leaf"
+            state: "absent"
+          no_log: true
+        - name: Create leaf certificates directory
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/leaf"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            state: "directory"
+            mode: "0700"
+        - name: Get intermediate key and cert and password
+          ansible.builtin.copy:
+            content: |
+              {{ hostvars['console']['ca']['intermediate'][item] }}
+            dest: "/run/user/{{ node['uid'] }}/leaf/intermediate_ca.{{ item }}"
+            owner: "{{ ansible_user }}"
+            group: "{{ node['group'] }}"
+            mode: "0400"
+          loop:
+            - "key"
+            - "crt"
+            - "password"
+          no_log: true
+        - name: Create leaf certificates
+          ansible.builtin.command: |
+            step certificate create \
+            "{{ services[item]['domain']['internal'] }}.{{ domain['internal'] }}" \
+            /run/user/{{ node['uid'] }}/leaf/{{ item }}.crt \
+            /run/user/{{ node['uid'] }}/leaf/{{ item }}.key \
+            --profile leaf \
+            --san {{ services[item]['domain']['internal'] }}.{{ domain['internal'] }} \
+            --ca /run/user/{{ node['uid'] }}/leaf/intermediate_ca.crt \
+            --ca-key /run/user/{{ node['uid'] }}/leaf/intermediate_ca.key \
+            --ca-password-file /run/user/{{ node['uid'] }}/leaf/intermediate_ca.password \
+            --not-after 21900h \
+            --insecure --no-password
+          loop: "{{ cert_services }}"
+          changed_when: true
+          no_log: true
+        - name: Update leaf keys and certificates
+          environment:
+            SOPS_AGE_KEY: "{{ hostvars['console']['age_key'] }}"
+          ansible.builtin.shell: |
+            set -euo pipefail
+            jq -Rs . "/run/user/{{ node['uid'] }}/leaf/{{ item }}.crt" \
+            | sops set --value-stdin "{{ hostvars['console']['node']['config_path'] }}/secrets/secrets.yaml" \
+            '["{{ item }}"]["crt"]'
+            jq -Rs . "/run/user/{{ node['uid'] }}/leaf/{{ item }}.key" \
+            | sops set --value-stdin "{{ hostvars['console']['node']['config_path'] }}/secrets/secrets.yaml" \
+            '["{{ item }}"]["key"]'
+          loop: "{{ cert_services }}"
+          changed_when: true
+          no_log: true
+      always:
+        - name: Clean temporary files
+          ansible.builtin.file:
+            path: "/run/user/{{ node['uid'] }}/leaf"
+            state: "absent"
+          no_log: true

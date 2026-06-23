@@ -4,6 +4,7 @@
 {% if node['name'] == 'console' %}
 # Hosts IPv4
 {{ hostvars['fw']['network4']['firewall']['server'] }} fw.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['bk']['server'] }} bk.{{ domain['internal'] }} kopia.{{ domain['internal'] }}
 {{ hostvars['fw']['network4']['vmm']['client'] }} init.vmm.{{ domain['internal'] }}
 {{ hostvars['fw']['network4']['vmm']['server'] }} vmm.{{ domain['internal'] }}
 {{ hostvars['fw']['network4']['infra']['server'] }} infra.{{ domain['internal'] }}
@@ -11,14 +12,12 @@
 {{ hostvars['fw']['network4']['app']['server'] }} app.{{ domain['internal'] }}
 # Hosts IPv6
 {{ hostvars['fw']['network6']['firewall']['server'] }} fw.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['bk']['server'] }} bk.{{ domain['internal'] }} kopia.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['vmm']['client'] }} init.vmm.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['vmm']['server'] }} vmm.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['infra']['server'] }} infra.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['auth']['server'] }} auth.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['app']['server'] }} app.{{ domain['internal'] }}
-# kopia repository
-{{ hostvars['fw']['network4']['nas']['client'] }} nas.{{ domain['internal'] }}
-{{ hostvars['fw']['network6']['nas']['client'] }} nas.{{ domain['internal'] }}
 {% else %}
 # IPv4
 # Crowdsec, blocky, bind(fw)

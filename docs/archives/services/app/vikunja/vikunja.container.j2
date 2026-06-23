@@ -28,7 +28,7 @@ Secret=VIKUNJA_SERVICE_JWTSECRET,type=env
 
 # Database
 Environment="VIKUNJA_DATABASE_TYPE=postgres"
-Environment="VIKUNJA_DATABASE_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="VIKUNJA_DATABASE_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
 Environment="VIKUNJA_DATABASE_USER=vikunja"
 Environment="VIKUNJA_DATABASE_DATABASE=vikunja_db"
 Environment="VIKUNJA_DATABASE_SSLMODE=verify-full"
@@ -39,7 +39,7 @@ Secret=VIKUNJA_DATABASE_PASSWORD,type=env
 # OIDC
 Environment="VIKUNJA_AUTH_OPENID_ENABLED=true"
 Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_NAME=Authelia"
-Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_AUTHURL=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}"
+Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_AUTHURL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTID=vikunja"
 # Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_SCOPE=" default value = openid email profile
 # Vikunja doesn't support OIDC and local dual login.
@@ -48,7 +48,7 @@ Environment="VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTID=vikunja"
 Secret=VIKUNJA_AUTH_OPENID_PROVIDERS_authelia_CLIENTSECRET,type=env
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

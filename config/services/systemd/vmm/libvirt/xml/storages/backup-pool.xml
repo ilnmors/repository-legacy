@@ -1,0 +1,8 @@
+<!-- Storage pool define -->
+<!-- backup-pool.xml -->
+<pool type='dir'>
+  <name>backup-pool</name>
+  <target>
+    <path>/var/lib/libvirt/disk/backup</path>
+  </target>
+</pool>

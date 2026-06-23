@@ -19,9 +19,9 @@ Image={{ domain['internal'] }}/{{ node['name'] }}/caddy:{{ version['containers']
 ContainerName=caddy_{{ node['name'] }}
 HostName=caddy_{{ node['name'] }}
 {% if node['name'] == 'infra' %}
-AddHost={{ services['ca']['domain'] }}.{{ domain['internal'] }}:host-gateway
-AddHost={{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:host-gateway
-AddHost={{ services['loki']['domain'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['ca']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['loki']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
 {% endif %}
 
 PublishPort={{ services['caddy']['ports']['http'] }}:80/tcp

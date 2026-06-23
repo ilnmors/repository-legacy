@@ -8,7 +8,7 @@ log_compression: true
 log_max_size: 100
 log_max_backups: 3
 log_max_age: 30
-api_url: "https://{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:{{ services['crowdsec']['ports']['https'] }}"
+api_url: "https://{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['crowdsec']['ports']['https'] }}"
 api_key: "{{ hostvars['console']['crowdsec']['bouncer']['fw'] }}"
 insecure_skip_verify: false
 disable_ipv6: false

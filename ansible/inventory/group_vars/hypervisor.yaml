@@ -21,13 +21,40 @@ hardware:
     bus: "0x00"
     slot: "0x02"
     function: "0x0"
-  hdd:
+  disk:
     data:
-      hdd0: "WMC6N0E617S8"
-      hdd1: "P6HVTL0W"
-      hdd2: "P2GH354H"
-      hdd3: "P6GJKSMP"
-  btrfs:
-    label: "DATA"
-    level: "raid10"
-    mount_point: "{{ node['libvirt_path'] }}/data"
+      serials:
+        - "WMC6N0E617S8"
+        - "P6HVTL0W"
+        - "P2GH354H"
+        - "P6GJKSMP"
+      fs:
+        type: "btrfs"
+        label: "DATA"
+        mount_point: "{{ node['libvirt_path'] }}/disk/data"
+        mount_opts:
+          - "defaults"
+          - "noatime"
+          - "nodatacow"
+          - "degraded"
+          - "nofail"
+        btrfs:
+          data_profile: "raid10"
+          metadata_profile: "raid10"
+          min_devices: 4
+    backup:
+      serials:
+        - "6261S5G4S75H"
+      fs:
+        type: "btrfs"
+        label: "BACKUP"
+        mount_point: "{{ node['libvirt_path'] }}/disk/backup"
+        mount_opts:
+          - "defaults"
+          - "noatime"
+          - "nodatacow"
+          - "nofail"
+        btrfs:
+          data_profile: "single"
+          metadata_profile: "dup"
+          min_devices: 1

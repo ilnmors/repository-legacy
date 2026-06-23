@@ -8,6 +8,7 @@
     mode: "0770"
   loop:
     - "data/containers/gitea"
+    - "data/containers/gitea/data"
     - "containers/gitea"
     - "containers/gitea/ssl"
   become: true
@@ -32,6 +33,13 @@
     force: true
   notify: "notification_restart_gitea"
   no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/gitea/gitea"
+    tag: "{{ version['containers']['gitea'] }}"
+    state: "present"
+    pull: true
 
 - name: Deploy container file
   ansible.builtin.template:

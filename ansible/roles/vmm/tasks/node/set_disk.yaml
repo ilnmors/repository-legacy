@@ -1,0 +1,179 @@
+---
+- name: Check btrfs installation
+  ansible.builtin.shell: |
+    command -v btrfs
+  become: true # btrfs is located in /usr/sbin, which means root permission is needed.
+  changed_when: false
+  failed_when: false
+  register: "is_btrfs_installed"
+
+- name: Install btrfs
+  ansible.builtin.apt:
+    name: "btrfs-progs"
+    state: "present"
+  become: true
+  when: is_btrfs_installed.rc != 0
+
+- name: Mount data disk
+  block:
+    - name: Set hard data disk path
+      ansible.builtin.shell: |
+        set -o pipefail
+        ls -1 /dev/disk/by-id/ata-* | \
+        grep -F -e "{{ hardware['disk']['data']['serials'] | join('" -e "') }}" | \
+        grep -vE -- '-part[0-9]+$' | \
+        sort
+      changed_when: false
+      register: "data_disk_path"
+
+    - name: Check vmm_hdd filesystem already exists
+      ansible.builtin.command: |
+        blkid -L {{ hardware['disk']['data']['fs']['label'] }}
+      become: true
+      changed_when: false
+      failed_when: false
+      register: "is_data_disk_fs"
+
+    - name: Check disk number
+      ansible.builtin.fail:
+        msg: "Below 4 disks for RAID10, found {{ data_disk_path.stdout_lines | length }}"
+      when: (data_disk_path.stdout_lines | length) < hardware['disk']['data']['fs']['btrfs']['min_devices']
+
+    - name: Set btrfs raid10 volume
+      ansible.builtin.shell: |
+        mkfs.btrfs -f \
+        -L {{ hardware['disk']['data']['fs']['label'] }} \
+        -d {{ hardware['disk']['data']['fs']['btrfs']['data_profile'] }} \
+        -m {{ hardware['disk']['data']['fs']['btrfs']['metadata_profile'] }} \
+        {{ data_disk_path.stdout_lines | join(' ') }}
+      become: true
+      when:
+        - is_data_disk_fs.rc != 0
+        - (data_disk_path.stdout_lines | length) >= hardware['disk']['data']['fs']['btrfs']['min_devices']
+      changed_when: is_mkfs.rc == 0
+      register: "is_mkfs"
+
+    - name: Create mount volume
+      ansible.builtin.file:
+        path: "{{ hardware['disk']['data']['fs']['mount_point'] }}"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0711"
+      become: true
+
+    - name: Mount btrfs raid10 volume
+      ansible.posix.mount:
+        path: "{{ hardware['disk']['data']['fs']['mount_point'] }}"
+        src: "LABEL={{ hardware['disk']['data']['fs']['label'] }}"
+        state: "mounted"
+        fstype: "{{ hardware['disk']['data']['fs']['type'] }}"
+        opts: "{{ hardware['disk']['data']['fs']['mount_opts'] | join(',') }}"
+      become: true
+
+    - name: Set mounted btrfs volume permissions
+      ansible.builtin.file:
+        path: "{{ hardware['disk']['data']['fs']['mount_point'] }}"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0711"
+      become: true
+
+- name: Mount backup disk
+  block:
+    - name: Set backup disk path
+      ansible.builtin.shell: |
+        set -o pipefail
+        ls -1 /dev/disk/by-id/ata-* | \
+        grep -F -e "{{ hardware['disk']['backup']['serials'] | join('" -e "') }}" | \
+        grep -vE -- '-part[0-9]+$' | \
+        sort
+      changed_when: false
+      register: "backup_disk_path"
+
+    - name: Check vmm_hdd filesystem already exists
+      ansible.builtin.command: |
+        blkid -L {{ hardware['disk']['backup']['fs']['label'] }}
+      become: true
+      changed_when: false
+      failed_when: false
+      register: "is_backup_disk_fs"
+
+    - name: Set btrfs volume
+      ansible.builtin.shell: |
+        mkfs.btrfs -f \
+        -L {{ hardware['disk']['backup']['fs']['label'] }} \
+        -d {{ hardware['disk']['backup']['fs']['btrfs']['data_profile'] }} \
+        -m {{ hardware['disk']['backup']['fs']['btrfs']['metadata_profile'] }} \
+        {{ backup_disk_path.stdout_lines | join(' ') }}
+      become: true
+      when:
+        - is_backup_disk_fs.rc != 0
+        - (backup_disk_path.stdout_lines | length) >= hardware['disk']['backup']['fs']['btrfs']['min_devices']
+      changed_when: is_mkfs.rc == 0
+      register: "is_mkfs"
+
+    - name: Create mount volume
+      ansible.builtin.file:
+        path: "{{ hardware['disk']['backup']['fs']['mount_point'] }}"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0711"
+      become: true
+
+    - name: Mount btrfs volume
+      ansible.posix.mount:
+        path: "{{ hardware['disk']['backup']['fs']['mount_point'] }}"
+        src: "LABEL={{ hardware['disk']['backup']['fs']['label'] }}"
+        state: "mounted"
+        fstype: "{{ hardware['disk']['backup']['fs']['type'] }}"
+        opts: "{{ hardware['disk']['backup']['fs']['mount_opts'] | join(',') }}"
+      become: true
+
+    - name: Set mounted btrfs volume permissions
+      ansible.builtin.file:
+        path: "{{ hardware['disk']['backup']['fs']['mount_point'] }}"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0711"
+      become: true
+
+- name: Verify data disk is mounted
+  ansible.builtin.command: |
+    mountpoint -q {{ hardware['disk']['data']['fs']['mount_point'] }}
+  become: true
+  changed_when: false
+
+- name: Verify backup disk is mounted
+  ansible.builtin.command: |
+    mountpoint -q {{ hardware['disk']['backup']['fs']['mount_point'] }}
+  become: true
+  changed_when: false
+
+- name: Deploy btrfs scrub service and timer
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/vmm/btrfs/btrfs-scrub-{{ item }}.j2"
+    dest: "/etc/systemd/system/btrfs-scrub-{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  loop:
+    - "data.service"
+    - "data.timer"
+    - "backup.service"
+    - "backup.timer"
+  become: true
+
+- name: Enable auto btrfs scrub
+  ansible.builtin.systemd:
+    name: "btrfs-scrub-{{ item }}.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+  loop:
+    - "data"
+    - "backup"
+  become: true

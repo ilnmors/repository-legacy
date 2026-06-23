@@ -29,7 +29,7 @@ Secret=OUTLINE_SECRET_KEY,type=env,target=SECRET_KEY
 Secret=OUTLINE_UTILS_SECRET,type=env,target=UTILS_SECRET
 
 # Database
-Environment="DATABASE_HOST={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}"
+Environment="DATABASE_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
 Environment="DATABASE_PORT={{ services['postgresql']['ports']['tcp'] }}"
 Environment="DATABASE_NAME=outline_db"
 Environment="DATABASE_USER=outline"
@@ -47,9 +47,9 @@ Environment="FILE_STORAGE_UPLOAD_MAX_SIZE=262144000"
 
 # OIDC
 Environment="OIDC_CLIENT_ID=outline"
-Environment="OIDC_AUTH_URI=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/api/oidc/authorization"
-Environment="OIDC_TOKEN_URI=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/api/oidc/token"
-Environment="OIDC_USERINFO_URI=https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}/api/oidc/userinfo"
+Environment="OIDC_AUTH_URI=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/api/oidc/authorization"
+Environment="OIDC_TOKEN_URI=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/api/oidc/token"
+Environment="OIDC_USERINFO_URI=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/api/oidc/userinfo"
 Environment="OIDC_USERNAME_CLAIM=preferred_username"
 Environment="OIDC_DISPLAY_NAME=Authelia"
 Environment="OIDC_SCOPES=openid offline_access profile email"
@@ -69,7 +69,7 @@ Secret=OUTLINE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
 Environment="LOG_LEVEL=warn"
 
 [Service]
-ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

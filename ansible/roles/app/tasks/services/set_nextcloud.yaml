@@ -90,7 +90,7 @@
           NEXTCLOUD_UPDATE: "1"
           NEXTCLOUD_ADMIN_USER: "{{ hostvars['console']['nextcloud']['admin']['id'] }}"
           NEXTCLOUD_ADMIN_PASSWORD: "{{ hostvars['console']['nextcloud']['admin']['password'] }}"
-          POSTGRES_HOST: "{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
+          POSTGRES_HOST: "{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
           POSTGRES_DB: "nextcloud_db"
           POSTGRES_USER: "nextcloud"
           POSTGRES_PASSWORD: "{{ hostvars['console']['postgresql']['password']['nextcloud'] }}"
@@ -139,6 +139,13 @@
     - "upload.ini"
   notify: "notification_restart_nextcloud"
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/library/nextcloud"
+    tag: "{{ version['containers']['nextcloud'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy nextcloud.container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/nextcloud.container.j2"
@@ -179,12 +186,14 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "docker.io/library/nextcloud:{{ version['containers']['nextcloud'] }}"
+    - name: "nextcloud"
+      image: "docker.io/library/nextcloud:{{ version['containers']['nextcloud'] }}"
       file: "docker.io_library_nextcloud_{{ version['containers']['nextcloud'] }}"
   loop_control:
-    label: "{{ item.file }}"
+    label: "{{ item.name }}"
   register: container_archive_images
 
 - name: Save container archive images

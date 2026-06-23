@@ -14,6 +14,8 @@ fw          IN      A       192.168.10.1
 fw          IN      AAAA    fd00:10::1
 blocky      IN      A       192.168.10.2
 blocky      IN      AAAA    fd00:10::2
+bk         IN      A       192.168.10.9
+bk         IN      AAAA    fd00:10::9
 vmm         IN      A       192.168.10.10
 vmm         IN      AAAA    fd00:10::10
 infra       IN      A       192.168.10.11
@@ -23,13 +25,12 @@ auth        IN      AAAA    fd00:10::12
 app         IN      A       192.168.10.13
 app         IN      AAAA    fd00:10::13
 switch      IN      A       192.168.1.2
-nas         IN      A       192.168.1.11
-nas         IN      AAAA    fd00:1::11
 console     IN      A       192.168.1.20
 console     IN      AAAA    fd00:1::20
 printer     IN      A       192.168.1.101
 ntp         IN      CNAME   fw.ilnmors.internal.
 crowdsec    IN      CNAME   fw.ilnmors.internal.
+kopia       IN      CNAME   bk.ilnmors.internal.
 ca          IN      CNAME   infra.ilnmors.internal.
 postgresql  IN      CNAME   infra.ilnmors.internal.
 ldap        IN      CNAME   infra.ilnmors.internal.

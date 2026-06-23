@@ -5,50 +5,288 @@
       - hardware
   become: true
 
-- name: Set console kopia
-  when: node['name'] == 'console'
+- name: Set backup kopia repository server
+  when: node['name'] == "bk"
   block:
-    - name: Download kopia
+    - name: Download kopia deb file (x86_64)
       ansible.builtin.get_url:
         url: "https://github.com/kopia/kopia/releases/download/v{{ version['packages']['kopia'] }}/\
-          kopia_{{ version['packages']['kopia'] }}_linux_{{ item }}.deb"
-        dest: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-{{ item }}.deb"
-        owner: "{{ ansible_user }}"
-        group: "{{ node['group'] }}"
-        mode: "0600"
-      loop:
-        - "amd64"
-        - "arm64"
-
-    - name: Install kopia (x86_64)
-      ansible.builtin.apt:
-        deb: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-amd64.deb"
-        state: "present"
+          kopia_{{ version['packages']['kopia'] }}_linux_amd64.deb"
+        dest: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
+        owner: "root"
+        group: "root"
+        mode: "0644"
       become: true
       when: ansible_facts['architecture'] == "x86_64"
 
-    - name: Install kopia (aarch64)
-      ansible.builtin.apt:
-        deb: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-arm64.deb"
-        state: "present"
+    - name: Download kopia deb file (aarch64)
+      ansible.builtin.get_url:
+        url: "https://github.com/kopia/kopia/releases/download/v{{ version['packages']['kopia'] }}/\
+          kopia_{{ version['packages']['kopia'] }}_linux_arm64.deb"
+        dest: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
+        owner: "root"
+        group: "root"
+        mode: "0644"
       become: true
       when: ansible_facts['architecture'] == "aarch64"
 
-    - name: Connect console kopia server
-      environment:
-        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['users']['console'] }}"
-      ansible.builtin.shell: |
-        /usr/bin/kopia repository connect server \
-        --url=https://{{ services['kopia']['domain'] }}.{{ domain['internal'] }}:{{ services['kopia']['ports']['https'] }} \
-        --override-username=console \
-        --override-hostname=console.{{ domain['internal'] }}
-      changed_when: false
-      failed_when: is_kopia_connected.rc != 0
-      register: "is_kopia_connected"
+    - name: Create kopia directory
+      ansible.builtin.file:
+        path: "{{ item.name }}"
+        state: "directory"
+        owner: "{{ ansible_user }}"
+        group: "root"
+        mode: "{{ item.mode }}"
+      loop:
+        - name: "/etc/kopia"
+          mode: "0700"
+        - name: "/etc/kopia/ssl"
+          mode: "0700"
+        - name: "/var/cache/kopia"
+          mode: "0700"
+      become: true
       no_log: true
 
-- name: Set infra/app kopia
-  when: node['name'] in ['infra', 'app']
+    - name: Install kopia
+      ansible.builtin.apt:
+        deb: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
+        state: "present"
+      become: true
+
+    - name: Deploy kopia env
+      ansible.builtin.template:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/kopia.env.j2"
+        dest: "/etc/secrets/{{ node['uid'] }}/kopia.env"
+        owner: "{{ ansible_user }}"
+        group: "root"
+        mode: "0400"
+      become: true
+      notify: "notification_restart_kopia_server"
+      no_log: true
+
+    - name: Deploy kopia certificate and key
+      ansible.builtin.copy:
+        content: |
+          {{ item.value }}
+        dest: "/etc/kopia/ssl/{{ item.name }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ node['group'] }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - name: "kopia.crt"
+          value: |
+            {{ hostvars['console']['kopia']['crt'] | trim }}
+            {{ hostvars['console']['ca']['intermediate']['crt'] }}
+          mode: "0440"
+        - name: "kopia.key"
+          value: "{{ hostvars['console']['kopia']['key'] }}"
+          mode: "0400"
+      notify: "notification_restart_kopia_server"
+      no_log: true
+
+    - name: Check repository existance
+      ansible.builtin.stat:
+        path: "{{ node['home_path'] }}/data/kopia/repository"
+      register: "is_kopia_repository"
+
+    - name: Create repository directory
+      ansible.builtin.file:
+        path: "{{ node['home_path'] }}/data/kopia/repository"
+        state: "directory"
+        owner: "{{ ansible_user }}"
+        group: "{{ node['group'] }}"
+        mode: "0770"
+      when: not is_kopia_repository.stat.exists
+
+    - name: Create kopia repository
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia repository create filesystem \
+        --path="{{ node['home_path'] }}/data/kopia/repository" \
+        --description="ilnmors.internal kopia repository" \
+        --create-only
+      when: not is_kopia_repository.stat.exists
+      changed_when: true
+      register: "is_repository_created"
+      no_log: true
+
+    - name: Connect to kopia repository
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia repository connect filesystem \
+        --path="{{ node['home_path'] }}/data/kopia/repository" \
+        --override-username="il" \
+        --override-hostname="{{ node['name'] }}.{{ domain['internal'] }}" \
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_created.rc == 0
+      changed_when: true
+      register: "is_repository_connected"
+      no_log: true
+
+    - name: Create kopia user
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia server users add \
+        --user-password {{ item.password | quote }} \
+        {{ item.name }}
+      loop:
+        - name: "console@console.ilnmors.internal"
+          password: "{{ hostvars['console']['kopia']['users']['console'] }}"
+        - name: "infra@infra.ilnmors.internal"
+          password: "{{ hostvars['console']['kopia']['users']['infra'] }}"
+        - name: "app@app.ilnmors.internal"
+          password: "{{ hostvars['console']['kopia']['users']['app'] }}"
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_connected.rc == 0
+      changed_when: true
+      register: "is_user_created"
+      no_log: true
+
+    - name: Set kopia console ACL
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia server acl add \
+        --user console@console.ilnmors.internal \
+        --target {{ item }} \
+        --access FULL
+      loop:
+        - "type=snapshot"
+        - "type=policy"
+        - "type=user"
+        - "type=acl"
+        - "type=content"
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_connected.rc == 0
+      changed_when: true
+      no_log: true
+
+    - name: Set kopia infra ACL
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia server acl add \
+        --user infra@infra.ilnmors.internal \
+        --target {{ item.target }} \
+        --access {{ item.access }}
+      loop:
+        - target: "type=snapshot"
+          access: "FULL"
+        - target: "type=policy"
+          access: "READ"
+        - target: "type=policy,username=infra,hostname=infra.ilnmors.internal"
+          access: "FULL"
+        - target: "type=content"
+          access: "APPEND"
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_connected.rc == 0
+      changed_when: true
+      no_log: true
+
+    - name: Set kopia app ACL
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia server acl add \
+        --user app@app.ilnmors.internal \
+        --target {{ item.target }} \
+        --access {{ item.access }}
+      loop:
+        - target: "type=snapshot"
+          access: "FULL"
+        - target: "type=policy"
+          access: "READ"
+        - target: "type=policy,username=app,hostname=app.ilnmors.internal"
+          access: "FULL"
+        - target: "type=content"
+          access: "APPEND"
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_connected.rc == 0
+      changed_when: true
+      no_log: true
+
+    - name: Set kopia policy
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia policy set \
+        {{ item.content }}
+      loop:
+        - content: |
+            --global \
+            --compression=zstd
+        - content: |
+            infra@infra.ilnmors.internal \
+            --compression=zstd \
+            --keep-latest=10 \
+            --keep-hourly=0 \
+            --keep-daily=14 \
+            --keep-weekly=4 \
+            --keep-monthly=6 \
+            --keep-annual=1
+        - content: |
+            app@app.ilnmors.internal \
+            --compression=none \
+            --keep-latest=10 \
+            --keep-hourly=0 \
+            --keep-daily=14 \
+            --keep-weekly=4 \
+            --keep-monthly=6 \
+            --keep-annual=1
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_connected.rc == 0
+      changed_when: true
+      no_log: true
+
+    - name: Set kopia parameters
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia repository set-parameters \
+        --max-pack-size-mb=100
+      when:
+        - not is_kopia_repository.stat.exists
+        - is_repository_connected.rc == 0
+      changed_when: true
+      no_log: true
+
+    - name: Deploy kopia servcer service file
+      ansible.builtin.template:
+        src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/kopia-server.service.j2"
+        dest: "{{ node['home_path'] }}/.config/systemd/user/kopia-server.service"
+        owner: "{{ ansible_user }}"
+        group: "{{ node['group'] }}"
+        mode: "0644"
+        validate: "/usr/bin/systemd-analyze verify %s"
+      become: true
+
+    - name: Enable kopia server service
+      ansible.builtin.systemd:
+        name: "kopia-server.service"
+        state: "started"
+        enabled: true
+        scope: "user"
+        daemon_reload: true
+
+- name: Set infra/app backup kopia
+  when: node['name'] in ["infra", "app"]
   block:
     - name: Set kopia uid
       ansible.builtin.set_fact:
@@ -127,7 +365,7 @@
       become: true
       no_log: true
 
-    - name: Deploy kopia service files
+    - name: Deploy kopia backup service files
       ansible.builtin.template:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/{{ item }}.j2"
         dest: "/etc/systemd/system/{{ item }}"
@@ -140,10 +378,52 @@
         - "kopia-backup.timer"
       become: true
 
-    - name: Enable auto kopia rules update
+    - name: Enable Kopia backup timer
       ansible.builtin.systemd:
         name: "kopia-backup.timer"
         state: "started"
         enabled: true
         daemon_reload: true
       become: true
+
+- name: Set console kopia
+  when: node['name'] == "console"
+  block:
+    - name: Download kopia
+      ansible.builtin.get_url:
+        url: "https://github.com/kopia/kopia/releases/download/v{{ version['packages']['kopia'] }}/\
+          kopia_{{ version['packages']['kopia'] }}_linux_{{ item }}.deb"
+        dest: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-{{ item }}.deb"
+        owner: "{{ ansible_user }}"
+        group: "{{ node['group'] }}"
+        mode: "0600"
+      loop:
+        - "amd64"
+        - "arm64"
+
+    - name: Install kopia (x86_64)
+      ansible.builtin.apt:
+        deb: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-amd64.deb"
+        state: "present"
+      become: true
+      when: ansible_facts['architecture'] == "x86_64"
+
+    - name: Install kopia (aarch64)
+      ansible.builtin.apt:
+        deb: "{{ node['data_path'] }}/bin/kopia-{{ version['packages']['kopia'] }}-arm64.deb"
+        state: "present"
+      become: true
+      when: ansible_facts['architecture'] == "aarch64"
+
+    - name: Connect console kopia server
+      environment:
+        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['users']['console'] }}"
+      ansible.builtin.shell: |
+        /usr/bin/kopia repository connect server \
+        --url=https://{{ services['kopia']['domain']['internal'] }}.{{ domain['internal'] }}:443 \
+        --override-username=console \
+        --override-hostname=console.{{ domain['internal'] }}
+      changed_when: false
+      failed_when: is_kopia_connected.rc != 0
+      register: "is_kopia_connected"
+      no_log: true

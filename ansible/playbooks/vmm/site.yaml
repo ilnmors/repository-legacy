@@ -104,7 +104,7 @@
     - name: Set raid
       ansible.builtin.include_role:
         name: "vmm"
-        tasks_from: "node/set_raid"
+        tasks_from: "node/set_disk"
         apply:
           tags: ["init", "raid"]
       tags: ["init", "raid"]

@@ -101,6 +101,13 @@
   notify: "notification_restart_outline"
   no_log: true
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/outlinewiki/outline"
+    tag: "{{ version['containers']['outline'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy outline.container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/outline/outline.container.j2"
@@ -122,12 +129,14 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
       file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
-    - image: "docker.io/outlinewiki/outline:{{ version['containers']['outline'] }}"
+    - name: "outline"
+      image: "docker.io/outlinewiki/outline:{{ version['containers']['outline'] }}"
       file: "docker.io_outlinewiki_outline_{{ version['containers']['outline'] }}"
   loop_control:
-    label: "{{ item.file }}"
+    label: "{{ item.name }}"
   register: container_archive_images
 
 - name: Save container archive images

@@ -8,13 +8,13 @@ provisioning = /etc/grafana/provisioning
 [server]
 protocol = http
 http_port = {{ services['grafana']['ports']['http'] }}
-domain = {{ services['grafana']['domain'] }}.{{ domain['internal'] }}
-root_url = http://{{ services['grafana']['domain'] }}.{{ domain['internal'] }}/
+domain = {{ services['grafana']['domain']['internal'] }}.{{ domain['internal'] }}
+root_url = https://{{ services['grafana']['domain']['internal'] }}.{{ domain['internal'] }}/
 router_logging = false
 
 [database]
 type = postgres
-host = {{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}
+host = {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}
 name = grafana_db
 user = grafana
 password = $__file{/run/secrets/GF_DB_PASSWORD}

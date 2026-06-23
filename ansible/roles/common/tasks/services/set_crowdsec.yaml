@@ -120,8 +120,8 @@
       no_log: true
 
     - name: Get existing machines list
-      ansible.builtin.command:
-        cmd: "cscli machines list -o json"
+      ansible.builtin.command: |
+        cscli machines list -o json
       become: true
       changed_when: false
       register: "existing_crowdsec_machines_list"
@@ -132,27 +132,27 @@
 
     - name: Set goal machines' name
       ansible.builtin.set_fact:
-        machines_name: ["fw", "vmm", "infra", "auth", "app"]
+        machines_name: ["fw", "vmm", "bk", "infra", "auth", "app"]
       no_log: true
 
     - name: Prune unknown (random) machines
-      ansible.builtin.command:
-        cmd: "cscli machines delete {{ item }}"
+      ansible.builtin.command: |
+        cscli machines delete {{ item }}
       loop: "{{ existing_machines_name | difference(machines_name) }}"
       become: true
       changed_when: true
 
     - name: Register crowdsec machines to LAPI server
-      ansible.builtin.command:
-        cmd: "cscli machines add {{ item }} --password {{ hostvars['console']['crowdsec']['machine'][item] }} --force -f /dev/null"
+      ansible.builtin.command: |
+        cscli machines add {{ item }} --password {{ hostvars['console']['crowdsec']['machine'][item] }} --force -f /dev/null
       loop: "{{ machines_name }}"
       become: true
       changed_when: false
       no_log: true
 
     - name: Get existing bouncers list
-      ansible.builtin.command:
-        cmd: "cscli bouncers list -o json"
+      ansible.builtin.command: |
+        cscli bouncers list -o json
       become: true
       register: "existing_crowdsec_bouncers_list"
       changed_when: false
@@ -162,8 +162,8 @@
         existing_bouncers_name: "{{ existing_crowdsec_bouncers_list.stdout | from_json | map(attribute='name') | list }}"
 
     - name: Flush bouncers
-      ansible.builtin.command:
-        cmd: "cscli bouncers delete {{ item }}"
+      ansible.builtin.command: |
+        cscli bouncers delete {{ item }}
       loop: "{{ existing_bouncers_name }}"
       become: true
       changed_when: true
@@ -173,8 +173,8 @@
         bouncers_name: ["fw", "caddy"]
 
     - name: Register Firewall Bouncer to LAPI
-      ansible.builtin.command:
-        cmd: "cscli bouncers add {{ item }}-bouncer -k {{ hostvars['console']['crowdsec']['bouncer'][item] }}"
+      ansible.builtin.command: |
+        cscli bouncers add {{ item }}-bouncer -k {{ hostvars['console']['crowdsec']['bouncer'][item] }}
       loop: "{{ bouncers_name }}"
       become: true
       changed_when: true
@@ -185,8 +185,8 @@
   when: node['name'] in acquisd_list
   block:
     - name: Install crowdsec collection
-      ansible.builtin.command:
-        cmd: "cscli collections install {{ item }}"
+      ansible.builtin.command: |
+        cscli collections install {{ item }}
       loop: "{{ acquisd_list[node['name']]['collection'] }}"
       become: true
       changed_when: "'overwrite' not in is_collection_installed.stderr"
@@ -196,8 +196,8 @@
       register: "is_collection_installed"
 
     - name: Install crowdsec parser
-      ansible.builtin.command:
-        cmd: "cscli parsers install {{ item }}"
+      ansible.builtin.command: |
+        cscli parsers install {{ item }}
       loop: "{{ acquisd_list[node['name']]['parser'] }}"
       become: true
       changed_when: "'overwrite' not in is_parser_installed.stderr"

@@ -13,7 +13,7 @@ Image=docker.io/lldap/lldap:{{ version['containers']['ldap'] }}
 ContainerName=ldap
 HostName=ldap
 # They are at the same host (for Pasta, it is needed)
-AddHost={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
 # For LDAPS - 636 > 6360 nftables
 PublishPort={{ services['ldap']['ports']['ldaps'] }}:6360/tcp
 # Web UI

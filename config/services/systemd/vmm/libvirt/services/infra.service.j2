@@ -1,7 +1,7 @@
 [Unit]
 Description=infra vm
-After=network-online.target libvirtd.service fw.service
-Wants=fw.service
+After=network-online.target libvirtd.service fw.service bk.service
+Wants=fw.service bk.service
 
 [Service]
 Type=oneshot

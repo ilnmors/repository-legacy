@@ -1,0 +1,92 @@
+{% if node['name'] == 'auth' %}
+{
+        # CrowdSec LAPI connection
+        crowdsec {
+                api_url https://{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['crowdsec']['ports']['https'] }}
+                api_key "{file./run/secrets/CADDY_CROWDSEC_KEY}"
+        }
+}
+
+# Snippets
+# CrowdSec log for parser
+(crowdsec_log) {
+        log {
+                output file /log/access.log {
+                        mode 0644
+                        roll_size 100MiB
+                        roll_keep 1
+                }
+                format json
+        }
+}
+{% endif %}
+{% if node['name'] == 'app' %}
+{
+        servers {
+                # Only accept packets from auth main caddy
+                trusted_proxies static {{ hostvars['fw']['network4']['auth']['server'] }} {{ hostvars['fw']['network6']['auth']['server'] }}
+        }
+}
+{% endif %}
+# Private TLS ACME with DNS-01-challenge
+(private_tls) {
+        tls {
+                issuer acme {
+                        dir https://{{ services['ca']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['ca']['ports']['https'] }}/acme/acme@{{ domain['internal'] }}/directory
+                        dns rfc2136 {
+                                server {{ services['bind']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['bind']['ports']['dns'] }}
+                                key_name acme-key
+                                key_alg hmac-sha256
+                                key "{file./run/secrets/CADDY_ACME_KEY}"
+                        }
+                        resolvers {{ services['bind']['domain']['internal'] }}.{{ domain['internal'] }}
+                }
+        }
+}
+# Node domain
+{{ node['name'] }}.{{ domain['internal'] }} {
+        import private_tls
+        metrics
+}
+# Applications
+{% for item in caddy_services %}
+{% set service = services[item] %}
+{% set web_type = service['dependency']['web'] %}
+{% if node['name'] == 'auth' %}
+{% if service['domain']['public'] == '@' %}
+{{ domain['public'] }} {
+{% else %}
+{{ service['domain']['public'] }}.{{ domain['public'] }} {
+{% endif %}
+        import crowdsec_log
+        route {
+                crowdsec
+{% if web_type == 'auth-public' %}
+                reverse_proxy host.containers.internal:{{ service['ports']['http'] }}
+{% else %}
+                reverse_proxy https://{{ service['domain']['internal'] }}.{{ domain['internal'] }} {
+                        header_up Host {http.reverse_proxy.upstream.host}
+                }
+{% endif %}
+        }
+}
+{% elif node['name'] == 'infra' %}
+{{ service['domain']['internal'] }}.{{ domain['internal'] }} {
+        import private_tls
+        route {
+        {% if service['ports']['https'] is defined %}
+                reverse_proxy https://{{ service['domain']['internal'] }}.{{ domain['internal'] }}:{{ service['ports']['https'] }}
+        {% else %}
+                reverse_proxy host.containers.internal:{{ service['ports']['http'] }}
+        {% endif %}
+        }
+}
+{% elif node['name'] == 'app' %}
+{{ service['domain']['internal'] }}.{{ domain['internal'] }} {
+        import private_tls
+        reverse_proxy host.containers.internal:{{ service['ports']['http'] }} {
+               header_up Host {http.request.header.X-Forwarded-Host}
+        }
+}
+{% endif %}
+{% endfor %}{{ '' }}

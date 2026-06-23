@@ -1,0 +1,28 @@
+[Unit]
+Description=Daily Kopia rclone backup service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+
+# logging
+StandardOutput=journal
+StandardError=journal
+
+Environment="RCLONE_CONFIG=/etc/secrets/{{ node['uid'] }}/rclone/rclone.config"
+
+ExecStart=/usr/bin/rclone copy %h/data/kopia/ gdrive:kopia \
+    --transfers=4 \
+    --checkers=4 \
+    --tpslimit=8 \
+    --tpslimit-burst=4 \
+    --drive-chunk-size=64M \
+    --retries=20 \
+    --low-level-retries=10 \
+    --retries-sleep=30s \
+    --timeout=3m \
+    --contimeout=30s \
+    --drive-stop-on-upload-limit \
+    --stats=30s \
+    --log-level=INFO

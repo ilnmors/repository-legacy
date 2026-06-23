@@ -1,0 +1,24 @@
+[Unit]
+Description=Kopia repository server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# logging
+StandardOutput=journal
+StandardError=journal
+
+EnvironmentFile=/etc/secrets/{{ node['uid'] }}/kopia.env
+
+ExecStartPre=/usr/bin/kopia repository connect filesystem \
+    --path={{ node['home_path'] }}/data/kopia/repository
+
+ExecStart=/usr/bin/kopia server start \
+    --no-ui \
+    --tls-cert-file=/etc/kopia/ssl/kopia.crt \
+    --tls-key-file=/etc/kopia/ssl/kopia.key \
+    --address=0.0.0.0:{{ services['kopia']['ports']['https'] }} \
+    --log-level=info
+
+[Install]
+WantedBy=default.target

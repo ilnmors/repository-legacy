@@ -21,31 +21,62 @@ domain:
 
 services:
   crowdsec:
-    domain: "crowdsec"
+    domain:
+      internal: "crowdsec"
     ports:
       https: "8080"
+    dependency:
+      cert: true
   bind:
-    domain: "bind"
+    domain:
+      internal: "bind"
     ports:
       dns: "53"
   blocky:
-    domain: "blocky"
+    domain:
+      internal: "blocky"
     ports:
       https: "443"
       dns: "53"
+      dot: "853"
+    dependency:
+      cert: true
+  kopia:
+    domain:
+      internal: "kopia"
+    ports:
+      https: "51515"
+    dependency:
+      cert: true
   postgresql:
-    domain: "postgresql"
+    domain:
+      internal: "postgresql"
     ports:
       tcp: "5432" # postgresql db connection port
     subuid: "100998"
+    dependency:
+      cert: true
   ldap:
-    domain: "ldap"
+    domain:
+      internal: "ldap"
     ports:
       http: "17170"
       ldaps: "6360"
     subuid: "100999"
+    dependency:
+      cert: true
+      web: "infra-internal"
+      db: "postgresql"
+  mail:
+    domain:
+      internal: "mail"
+    ports: ""
+    subuid: ""
+    dependency:
+      cert: true
   ca:
-    domain: "ca"
+    domain:
+      internal: "ca"
     ports:
       https: "9000"
     subuid: "100999"
@@ -54,36 +85,43 @@ services:
       http: "9793"
     subuid: "165533"
   prometheus:
-    domain: "prometheus"
+    domain:
+      internal: "prometheus"
     ports:
       https: "9090"
     subuid: "165533"
+    dependency:
+      cert: true
+      web: "infra-internal"
   loki:
-    domain: "loki"
+    domain:
+      internal: "loki"
     ports:
       https: "3100"
     subuid: "110000"
+    dependency:
+      cert: true
   grafana:
-    domain: "grafana"
+    domain:
+      internal: "grafana"
     ports:
       http: "3000"
     subuid: "100471"
+    dependency:
+      web: "infra-internal"
+      db: "postgresql"
   caddy:
     ports:
       http: "2080"
       https: "2443"
-  nas:
-    domain: "nas"
-    ports:
-      https: "5001"
-  kopia:
-    domain: "nas"
-    ports:
-      https: "51515"
   authelia:
-    domain: "authelia"
+    domain:
+      public: "authelia"
     ports:
       http: "9091"
+    dependency:
+      web: "auth-public"
+      db: "postgresql"
   redis:
     subuid: "100998"
   vaultwarden:
@@ -92,6 +130,9 @@ services:
       internal: "vault.app"
     ports:
       http: "8000"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   gitea:
     domain:
       public: "gitea"
@@ -99,6 +140,9 @@ services:
     ports:
       http: "3001"
     subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   immich:
     domain:
       public: "immich"
@@ -106,6 +150,9 @@ services:
     ports:
       http: "2283"
       redis: "6379"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   immich-ml:
     ports:
       http: "3003"
@@ -117,6 +164,9 @@ services:
       http: "8001"
       redis: "6380"
     subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   nextcloud:
     domain:
       public: "nextcloud"
@@ -125,6 +175,9 @@ services:
       http: "8002"
       redis: "6382"
     subuid: "100032"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   collabora:
     domain:
       public: "collabora"
@@ -132,6 +185,8 @@ services:
     ports:
       http: "9980"
     subuid: "101000"
+    dependency:
+      web: "app-public"
   sure:
     domain:
       public: "sure"
@@ -140,6 +195,9 @@ services:
       http: "3002"
       redis: "6383"
     subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   outline:
     domain:
       public: "outline"
@@ -148,6 +206,9 @@ services:
       http: "3004"
       redis: "6384"
     subuid: "101000"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   memos:
     domain:
       public: "memos"
@@ -155,6 +216,9 @@ services:
     ports:
       http: "3005"
     subuid: "110000"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   mealie:
     domain:
       public: "mealie"
@@ -162,6 +226,18 @@ services:
     ports:
       http: "9001"
     subuid: "100910"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+  homebox:
+    domain:
+      public: "homebox"
+      internal: "homebox.app"
+    ports:
+      http: "7745"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
 
 version:
   packages:
@@ -194,8 +270,9 @@ version:
     immich: "v2.7.5"
     paperless: "2.20.15"
     nextcloud: "33.0.5"
-    collabora: "25.04.10.3.1"
+    collabora: "26.04.1.4.1"
     sure: "0.7.1"
     outline: "1.8.1"
     memos: "0.29.1"
     mealie: "v3.19.2"
+    homebox: "0.26.2"

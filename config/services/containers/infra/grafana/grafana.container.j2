@@ -13,10 +13,10 @@ Image=docker.io/grafana/grafana:{{ version['containers']['grafana'] }}
 ContainerName=grafana
 HostName=grafana
 
-AddHost={{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:host-gateway
-AddHost={{ services['ldap']['domain'] }}.{{ domain['internal'] }}:host-gateway
-AddHost={{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:host-gateway
-AddHost={{ services['loki']['domain'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['loki']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
 
 PublishPort={{ services['grafana']['ports']['http'] }}:3000/tcp
 

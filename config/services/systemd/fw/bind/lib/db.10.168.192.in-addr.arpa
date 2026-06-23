@@ -11,6 +11,7 @@ $TTL    86400
 1           IN      PTR     fw.ilnmors.internal.
 2           IN      PTR     blocky.ilnmors.internal.
 3           IN      PTR     bind.ilnmors.internal.
+9           IN      PTR     bk.ilnmors.internal.
 10          IN      PTR     vmm.ilnmors.internal.
 11          IN      PTR     infra.ilnmors.internal.
 12          IN      PTR     auth.ilnmors.internal.

@@ -124,3 +124,14 @@
   changed_when: false
   listen: "notification_restart_mealie"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart homebox
+  ansible.builtin.systemd:
+    name: "homebox.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_homebox"
+  ignore_errors: true # noqa: ignore-errors

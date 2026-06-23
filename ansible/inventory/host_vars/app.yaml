@@ -24,17 +24,8 @@ vm:
   storage: 256
   data_storage:
     name: "vdb"
+    pool: "data"
     size: 3.5
   lan_mac: "0a:49:6e:4d:03:00"
   lan_net: "lan-net"
   lan_group: "vlan10-access"
-  # PCIe passthrough address
-  # result of `lspci | grep -i -e "sata controller" -e "vga"` and parse it.
-  # Ex) 04:00.0 > domain: "0x0000", bus: "0x04", slot: "0x00", function: "0x0"
-  pass_through:
-    igpu:
-      address: "0000:00:02.0"
-      domain: "0x0000"
-      bus: "0x00"
-      slot: "0x02"
-      function: "0x0"

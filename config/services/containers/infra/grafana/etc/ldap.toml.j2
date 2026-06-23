@@ -1,6 +1,6 @@
 # https://github.com/lldap/lldap/blob/main/example_configs/grafana_ldap_config.toml
 [[servers]]
-host = "{{ services['ldap']['domain'] }}.{{ domain['internal'] }}"
+host = "{{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}"
 port = {{ services['ldap']['ports']['ldaps'] }}
 # Activate STARTTLS or LDAPS
 use_ssl = true

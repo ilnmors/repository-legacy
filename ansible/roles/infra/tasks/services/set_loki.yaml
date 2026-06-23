@@ -48,6 +48,13 @@
   notify: "notification_restart_loki"
   no_log: true
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/grafana/loki"
+    tag: "{{ version['containers']['loki'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/loki.container.j2"

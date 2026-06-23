@@ -21,6 +21,6 @@ node:
   data_path: "{{ node['homelab_path'] }}/data"
   config_path: "{{ node['homelab_path'] }}/config"
   ssh_san: "{{ node['name'] }},{{ node['name'] }}.{{ domain['internal'] }}"
-  ssh_users: "vmm,fw,infra,auth,app"
+  ssh_users: "vmm,fw,bk,infra,auth,app"
   # add the hostname of wsl, it is needed to improve the sudo problem
   local_san: "localhost {{ node['name'] }} {{ node['name'] }}.{{ domain['internal'] }}"

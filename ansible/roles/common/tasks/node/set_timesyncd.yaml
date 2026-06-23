@@ -9,8 +9,8 @@
   become: true
 
 - name: Deploy timesyncd.conf.d/local-ntp.conf
-  ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['config_path'] }}/node/common/timesyncd/local-ntp.conf"
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/node/common/timesyncd/local-ntp.conf.j2"
     dest: "/etc/systemd/timesyncd.conf.d/local-ntp.conf"
     owner: "root"
     group: "systemd-timesync"

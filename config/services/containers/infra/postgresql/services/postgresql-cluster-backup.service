@@ -11,8 +11,12 @@ StandardOutput=journal
 StandardError=journal
 
 ExecStartPre=/usr/bin/podman exec postgresql sh -c "mkdir -p /backups/cluster && chown postgres:root /backups/cluster && chmod 770 /backups/cluster"
+ExecStartPre=/usr/bin/podman exec postgresql sh -c "mkdir -p /backups/sql && chown postgres:root /backups/sql && chmod 770 /backups/sql"
+
 
 # Run the script
 ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'pg_dumpall -U postgres --schema-only | grep -v -E "CREATE ROLE postgres" > /backups/cluster/pg_cluster_$(date "+%%Y-%%m-%%d").sql'
-ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c "find /backups/cluster -maxdepth 1 -type f -mtime +7 -delete"
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c 'cp /backups/cluster/pg_cluster_$(date "+%%Y-%%m-%%d").sql /backups/sql/pg_cluster.sql'
+ExecStart=/usr/bin/podman exec -u postgres postgresql sh -c "find /backups/cluster -maxdepth 1 -type f -name 'pg_cluster_*.sql' -mtime +7 -delete"
 ExecStart=/usr/bin/podman exec postgresql sh -c "chown -R postgres:root /backups/cluster && chmod 660 /backups/cluster/*"
+ExecStart=/usr/bin/podman exec postgresql sh -c "chown -R postgres:root /backups/sql && chmod 660 /backups/sql/pg_cluster.sql"

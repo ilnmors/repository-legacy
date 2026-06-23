@@ -5,14 +5,14 @@ connectIPVersion: dual
 
 ports:
   dns:
-    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:53"
-    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:53"
+    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:{{ services['blocky']['ports']['dns'] }}"
+    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:{{ services['blocky']['ports']['dns'] }}"
   tls:
-    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:853"
-    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:853"
+    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:{{ services['blocky']['ports']['dot'] }}"
+    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:{{ services['blocky']['ports']['dot'] }}"
   https:
-    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:443"
-    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:443"
+    - "{{ hostvars['fw']['network4']['blocky']['server'] }}:{{ services['blocky']['ports']['https'] }}"
+    - "[{{ hostvars['fw']['network6']['blocky']['server'] }}]:{{ services['blocky']['ports']['https'] }}"
 
 log:
   level: info
@@ -31,13 +31,13 @@ upstreams:
 conditional:
   fallbackUpstream: false
   mapping:
-    ilnmors.internal: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
-    ilnmors.com: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    {{ domain['internal'] }}: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
+    {{ domain['public'] }}: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
     1.168.192.in-addr.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
     10.168.192.in-addr.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
     0.0.0.0.0.0.0.0.1.0.0.0.0.0.d.f.ip6.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
     0.0.0.0.0.0.0.0.0.1.0.0.0.0.d.f.ip6.arpa: "{{ hostvars['fw']['network4']['bind']['server'] }}, {{ hostvars['fw']['network6']['bind']['server'] }}"
-    vpn.ilnmors.com: "tcp-tls:1.1.1.1:853, tcp-tls:1.0.0.1:853, tcp-tls:[2606:4700:4700::1111]:853, tcp-tls:[2606:4700:4700::1001]:853"
+    vpn.{{ domain['public'] }}: "tcp-tls:1.1.1.1:853, tcp-tls:1.0.0.1:853, tcp-tls:[2606:4700:4700::1111]:853, tcp-tls:[2606:4700:4700::1001]:853"
 
 blocking:
   blockType: nxDomain

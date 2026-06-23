@@ -1,0 +1,49 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Homebox
+
+[Container]
+Image=ghcr.io/sysadminsmedia/homebox:{{ version['containers']['homebox'] }}
+
+ContainerName=homebox
+HostName=homebox
+
+PublishPort={{ services['homebox']['ports']['http'] }}:7745
+
+# Volumes
+Volume=%h/data/containers/homebox/data:/data:rw
+Volume=%h/containers/homebox/ssl:/etc/ssl/homebox:ro
+
+# Environment
+Environment="TZ={{ timezone }}"
+Secret=HBOX_AUTH_API_KEY_PEPPER,type=env
+# OIDC
+Environment="HBOX_OIDC_ENABLED=true"
+Environment="HBOX_OIDC_ISSUER_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="HBOX_OIDC_CLIENT_ID=homebox"
+Environment="HBOX_OIDC_SCOPE=openid profile email groups"
+Environment="HBOX_OPTIONS_TRUST_PROXY=true"
+Environment="HBOX_OIDC_ALLOWED_GROUPS=admins,users"
+Environment="HBOX_OPTIONS_ALLOW_LOCAL_LOGIN=false"
+Secret=HBOX_OIDC_CLIENT_SECRET,type=env
+
+# Database
+Environment="HBOX_DATABASE_DRIVER=postgres"
+Environment="HBOX_DATABASE_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="HBOX_DATABASE_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="HBOX_DATABASE_USERNAME=homebox"
+Environment="HBOX_DATABASE_DATABASE=homebox_db"
+Environment="HBOX_DATABASE_SSL_MODE=verify-full"
+Environment="HBOX_DATABASE_SSL_ROOT_CERT=/etc/ssl/homebox/{{ root_cert_filename }}"
+Secret=HBOX_DATABASE_PASSWORD,type=env
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

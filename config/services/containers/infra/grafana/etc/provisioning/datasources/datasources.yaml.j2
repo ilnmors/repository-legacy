@@ -4,7 +4,7 @@ apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
-    url: https://{{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}
+    url: https://{{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}
     access: proxy
     isDefault: true
     jsonData:
@@ -16,7 +16,7 @@ datasources:
 
   - name: Loki
     type: loki
-    url: https://{{ services['loki']['domain'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}
+    url: https://{{ services['loki']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}
     access: proxy
     jsonData:
       tlsAuth: false
@@ -26,4 +26,4 @@ datasources:
       maxLines: 1000
     secureJsonData:
       tlsCACert: "$__file{/etc/ssl/grafana/{{ root_cert_filename }}}"
-      httpHeaderValue1: "{{ domain['internal'] }} "
+      httpHeaderValue1: "{{ domain['internal'] }}"

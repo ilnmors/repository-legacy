@@ -78,6 +78,14 @@
           tags: ["init", "resolved"]
       tags: ["init", "resolved"]
 
+    - name: Set timesyncd
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "node/set_timesyncd"
+        apply:
+          tags: ["init", "timesyncd"]
+      tags: ["init", "timesyncd"]
+
     - name: Update and upgrade apt
       ansible.builtin.apt:
         upgrade: "dist"
@@ -100,7 +108,7 @@
 
     - name: Set data volume
       ansible.builtin.include_role:
-        name: "app"
+        name: "common"
         tasks_from: "node/set_data_volume"
         apply:
           tags: ["init", "raid"]
@@ -241,6 +249,14 @@
         apply:
           tags: ["site", "mealie"]
       tags: ["site", "mealie"]
+
+    - name: Set homebox
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_homebox"
+        apply:
+          tags: ["site", "homebox"]
+      tags: ["site", "homebox"]
 
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"

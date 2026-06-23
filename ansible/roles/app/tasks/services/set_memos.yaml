@@ -29,12 +29,19 @@
   containers.podman.podman_secret:
     name: "MEMOS_DSN"
     data: "postgresql://memos:{{ hostvars['console']['postgresql']['password']['memos'] | urlencode | replace('/', '%2F') }}\
-        @{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}/memos_db?sslmode=verify-full&\
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/memos_db?sslmode=verify-full&\
         sslrootcert=/etc/ssl/memos/{{ root_cert_filename }}"
     state: "present"
     force: true
   no_log: true
   notify: "notification_restart_memos"
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/neosmemo/memos"
+    tag: "{{ version['containers']['memos'] }}"
+    state: "present"
+    pull: true
 
 - name: Deploy memos.container file
   ansible.builtin.template:

@@ -30,12 +30,12 @@ identity_validation:
 # Authentication backend provider configuration
 authentication_backend:
   ldap:
-    # ldaps uses 636 -> NAT automatically change port 636 in output packet -> 2636 which lldap server uses.
-    address: 'ldaps://{{ services['ldap']['domain'] }}.{{ domain['internal'] }}'
+    # ldaps uses 636 -> NAT automatically change port 636 in output packet -> 6360 which lldap server uses.
+    address: 'ldaps://{{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}'
     implementation: 'lldap'
     # tls configuration, it uses certificates_directory's /etc/ssl/authelia/{{ root_cert_filename }}
     tls:
-      server_name: '{{ services['ldap']['domain'] }}.{{ domain['internal'] }}'
+      server_name: '{{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}'
       skip_verify: false
     # LLDAP base DN
     base_dn: '{{ domain['dc'] }}'
@@ -53,7 +53,7 @@ access_control:
   default_policy: 'deny'
   rules:
     # authelia portal
-    - domain: '{{ services['authelia']['domain'] }}.{{ domain['public'] }}'
+    - domain: '{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}'
       policy: 'bypass'
 #    - domain: 'test.ilnmors.com'
 #      policy: 'one_factor'
@@ -68,7 +68,7 @@ session:
   cookies:
     - name: 'authelia_public_session'
       domain: '{{ domain['public'] }}'
-      authelia_url: 'https://{{ services['authelia']['domain'] }}.{{ domain['public'] }}'
+      authelia_url: 'https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}'
       same_site: 'lax'
 
 # This authelia doesn't use Redis.
@@ -77,12 +77,12 @@ session:
 storage:
   encryption_key: '' # $AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE is designated in container file
   postgres:
-    address: 'tcp://{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}'
+    address: 'tcp://{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}'
     database: 'authelia_db'
     username: 'authelia'
     password: '' # $AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE is designated in container file
     tls:
-      server_name: '{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}'
+      server_name: '{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}'
       skip_verify: false
 
 # Notification provider
@@ -94,47 +94,18 @@ notifier:
 identity_providers:
   oidc:
     hmac_secret: '' # $AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
-    jwks:{% raw %}
+    jwks:
       - algorithm: 'RS256'
         use: 'sig'
-        key: {{ secret "/run/secrets/AUTHELIA_JWKS_RS256" | mindent 10 "|" | msquote }}
+        key: {% raw %}{{ secret "/run/secrets/AUTHELIA_JWKS_RS256" | mindent 10 "|" | msquote }}{% endraw %}{{ '' }}
       - algorithm: 'ES256'
         use: 'sig'
-        key: {{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %}
+        key: {% raw %}{{ secret "/run/secrets/AUTHELIA_JWKS_ES256" | mindent 10 "|" | msquote }}{% endraw %}{{ '' }}
     lifespans:
       access_token: '1h'
       id_token: '1h'
       refresh_token: '720h'
     clients:
-      # https://www.authelia.com/integration/openid-connect/clients/synology-dsm/
-      - client_id: 'dsm'
-        client_name: 'dsm'
-        consent_mode: 'implicit'
-        # It depends on application
-        # hash value generate:
-        # podman exec -it authelia sh
-        # authelia crypto hash generate pbkdf2 --password 'password'
-        client_secret: '{{ hostvars['console']['dsm']['oidc']['hash'] }}'
-        # If there were not client secret, public should be `true` [true | false]
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['nas']['domain'] }}.{{ domain['internal'] }}:{{ services['nas']['ports']['https'] }}'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'groups'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        # [ client_secret_post | client_secret_basic ]
-        token_endpoint_auth_method: 'client_secret_post'
       # https://www.authelia.com/integration/openid-connect/clients/gitea/
       - client_id: 'gitea'
         client_name: 'gitea'
@@ -318,4 +289,25 @@ identity_providers:
           - 'authorization_code'
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'
+      # https://www.authelia.com/integration/openid-connect/clients/homebox/
+      - client_id: 'homebox'
+        client_name: 'homebox'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['homebox']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['homebox']['domain']['public'] }}.{{ domain['public'] }}/api/v1/users/login/oidc/callback'
+        scopes:
+          - 'openid'
+          - 'groups'
+          - 'email'
+          - 'profile'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
         token_endpoint_auth_method: 'client_secret_basic'

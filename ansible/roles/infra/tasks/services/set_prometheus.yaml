@@ -52,6 +52,13 @@
   notify: "notification_restart_prometheus"
   no_log: true
 
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/prom/prometheus"
+    tag: "{{ version['containers']['prometheus'] }}"
+    state: "present"
+    pull: true
+
 - name: Deploy container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/prometheus/prometheus.container.j2"

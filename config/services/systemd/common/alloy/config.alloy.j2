@@ -6,7 +6,7 @@
 //// Metric ouput
 prometheus.remote_write "prometheus" {
     endpoint {
-        url = "https://{{ services['prometheus']['domain'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}/api/v1/write"
+        url = "https://{{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}/api/v1/write"
     }
 }
 
@@ -71,8 +71,8 @@ prometheus.scrape "system" {
 ////// For Crowdsec metrics
 prometheus.scrape "crowdsec" {
     targets = [
-        { "__address__" = "{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:6060", "job" = "crowdsec" },
-        { "__address__" = "{{ services['crowdsec']['domain'] }}.{{ domain['internal'] }}:60601", "job" = "crowdsec-bouncer" },
+        { "__address__" = "{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:6060", "job" = "crowdsec" },
+        { "__address__" = "{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:60601", "job" = "crowdsec-bouncer" },
     ]
     honor_labels = true
     forward_to = [prometheus.relabel.default_label.receiver]
@@ -83,7 +83,7 @@ prometheus.scrape "crowdsec" {
 ////// For postgresql metrics
 prometheus.exporter.postgres "postgresql" {
     data_source_names = [
-        "postgres://alloy@{{ services['postgresql']['domain'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}/postgres?sslmode=verify-full",
+        "postgres://alloy@{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}/postgres?sslmode=verify-full",
     ]
 }
 prometheus.scrape "postgresql" {
@@ -99,7 +99,7 @@ prometheus.scrape "x509" {
 }
 {% endif %}
 
-{% if node['name'] in ['infra', 'auth', 'app'] %}
+{% if node['name'] in ["infra", "auth", "app"] %}
 ////// For Input Caddy metrics
 prometheus.scrape "caddy" {
     targets = [
@@ -114,7 +114,7 @@ prometheus.scrape "caddy" {
 //// Logs output
 loki.write "loki" {
     endpoint {
-        url = "https://{{ services['loki']['domain'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}/loki/api/v1/push"
+        url = "https://{{ services['loki']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}/loki/api/v1/push"
         tenant_id = "{{ domain['internal'] }}"
     }
 }

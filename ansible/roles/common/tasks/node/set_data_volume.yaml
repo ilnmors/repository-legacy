@@ -1,16 +1,16 @@
 ---
-- name: Check app data volume filesystem already exists
-  ansible.builtin.command:
-    cmd: "blkid /dev/{{ vm['data_storage']['name'] }}"
-  register: is_app_data
+- name: Check data volume filesystem already exists
+  ansible.builtin.command: |
+    blkid /dev/{{ vm['data_storage']['name'] }}
+  register: is_volume
   changed_when: false
   failed_when: false
   become: true
 
-- name: Create ext4 filesystem on app data raw
-  ansible.builtin.command:
-    cmd: "mkfs.ext4 -F /dev/{{ vm['data_storage']['name'] }}"
-  when: is_app_data.rc != 0
+- name: Create ext4 filesystem on data raw
+  ansible.builtin.command: |
+    mkfs.ext4 -F /dev/{{ vm['data_storage']['name'] }}
+  when: is_volume.rc != 0
   changed_when: true
   become: true
 
@@ -22,7 +22,7 @@
     group: "{{ node['group'] }}"
     mode: "0770"
 
-- name: Mount app data volume
+- name: Mount data volume
   ansible.posix.mount:
     path: "{{ node['home_path'] }}/data"
     src: "/dev/{{ vm['data_storage']['name'] }}"
@@ -31,7 +31,7 @@
     fstype: "ext4"
   become: true
 
-- name: Set app data volume path permissions
+- name: Set data volume path permissions
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/data"
     state: "directory"
