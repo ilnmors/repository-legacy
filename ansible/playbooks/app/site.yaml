@@ -138,14 +138,6 @@
           tags: ["init", "nftables"]
       tags: ["init", "nftables"]
 
-    - name: Set crowdsec
-      ansible.builtin.include_role:
-        name: "common"
-        tasks_from: "services/set_crowdsec"
-        apply:
-          tags: ["site", "crowdsec"]
-      tags: ["site", "crowdsec"]
-
     - name: Set alloy
       ansible.builtin.include_role:
         name: "common"
@@ -153,6 +145,14 @@
         apply:
           tags: ["init", "alloy"]
       tags: ["init", "alloy"]
+
+    - name: Set crowdsec
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_crowdsec"
+        apply:
+          tags: ["site", "crowdsec"]
+      tags: ["site", "crowdsec"]
 
     - name: Set kopia
       ansible.builtin.include_role:
@@ -257,6 +257,14 @@
         apply:
           tags: ["site", "homebox"]
       tags: ["site", "homebox"]
+
+    - name: Set homepage
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_homepage"
+        apply:
+          tags: ["site", "homepage"]
+      tags: ["site", "homepage"]
 
     - name: Flush handlers right now
       ansible.builtin.meta: "flush_handlers"

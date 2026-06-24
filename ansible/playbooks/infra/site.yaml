@@ -138,6 +138,14 @@
           tags: ["site", "crowdsec"]
       tags: ["site", "crowdsec"]
 
+    - name: Set kopia
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_kopia"
+        apply:
+          tags: ["site", "kopia"]
+      tags: ["site", "kopia"]
+
     - name: Set ca
       ansible.builtin.include_role:
         name: "infra"
@@ -209,11 +217,3 @@
         apply:
           tags: ["site", "grafana"]
       tags: ["site", "grafana"]
-
-    - name: Set kopia
-      ansible.builtin.include_role:
-        name: "common"
-        tasks_from: "services/set_kopia"
-        apply:
-          tags: ["site", "kopia"]
-      tags: ["site", "kopia"]

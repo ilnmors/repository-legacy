@@ -365,6 +365,78 @@
       become: true
       no_log: true
 
+    - name: Check data directory empty
+      ansible.builtin.find:
+        path: "{{ node['home_path'] }}/data/"
+        file_type: "any"
+        hidden: true
+        recurse: false
+      register: "is_data_dir_empty"
+
+    - name: Connect kopia server
+      environment:
+        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['users'][node['name']] }}"
+      ansible.builtin.shell: |
+        /usr/bin/kopia repository connect server \
+        --url=https://{{ services['kopia']['domain']['internal'] }}.{{ domain['internal'] }}:443 \
+        --override-username={{ node['name'] }} \
+        --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
+      become: true
+      when: is_data_dir_empty.matched == 0
+      changed_when: false
+      failed_when: is_kopia_connected.rc != 0
+      register: "is_kopia_connected"
+      no_log: true
+
+    - name: Check whether Kopia snapshot exists
+      environment:
+        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['users'][node['name']] }}"
+      ansible.builtin.shell: |
+        /usr/bin/kopia snapshot list \
+        {{ node['name'] }}@{{ node['name'] }}.{{ domain['internal'] }}:{{ node['home_path'] }}/data \
+        --json \
+        --max-results=1
+      become: true
+      when: (is_kopia_connected.rc | default(1)) == 0
+      changed_when: false
+      failed_when: false
+      register: "is_snapshot_exist"
+      no_log: true
+
+    - name: Restore data directory
+      environment:
+        KOPIA_PASSWORD: "{{ hostvars['console']['kopia']['users'][node['name']] }}"
+      ansible.builtin.shell: |
+        /usr/bin/kopia snapshot restore \
+        --snapshot-time=latest \
+        {{ node['name'] }}@{{ node['name'] }}.{{ domain['internal'] }}:{{ node['home_path'] }}/data \
+        {{ node['home_path'] }}/data
+      become: true
+      when:
+        - is_data_dir_empty.matched == 0
+        - (is_kopia_connected.rc | default(1)) == 0
+        - (is_snapshot_exist.stdout |
+           default('[]', true) |
+           from_json |
+           list |
+           length
+          ) > 0
+      changed_when: is_kopia_restored.rc == 0
+      failed_when: is_kopia_restored.rc != 0
+      register: "is_kopia_restored"
+      no_log: true
+
+    - name: Disconnect kopia server
+      ansible.builtin.shell: |
+        /usr/bin/kopia repository disconnect
+      become: true
+      when:
+        - is_data_dir_empty.matched == 0
+        - (is_kopia_connected.rc | default(1)) == 0
+      changed_when: false
+      failed_when: false
+      no_log: true
+
     - name: Deploy kopia backup service files
       ansible.builtin.template:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/{{ item }}.j2"
@@ -421,8 +493,8 @@
       ansible.builtin.shell: |
         /usr/bin/kopia repository connect server \
         --url=https://{{ services['kopia']['domain']['internal'] }}.{{ domain['internal'] }}:443 \
-        --override-username=console \
-        --override-hostname=console.{{ domain['internal'] }}
+        --override-username={{ node['name'] }} \
+        --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
       changed_when: false
       failed_when: is_kopia_connected.rc != 0
       register: "is_kopia_connected"
