@@ -1,0 +1,30 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Homepage
+
+[Container]
+Image=docker.io/gethomepage/homepage:{{ version['containers']['homepage'] }}
+
+ContainerName=homepage
+HostName=homepage
+
+PublishPort={{ services['homepage']['ports']['http'] }}:3000
+
+# Volumes
+Volume=%h/containers/homepage/config:/app/config:rw
+Volume=%h/containers/homepage/images:/app/public/images:ro
+
+# Environment
+Environment="TZ={{ timezone }}"
+# The public root domain will be the domain of homepage
+Environment="HOMEPAGE_ALLOWED_HOSTS={{ domain['public'] }},www.{{ domain['public']}}"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

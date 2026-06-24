@@ -135,3 +135,14 @@
   changed_when: false
   listen: "notification_restart_homebox"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart homepage
+  ansible.builtin.systemd:
+    name: "homepage.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_homepage"
+  ignore_errors: true # noqa: ignore-errors

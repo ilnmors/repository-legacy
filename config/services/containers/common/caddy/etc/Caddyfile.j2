@@ -54,7 +54,7 @@
 {% set web_type = service['dependency']['web'] %}
 {% if node['name'] == 'auth' %}
 {% if service['domain']['public'] == '@' %}
-{{ domain['public'] }} {
+{{ domain['public'] }}, www.{{ domain['public'] }} {
 {% else %}
 {{ service['domain']['public'] }}.{{ domain['public'] }} {
 {% endif %}

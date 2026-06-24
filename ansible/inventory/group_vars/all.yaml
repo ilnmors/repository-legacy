@@ -105,7 +105,7 @@ services:
     domain:
       internal: "grafana"
     ports:
-      http: "3000"
+      http: "3000" # infra
     subuid: "100471"
     dependency:
       web: "infra-internal"
@@ -124,6 +124,14 @@ services:
       db: "postgresql"
   redis:
     subuid: "100998"
+  homepage:
+    domain:
+      public: "@"
+      internal: "homepage.app"
+    ports:
+      http: "3000" # app
+    dependency:
+      web: "app-public"
   vaultwarden:
     domain:
       public: "vault"
@@ -139,30 +147,6 @@ services:
       internal: "gitea.app"
     ports:
       http: "3001"
-    subuid: "100999"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
-  immich:
-    domain:
-      public: "immich"
-      internal: "immich.app"
-    ports:
-      http: "2283"
-      redis: "6379"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
-  immich-ml:
-    ports:
-      http: "3003"
-  paperless:
-    domain:
-      public: "paperless"
-      internal: "paperless.app"
-    ports:
-      http: "8001"
-      redis: "6380"
     subuid: "100999"
     dependency:
       web: "app-public"
@@ -187,17 +171,19 @@ services:
     subuid: "101000"
     dependency:
       web: "app-public"
-  sure:
+  immich:
     domain:
-      public: "sure"
-      internal: "sure.app"
+      public: "immich"
+      internal: "immich.app"
     ports:
-      http: "3002"
-      redis: "6383"
-    subuid: "100999"
+      http: "2283"
+      redis: "6379"
     dependency:
       web: "app-public"
       db: "postgresql"
+  immich-ml:
+    ports:
+      http: "3003"
   outline:
     domain:
       public: "outline"
@@ -216,6 +202,28 @@ services:
     ports:
       http: "3005"
     subuid: "110000"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+  sure:
+    domain:
+      public: "sure"
+      internal: "sure.app"
+    ports:
+      http: "3002"
+      redis: "6383"
+    subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+  paperless:
+    domain:
+      public: "paperless"
+      internal: "paperless.app"
+    ports:
+      http: "8001"
+      redis: "6380"
+    subuid: "100999"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -276,3 +284,4 @@ version:
     memos: "0.29.1"
     mealie: "v3.19.2"
     homebox: "0.26.2"
+    homepage: "v1.13.2"

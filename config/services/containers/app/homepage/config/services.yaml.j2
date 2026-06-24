@@ -1,0 +1,12 @@
+- Services:
+{% for item in (homepage_public_services | reject('in', ['homepage', 'collabora'])) %}
+    - {{ item }}:
+        icon: {{ item }}.svg
+        href: https://{{ services[item]['domain']['public'] }}.{{ domain['public'] }}
+{% endfor %}
+- Admin:
+{% for item in homepage_internal_services %}
+    - {{ item }}:
+        icon: {{ 'lldap' if item == 'ldap' else item }}.svg
+        href: https://{{ services[item]['domain']['internal'] }}.{{ domain['internal'] }}
+{% endfor %}
