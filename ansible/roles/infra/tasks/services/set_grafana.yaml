@@ -12,6 +12,7 @@
     - "grafana/etc"
     - "grafana/etc/provisioning"
     - "grafana/etc/provisioning/datasources"
+    - "grafana/etc/provisioning/dashboards"
     - "grafana/etc/dashboards"
     - "grafana/ssl"
   become: true
@@ -58,10 +59,29 @@
   notify: "notification_restart_grafana"
   no_log: true
 
-- name: Deploy provisioing file
+- name: Deploy provisioing files
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/provisioning/datasources/datasources.yaml.j2"
-    dest: "{{ node['home_path'] }}/containers/grafana/etc/provisioning/datasources/datasources.yaml"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/provisioning/{{ item.file }}"
+    dest: "{{ node['home_path'] }}/containers/grafana/etc/provisioning/{{ item.dest }}"
+    owner: "{{ services['grafana']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0400"
+  loop:
+    - name: "datasource"
+      file: "datasources/datasources.yaml.j2"
+      dest: "datasources/datasources.yaml"
+    - name: "dashboard"
+      file: "dashboards/dashboards.yaml"
+      dest: "dashboards/dashboards.yaml"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+  notify: "notification_restart_grafana"
+
+- name: Deploy dashboard files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/grafana/etc/dashboards/"
+    dest: "{{ node['home_path'] }}/containers/grafana/etc/dashboards/"
     owner: "{{ services['grafana']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0400"

@@ -1,28 +1,25 @@
-// The "name" and "job"
-// job > prometheus: which exporter / loki: which service
-// name > prometheus: which service
-// service_name > loki: which service
-// Metric
-//// Metric ouput
+// prometheus
+
+// Metrics output
+
 prometheus.remote_write "prometheus" {
     endpoint {
         url = "https://{{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}/api/v1/write"
     }
 }
 
-//// Metric relabel
-////// For node metrics
-prometheus.relabel "system_relabel" {
+// System metrics relabel
+
+prometheus.relabel "system_metrics" {
     forward_to = [prometheus.remote_write.prometheus.receiver]
+
     rule {
         target_label = "instance"
         replacement  = "{{ node['name'] }}"
     }
     rule {
-        source_labels = ["job"]
-        regex         = "integrations\\/(.+)"
         target_label = "job"
-        replacement = "$1"
+        replacement  = "system"
     }
     rule {
         source_labels = ["name"]
@@ -30,11 +27,25 @@ prometheus.relabel "system_relabel" {
         target_label  = "name"
         replacement   = "$1"
     }
+    rule {
+        source_labels = ["name"]
+        regex         = "(.+)\\.timer"
+        target_label  = "name"
+        replacement   = "$1.timer"
+    }
+    rule {
+        source_labels = ["name"]
+        regex         = "(.+)\\.socket"
+        target_label  = "name"
+        replacement   = "$1.socket"
+    }
 }
 
-////// For service metrics
-prometheus.relabel "default_label" {
+// Generic service metrics relabel
+
+prometheus.relabel "service_metrics" {
     forward_to = [prometheus.remote_write.prometheus.receiver]
+
     rule {
         target_label = "instance"
         replacement  = "{{ node['name'] }}"
@@ -42,117 +53,162 @@ prometheus.relabel "default_label" {
     rule {
         source_labels = ["job"]
         regex         = "prometheus\\.scrape\\.(.+)"
-        target_label = "job"
-        replacement = "$1"
+        target_label  = "job"
+        replacement   = "$1"
     }
     rule {
         source_labels = ["job"]
         regex         = "integrations\\/(.+)"
-        target_label = "job"
-        replacement = "$1"
+        target_label  = "job"
+        replacement   = "$1"
+    }
+    rule {
+        source_labels = ["name", "job"]
+        separator     = ";"
+        regex         = ";(.+)"
+        target_label  = "name"
+        replacement   = "$1"
     }
 }
 
-//// Metric input
-////// For node metrics
+// Metrics input
+
+// System metrics input
+
 prometheus.exporter.unix "system" {
-    enable_collectors = ["systemd", "cgroup", "processes", "cpu", "meminfo", "filesystem", "netdev"]
+    enable_collectors = [
+        "systemd",
+        "cgroup",
+        "processes",
+        "cpu",
+        "meminfo",
+        "filesystem",
+        "netdev",
+    ]
     filesystem {
-        mount_points_exclude = "^/(sys|proc|dev|run|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+        mount_points_exclude = "^/(boot|sys|proc|dev|run|mnt|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
         fs_types_exclude     = "^(tmpfs|devtmpfs|devfs|iso9660|overlay|aufs|squashfs)$"
     }
 }
+
 prometheus.scrape "system" {
     targets    = prometheus.exporter.unix.system.targets
-    forward_to = [prometheus.relabel.system_relabel.receiver]
+    forward_to = [prometheus.relabel.system_metrics.receiver]
 }
+{% if node['name'] == "fw" %}
 
-{% if node['name'] == 'fw' %}
-////// For Crowdsec metrics
+// CrowdSec metrics input
 prometheus.scrape "crowdsec" {
     targets = [
-        { "__address__" = "{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:6060", "job" = "crowdsec" },
-        { "__address__" = "{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:60601", "job" = "crowdsec-bouncer" },
+        {
+            "__address__" = "{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:6060",
+            "job"         = "crowdsec",
+            "name"        = "crowdsec",
+        },
+        {
+            "__address__" = "{{ services['crowdsec']['domain']['internal'] }}.{{ domain['internal'] }}:60601",
+            "job"         = "crowdsec",
+            "name"        = "crowdsec-bouncer",
+        },
     ]
+
     honor_labels = true
-    forward_to = [prometheus.relabel.default_label.receiver]
+    forward_to   = [prometheus.relabel.service_metrics.receiver]
 }
 {% endif %}
+{% if node['name'] == "infra" %}
 
-{% if node['name'] == 'infra' %}
-////// For postgresql metrics
+// PostgreSQL metrics
 prometheus.exporter.postgres "postgresql" {
     data_source_names = [
         "postgres://alloy@{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}/postgres?sslmode=verify-full",
     ]
 }
+
 prometheus.scrape "postgresql" {
     targets    = prometheus.exporter.postgres.postgresql.targets
-    forward_to = [prometheus.relabel.default_label.receiver]
+    forward_to = [prometheus.relabel.service_metrics.receiver]
 }
-///// For certificates metrics
+
+// x509-exporter metrics
 prometheus.scrape "x509" {
     targets = [
-        { "__address__" = "{{ node['name'] }}.{{ domain['internal'] }}:{{ services['x509-exporter']['ports']['http'] }}" },
+        {
+            "__address__" = "{{ node['name'] }}.{{ domain['internal'] }}:{{ services['x509-exporter']['ports']['http'] }}",
+        },
     ]
-    forward_to = [prometheus.relabel.default_label.receiver]
+
+    forward_to = [prometheus.relabel.service_metrics.receiver]
 }
 {% endif %}
-
 {% if node['name'] in ["infra", "auth", "app"] %}
-////// For Input Caddy metrics
+
+// Caddy metrics
 prometheus.scrape "caddy" {
     targets = [
-        { "__address__" = "{{ node['name'] }}.{{ domain['internal'] }}:443" },
+        {
+            "__address__" = "{{ node['name'] }}.{{ domain['internal'] }}:443",
+        },
     ]
-    scheme = "https"
-    forward_to = [prometheus.relabel.default_label.receiver]
+    scheme       = "https"
+    metrics_path = "/metrics"
+    forward_to   = [prometheus.relabel.service_metrics.receiver]
 }
 {% endif %}
 
-// Log
-//// Logs output
+// Loki
+
+// Logs output
+
 loki.write "loki" {
     endpoint {
-        url = "https://{{ services['loki']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}/loki/api/v1/push"
+        url       = "https://{{ services['loki']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['loki']['ports']['https'] }}/loki/api/v1/push"
         tenant_id = "{{ domain['internal'] }}"
     }
 }
-//// Logs relabel
-///// journal
-loki.relabel "journal_relabel" {
+
+// Journald logs relabel
+
+loki.relabel "journal_logs" {
     forward_to = []
     rule {
         target_label = "instance"
         replacement  = "{{ node['name'] }}"
     }
-    // Default value
     rule {
         target_label = "job"
         replacement  = "systemd-journal"
     }
-    // if identifier exists
-    rule {
-        source_labels = ["__journal_syslog_identifier"]
-        regex         = "(.+)"
-        target_label  = "job"
-        replacement   = "$1"
-    }
-    // if systemd_unit exists
     rule {
         source_labels = ["__journal__systemd_unit"]
         regex         = "(.+)\\.service"
         target_label  = "job"
         replacement   = "$1"
     }
-    // if systemd_unit is "user@$UID"
+    rule {
+        source_labels = ["__journal__systemd_unit"]
+        regex         = "(.+)\\.timer"
+        target_label  = "job"
+        replacement   = "$1.timer"
+    }
+    rule {
+        source_labels = ["__journal__systemd_unit"]
+        regex         = "(.+)\\.socket"
+        target_label  = "job"
+        replacement   = "$1.socket"
+    }
+    rule {
+        source_labels = ["__journal_syslog_identifier"]
+        regex         = "(.+)"
+        target_label  = "job"
+        replacement   = "$1"
+    }
     rule {
         source_labels = ["job"]
         regex         = "user@\\d+"
         target_label  = "job"
         replacement   = "systemd-journal"
     }
-    // if systemd_user_unit exists
     rule {
         source_labels = ["__journal__systemd_user_unit"]
         regex         = "(.+)\\.service"
@@ -160,139 +216,292 @@ loki.relabel "journal_relabel" {
         replacement   = "$1"
     }
     rule {
+        source_labels = ["__journal__systemd_user_unit"]
+        regex         = "(.+)\\.timer"
+        target_label  = "job"
+        replacement   = "$1.timer"
+    }
+    rule {
+        source_labels = ["__journal__systemd_user_unit"]
+        regex         = "(.+)\\.socket"
+        target_label  = "job"
+        replacement   = "$1.socket"
+    }
+    rule {
+        source_labels = ["job"]
+        regex         = "(.+)"
+        target_label  = "service_name"
+        replacement   = "$1"
+    }
+    rule {
         source_labels = ["__journal_priority_keyword"]
+        regex         = "(.+)"
+        target_label  = "journal_level"
+        replacement   = "$1"
+    }
+    rule {
+        target_label = "level"
+        replacement  = "info"
+    }
+    rule {
+        source_labels = ["__journal_priority_keyword"]
+        regex         = "debug"
         target_label  = "level"
-    }
-}
-{% if node['name'] == "fw" %}
-loki.relabel "suricata_relabel" {
-    forward_to = [loki.process.suricata_json.receiver]
-    rule {
-        target_label = "instance"
-        replacement  = "{{ node['name'] }}"
+        replacement   = "debug"
     }
     rule {
-        target_label  = "level"
-        replacement   = "info"
-    }
-    rule {
-        target_label  = "job"
-        replacement   = "suricata_eve"
-    }
-}
-{% endif %}
-{% if node['name'] == "auth" %}
-loki.relabel "caddy_relabel" {
-    forward_to = [loki.process.caddy_json.receiver]
-    rule {
-        target_label = "instance"
-        replacement  = "{{ node['name'] }}"
-    }
-    rule {
+        source_labels = ["__journal_priority_keyword"]
+        regex         = "info|notice"
         target_label  = "level"
         replacement   = "info"
     }
     rule {
-        target_label  = "job"
-        replacement   = "caddy_access"
+        source_labels = ["__journal_priority_keyword"]
+        regex         = "warning"
+        target_label  = "level"
+        replacement   = "warn"
+    }
+    rule {
+        source_labels = ["__journal_priority_keyword"]
+        regex         = "err"
+        target_label  = "level"
+        replacement   = "error"
+    }
+    rule {
+        source_labels = ["__journal_priority_keyword"]
+        regex         = "crit|alert|emerg"
+        target_label  = "level"
+        replacement   = "fatal"
     }
 }
-{% endif %}
-//// Log parser
-///// journal
+
+// Journald logs parser
+
 loki.process "journal_parser" {
-        forward_to = [loki.write.loki.receiver]
-        // Severity parsing
+    forward_to = [loki.write.loki.receiver]
+    stage.match {
+        selector = "{level!=\"fatal\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(fatal|critical|panic|uncaught|unhandled|assertion failed|out of memory|\\bboom\\b|killed process)\""
+        stage.static_labels {
+            values = {
+                level = "fatal",
+            }
+        }
+    }
+    stage.match {
+        selector = "{level=~\"info|debug\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(\\berror\\b|\\berr\\b|\\bfailed\\b|\\bfailure\\b|\\bexception\\b|traceback|segfault|exit-code|container died|permission denied|access denied|connection refused|connection reset|timed out|timeout exceeded|no such file|authentication failed|sqlstate|duplicate key|relation .* does not exist|column .* does not exist|database .* does not exist|relation .* already exists|column .* already exists|x509|unknown authority|certificate .*expired|tls handshake|bad gateway|upstream .*failed|upstream .*error)\""
+        stage.static_labels {
+            values = {
+                level = "error",
+            }
+        }
+    }
+    stage.match {
+        selector = "{level=~\"info|debug\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(Main process exited|Failed with result|start request repeated too quickly|Dependency failed|Unit .* entered failed state)\""
+
+        stage.static_labels {
+            values = {
+                level = "error",
+            }
+        }
+    }
+    stage.match {
+        selector = "{level=~\"info|debug\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(\\bwarn\\b|warning|deprecated|retrying|rate.?limit|too many requests|slow query|slow request)\""
+
+        stage.static_labels {
+            values = {
+                level = "warn",
+            }
+        }
+    }
+    stage.match {
+        selector = "{job=~\"ssh|sshd\"}"
+
         stage.regex {
-            // Regex to extract the log level from the content.
-            expression = "(?i)(?:level[\"\\s:=]+|\\[|\\s|^)(?P<content_level>info|warn|warning|error|debug|fatal|critical|trace)(?:[\"\\]\\s]|$)"
+            expression = "Accepted \\w+ for (?P<user>[^ ]+) from (?P<ip>[0-9a-fA-F:.]+)"
         }
 
         stage.labels {
             values = {
-                "level" = "content_level",
+                user = "",
             }
         }
-        // Add this section as parser for each service
-        // common
-        stage.match {
-            selector = "{job=\"sshd\"}"
-            stage.regex {
-                expression = "Accepted \\w+ for (?P<user>\\w+) from (?P<ip>[\\d\\.]+)"
-            }
-            stage.labels {
-                values = { "user" = "" }
-            }
-        }
-        // infra
-        {% if node['name'] == 'infra' %}
-        // auth
-        {% elif node['name'] == 'auth' %}
-        // app
-        {% elif node['name'] == 'app' %}
-        {% endif %}
+    }
 }
 {% if node['name'] == "fw" %}
-////// suricata
-loki.process "suricata_json" {
+
+// Suricata logs relabel
+
+loki.relabel "suricata_logs" {
+    forward_to = [loki.process.suricata_parser.receiver]
+    
+    rule {
+        target_label = "instance"
+        replacement  = "{{ node['name'] }}"
+    }
+    rule {
+        target_label = "job"
+        replacement  = "suricata_eve"
+    }
+    rule {
+        target_label = "service_name"
+        replacement  = "suricata_eve"
+    }
+    rule {
+        target_label = "level"
+        replacement  = "info"
+    }
+}
+
+// Suricata logs parser
+
+loki.process "suricata_parser" {
     forward_to = [loki.write.loki.receiver]
+
     stage.json {
         expressions = {
             event_type = "event_type",
-            src_ip     = "src_ip",
-            severity   = "alert.severity",
         }
     }
     stage.labels {
-        values = { event_type = "", severity = "" }
+        values = {
+            event_type = "",
+        }
     }
+    stage.match {
+        selector = "{event_type=\"alert\"}"
+        stage.json {
+            expressions = {
+                severity = "alert.severity",
+            }
+        }
+        stage.labels {
+            values = {
+                severity = "",
+            }
+        }
+        stage.static_labels {
+            values = {
+                level = "warn",
+            }
+        }
+    }
+    stage.match {
+        selector = "{event_type=\"alert\", severity=~\"1|2\"}"
+        stage.static_labels {
+            values = {
+                level = "error",
+            }
+        }
+    }
+}
+
+// Suricata eve.json input
+
+local.file_match "suricata_logs" {
+    path_targets = [
+        { "__path__" = "/var/log/suricata/eve.json" },
+    ]
+}
+
+loki.source.file "suricata" {
+    targets    = local.file_match.suricata_logs.targets
+    forward_to = [loki.relabel.suricata_logs.receiver]
 }
 {% endif %}
 {% if node['name'] == "auth" %}
-////// caddy
-loki.process "caddy_json" {
+
+// Caddy access logs relabel
+
+loki.relabel "caddy_logs" {
+    forward_to = [loki.process.caddy_parser.receiver]
+
+    rule {
+        target_label = "instance"
+        replacement  = "{{ node['name'] }}"
+    }
+
+    rule {
+        target_label = "job"
+        replacement  = "caddy_access"
+    }
+
+    rule {
+        target_label = "service_name"
+        replacement  = "caddy_access"
+    }
+
+    rule {
+        target_label = "level"
+        replacement  = "info"
+    }
+}
+
+// Caddy access logs parser
+
+loki.process "caddy_parser" {
     forward_to = [loki.write.loki.receiver]
+
     stage.json {
         expressions = {
-            status      = "status",
-            method      = "method",
-            remote_ip   = "remote_ip",
-            duration    = "duration",
+            status    = "status",
+            duration  = "duration",
+            method    = "request.method",
+            host      = "request.host",
+            uri       = "request.uri",
+            remote_ip = "request.remote_ip",
         }
     }
     stage.labels {
-        values = { status = "", method = "" }
+        values = {
+            status = "",
+            method = "",
+            host   = "",
+        }
+    }
+    stage.structured_metadata {
+        values = {
+            uri       = "",
+            remote_ip = "",
+            duration  = "",
+        }
+    }
+    stage.match {
+        selector = "{status=~\"401|403|429\"}"
+
+        stage.static_labels {
+            values = {
+                level = "warn",
+            }
+        }
+    }
+    stage.match {
+        selector = "{status=~\"5..\"}"
+
+        stage.static_labels {
+            values = {
+                level = "error",
+            }
+        }
     }
 }
-{% endif %}
-//// Logs input
-////// journald
-loki.source.journal "systemd" {
-    forward_to = [loki.process.journal_parser.receiver]
-    // Temporary tags like "__journal__systemd_unit" is automatically removed when logs is passing "forward_to"
-    // To relabel tags with temporary tags, relabel_rules command is necessary.
-    relabel_rules = loki.relabel.journal_relabel.rules
-}
 
-{% if node['name'] == 'fw' %}
-////// suricata
-local.file_match "suricata_logs" {
-    path_targets = [{ "__path__" = "/var/log/suricata/eve.json", "instance" = "{{ node['name'] }}" }]
-}
-loki.source.file "suricata" {
-    targets    = local.file_match.suricata_logs.targets
-    forward_to = [loki.relabel.suricata_relabel.receiver]
-}
-{% endif %}
+// Caddy access log input
 
-{% if node['name'] == 'auth' %}
-////// caddy
 local.file_match "caddy_logs" {
-    path_targets = [{ "__path__" = "/var/log/caddy/access.log", "instance" = "{{ node['name'] }}" }]
+    path_targets = [
+        { "__path__" = "/var/log/caddy/access.log" },
+    ]
 }
 
 loki.source.file "caddy" {
     targets    = local.file_match.caddy_logs.targets
-    forward_to = [loki.relabel.caddy_relabel.receiver]
+    forward_to = [loki.relabel.caddy_logs.receiver]
 }
 {% endif %}
+
+// Journald logs input
+
+loki.source.journal "systemd" {
+    forward_to    = [loki.process.journal_parser.receiver]
+    relabel_rules = loki.relabel.journal_logs.rules
+}

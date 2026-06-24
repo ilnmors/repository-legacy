@@ -13,6 +13,8 @@ Image=docker.io/prom/prometheus:{{ version['containers']['prometheus'] }}
 ContainerName=prometheus
 HostName=prometheus
 
+AddHost={{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+
 PublishPort={{ services['prometheus']['ports']['https'] }}:9090/tcp
 
 Volume=%h/containers/prometheus/data:/prometheus:rw

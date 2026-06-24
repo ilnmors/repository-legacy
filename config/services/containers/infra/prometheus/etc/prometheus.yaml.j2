@@ -24,9 +24,9 @@ scrape_configs:
     scheme: "https"
     tls_config:
       ca_file: "/etc/ssl/prometheus/{{ root_cert_filename }}"
-      server_name: "{{ ['internal'] }}.{{ domain['internal'] }}"
+      server_name: "{{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}"
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ["{{ services['prometheus']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['prometheus']['ports']['https'] }}"]
        # The label name is added as a label `label_name=<label_value>` to any timeseries scraped from this config.
         labels:
           instance: "{{ node['name'] }}"

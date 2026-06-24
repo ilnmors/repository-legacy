@@ -1,7 +1,7 @@
 groups:
   - name: node_exporters_heartbeat
     rules:
-{% for instance in ["vmm", "fw", "infra", "auth", "app"] %}
+{% for instance in (((groups['hypervisor'] | default([])) + (groups['vms'] | default([]))) | difference(['vmm_init']) | sort) %}
     - alert: {{ instance }}_node_exporter_down
       expr: |
         (present_over_time(up{instance="{{ instance }}"}[5m]) or on() vector(0)) == 0
@@ -25,14 +25,14 @@ groups:
           description: "postgresql node is down for 5 mins."
   - name: Certificate_expiry_check
     rules:
-{% for filename in ["root.crt", "intermediate.crt", "crowdsec.crt", "blocky.crt", "kopia.crt", "postgresql.crt", "ldap.crt", "prometheus.crt", "loki.crt"] %}
+{% for filename in ['root', 'intermediate'] + (services | dict2items | selectattr('value.dependency.cert', 'defined') | selectattr('value.dependency.cert', 'equalto', true) | map(attribute='key') | list) %}
       - alert: {{ filename | replace('.', '_') }}_is_expired_soon
         expr: |
-          max(x509_cert_not_after{filename="{{ filename }}"}) - time() < 2592000
+          max(x509_cert_not_after{filename="{{ filename }}.crt"}) - time() < 2592000
         for: 1d
         labels:
           severity: critical
         annotations:
-          summary: "{{ filename }} is expired in 30 days"
-          description: "{{ filename }} is expired in 30 days."
+          summary: "{{ filename }}.crt is expired in 30 days"
+          description: "{{ filename }}.crt is expired in 30 days."
 {% endfor %}

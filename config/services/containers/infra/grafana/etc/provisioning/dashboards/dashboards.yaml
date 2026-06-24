@@ -1,0 +1,11 @@
+# https://github.com/grafana/grafana/blob/main/conf/provisioning/dashboards/sample.yaml
+apiVersion: 1
+
+providers:
+ - name: 'default'
+   orgId: 1
+   folder: 'My Dashboards'
+   folderUid: ''
+   type: file
+   options:
+     path: /etc/grafana/dashboards
