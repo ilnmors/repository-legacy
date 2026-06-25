@@ -15,7 +15,7 @@ root_ca_cert = "/etc/ssl/grafana/{{ root_cert_filename }}"
 # client_key = "/path/to/client.key"
 
 bind_dn = "uid=grafana,ou=people,{{ domain['dc'] }}"
-bind_password = "$__file{/run/secrets/LDAP_BIND_PASSWORD}"
+bind_password = "$__file{/run/secrets/GF_LDAP_BIND_PASSWORD}"
 
 search_filter = "(&(|(uid=%s)(mail=%s))(|(memberOf=cn=admins,ou=groups,{{ domain['dc'] }})(memberOf=cn=users,ou=groups,{{ domain['dc'] }})))"
 search_base_dns = ["{{ domain['dc'] }}"]

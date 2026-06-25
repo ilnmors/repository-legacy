@@ -178,6 +178,14 @@
           tags: ["site", "ldap"]
       tags: ["site", "ldap"]
 
+    - name: Set maddy
+      ansible.builtin.include_role:
+        name: "infra"
+        tasks_from: "services/set_maddy"
+        apply:
+          tags: ["site", "maddy"]
+      tags: ["site", "maddy"]
+
     - name: Set x509 exporter
       ansible.builtin.include_role:
         name: "infra"

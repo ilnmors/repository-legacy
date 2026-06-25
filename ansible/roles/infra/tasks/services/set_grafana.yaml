@@ -36,7 +36,7 @@
     state: "present"
     force: true
   loop:
-    - name: "LDAP_BIND_PASSWORD"
+    - name: "GF_LDAP_BIND_PASSWORD"
       value: "{{ hostvars['console']['ldap']['password']['services']['grafana'] }}"
     - name: "GF_DB_PASSWORD"
       value: "{{ hostvars['console']['postgresql']['password']['grafana'] }}"

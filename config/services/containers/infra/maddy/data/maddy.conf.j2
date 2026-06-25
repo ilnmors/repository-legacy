@@ -1,0 +1,114 @@
+# Base
+
+$(hostname) = {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}
+$(primary_domain) = {{ domain['internal'] }}
+$(local_domains) = $(primary_domain)
+state_dir /data
+runtime_dir /tmp/maddy
+hostname $(hostname)
+tls file /etc/ssl/maddy/maddy.crt /etc/ssl/maddy/maddy.key {
+    protocols tls1.2 tls1.3
+}
+
+# LDAP
+auth.ldap smtp_ldap {
+    urls ldaps://{{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}
+    bind plain "uid=maddy,ou=people,{{ domain['dc'] }}" "{env:MADDY_LDAP_BIND_PASSWORD}"
+    base_dn "ou=people,{{ domain['dc'] }}"
+    filter "(&(uid={username})(objectClass=person)(|(memberOf=cn=admins,ou=groups,{{ domain['dc'] }})(memberOf=cn=users,ou=groups,{{ domain['dc'] }})(memberOf=cn=services,ou=groups,{{ domain['dc'] }})))"
+    starttls off
+    tls_client {
+        root_ca /etc/ssl/maddy/{{ root_cert_filename }}
+    }
+}
+auth.ldap imap_ldap {
+    urls ldaps://{{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}
+    bind plain "uid=maddy,ou=people,{{ domain['dc'] }}" "{env:MADDY_LDAP_BIND_PASSWORD}"
+    base_dn "ou=people,{{ domain['dc'] }}"
+    filter "(&(uid={username})(objectClass=person)(|(memberOf=cn=admins,ou=groups,{{ domain['dc'] }})(memberOf=cn=users,ou=groups,{{ domain['dc'] }})))"
+    starttls off
+    tls_client {
+        root_ca /etc/ssl/maddy/{{ root_cert_filename }}
+    }
+}
+
+storage.imapsql local_mailboxes {
+    driver postgres
+    dsn "{env:MADDY_POSTGRES_URL}"
+    msg_store fs messages/
+    delivery_map email_localpart
+    delivery_normalize precis_casefold_email
+}
+
+table.chain local_rewrites {
+    optional_step regexp "(.+)\+(.+)@(.+)" "$1@$3"
+
+    optional_step static {
+        entry postmaster postmaster@$(primary_domain)
+    }
+}
+
+msgpipeline local_routing {
+    destination postmaster $(local_domains) {
+        modify {
+            replace_rcpt &local_rewrites
+        }
+
+        deliver_to &local_mailboxes
+    }
+
+    default_destination {
+        reject 550 5.1.1 "User doesn't exist"
+    }
+}
+
+submission tcp://0.0.0.0:587 {
+    hostname $(hostname)
+
+    limits {
+        all rate 20 1s
+        all concurrency 20
+    }
+
+    auth &smtp_ldap
+    insecure_auth no
+    sasl_login yes
+    max_message_size 32M
+
+    source $(local_domains) {
+        check {
+            authorize_sender {
+                prepare_email &local_rewrites
+
+                auth_normalize precis_casefold
+                from_normalize precis_casefold_email
+                user_to_email regexp "(.*)" "$1@$(primary_domain)"
+
+                check_header yes
+            }
+        }
+
+        destination postmaster $(local_domains) {
+            deliver_to &local_routing
+        }
+
+        default_destination {
+            reject 550 5.7.1 "External delivery is disabled"
+        }
+    }
+
+    default_source {
+        reject 550 5.7.1 "Non-local sender domain"
+    }
+}
+
+imap tls://0.0.0.0:993 {
+    auth &imap_ldap
+    storage &local_mailboxes
+
+    insecure_auth no
+    sasl_login yes
+
+    storage_map identity
+    storage_map_normalize precis_casefold
+}

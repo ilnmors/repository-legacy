@@ -1,6 +1,6 @@
 $TTL    86400
 
-@           IN SOA bind.ilnmors.internal. mail.ilnmors.internal. (
+@           IN SOA bind.ilnmors.internal. bind.ilnmors.internal. (
                 2026021201 ; serial
                 3600       ; refresh (1 hour)
                 1800       ; retry (30 minutes)
@@ -35,6 +35,7 @@ kopia       IN      CNAME   bk.ilnmors.internal.
 ca          IN      CNAME   infra.ilnmors.internal.
 postgresql  IN      CNAME   infra.ilnmors.internal.
 ldap        IN      CNAME   infra.ilnmors.internal.
+maddy       IN      CNAME   infra.ilnmors.internal.
 prometheus  IN      CNAME   infra.ilnmors.internal.
 loki        IN      CNAME   infra.ilnmors.internal.
 grafana     IN      CNAME   infra.ilnmors.internal.

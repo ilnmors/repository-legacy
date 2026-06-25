@@ -26,6 +26,8 @@
     group: "root"
     mode: "0711"
   loop: "{{ is_libvirt_dir.results }}"
+  loop_control:
+    label: "{{ item.item }}"
   when: not item.stat.exists
   become: true
 

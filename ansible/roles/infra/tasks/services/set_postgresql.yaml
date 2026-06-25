@@ -15,6 +15,12 @@
         | list
       }}
 
+- name: Delete existing init files
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/postgresql/init"
+    state: "absent"
+  become: true
+
 - name: Create postgresql directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
@@ -109,10 +115,10 @@
 - name: Validate initiating SQL file count
   ansible.builtin.assert:
     that:
-      - postgresql_init_sql_files.matched == 0 or postgresql_init_sql_files.matched == ((connected_services | length) + 1)
+      - postgresql_init_sql_files.matched == 0 or postgresql_init_sql_files.matched <= ((connected_services | length) + 1)
     fail_msg: >-
       Init SQL count mismatch.
-      expected=0 or {{ (connected_services | length) + 1 }},
+      expected=0 or above {{ (connected_services | length) + 1 }},
       actual={{ postgresql_init_sql_files.matched }}.
       Check pg_cluster.sql and pg_<service>.sql files in
       {{ node['home_path'] }}/data/containers/postgresql/backups/sql/

@@ -49,8 +49,7 @@ define PORTS_DHCP = { 67, 68, 546, 547 }
 define PORTS_DNS = 53
 define PORTS_NTP = 123
 define PORTS_VPN = 11290
-define PORTS_CROWDSEC = 8080
-define PORTS_NAS = { 5000, 5001 }
+define PORTS_CROWDSEC = {{ services['crowdsec']['ports']['https'] }}
 
 table inet nat {
         chain prerouting {

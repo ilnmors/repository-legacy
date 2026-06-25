@@ -31,7 +31,7 @@ Environment="GF_PATHS_CONFIG=/etc/grafana/grafana.ini"
 Environment="GF_FEATURE_TOGGLES_EXPAND_ENV_VARS=true"
 
 Secret=GF_DB_PASSWORD,target=/run/secrets/GF_DB_PASSWORD
-Secret=LDAP_BIND_PASSWORD,target=/run/secrets/LDAP_BIND_PASSWORD
+Secret=GF_LDAP_BIND_PASSWORD,target=/run/secrets/GF_LDAP_BIND_PASSWORD
 Secret=GF_ADMIN_PASSWORD,target=/run/secrets/GF_ADMIN_PASSWORD
 
 [Service]

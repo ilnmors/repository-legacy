@@ -20,6 +20,7 @@ domain:
 # Check the hosts.j2 when cname records are fixed
 
 services:
+  # common
   crowdsec:
     domain:
       internal: "crowdsec"
@@ -27,6 +28,18 @@ services:
       https: "8080"
     dependency:
       cert: true
+  kopia:
+    domain:
+      internal: "kopia"
+    ports:
+      https: "51515"
+    dependency:
+      cert: true
+  caddy:
+    ports:
+      http: "2080"
+      https: "2443"
+  # fw
   bind:
     domain:
       internal: "bind"
@@ -41,13 +54,7 @@ services:
       dot: "853"
     dependency:
       cert: true
-  kopia:
-    domain:
-      internal: "kopia"
-    ports:
-      https: "51515"
-    dependency:
-      cert: true
+  # infra
   postgresql:
     domain:
       internal: "postgresql"
@@ -67,13 +74,15 @@ services:
       cert: true
       web: "infra-internal"
       db: "postgresql"
-  mail:
+  maddy:
     domain:
-      internal: "mail"
-    ports: ""
-    subuid: ""
+      internal: "maddy"
+    ports:
+      smtp: "2587"
+      imaps: "2993"
     dependency:
       cert: true
+      db: "postgresql"
   ca:
     domain:
       internal: "ca"
@@ -110,10 +119,7 @@ services:
     dependency:
       web: "infra-internal"
       db: "postgresql"
-  caddy:
-    ports:
-      http: "2080"
-      https: "2443"
+  # auth
   authelia:
     domain:
       public: "authelia"
@@ -124,6 +130,7 @@ services:
       db: "postgresql"
   redis:
     subuid: "100998"
+  # app
   homepage:
     domain:
       public: "@"
@@ -259,16 +266,19 @@ version:
     caddy: "2.11.4"
     # infra
     step: "0.30.2"
+    ## Postgresql
+    postgresql: "18.4"
+    ### For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
+    ### pgvector: "v0.8.1"
+    vectorchord: "1.1.1"
+    ## lldap
     ldap: "v0.6.3"
+    ## maddy
+    maddy: "0.9.5"
     x509-exporter: "4.1.0"
     prometheus: "v3.12.0"
     loki: "3.7.1"
     grafana: "13.0.1"
-    ## Postgresql
-    postgresql: "18.4"
-    # For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
-#    pgvector: "v0.8.1"
-    vectorchord: "1.1.1"
     # Auth
     authelia: "4.39.20"
     # App

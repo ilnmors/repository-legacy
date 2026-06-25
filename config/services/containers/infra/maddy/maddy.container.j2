@@ -1,0 +1,36 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Maddy
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/foxcpp/maddy:{{ version['containers']['maddy'] }}
+
+ContainerName=maddy
+HostName=maddy
+
+PublishPort={{ services['maddy']['ports']['smtp'] }}:587/tcp
+PublishPort={{ services['maddy']['ports']['imaps'] }}:993/tcp
+
+AddHost={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+AddHost={{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+
+Volume=%h/containers/maddy/maddy.conf:/data/maddy.conf:ro
+Volume=%h/containers/maddy/ssl:/etc/ssl/maddy:ro
+Volume=%h/data/containers/maddy/data:/data:rw
+
+Environment="TZ={{ timezone }}"
+Secret=MADDY_LDAP_BIND_PASSWORD,type=env
+Secret=MADDY_POSTGRES_URL,type=env
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

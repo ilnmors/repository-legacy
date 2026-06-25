@@ -1,0 +1,107 @@
+---
+- name: Create maddy directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    state: "directory"
+    mode: "0770"
+  loop:
+    - "containers/maddy"
+    - "containers/maddy/ssl"
+    - "data/containers/maddy"
+    - "data/containers/maddy/data"
+
+- name: Deploy maddy certificate and key
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "{{ node['home_path'] }}/containers/maddy/ssl/{{ item.name }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "{{ root_cert_filename }}"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      mode: "0440"
+    - name: "maddy.crt"
+      value: |
+        {{ hostvars['console']['maddy']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "maddy.key"
+      value: "{{ hostvars['console']['maddy']['key'] }}"
+      mode: "0400"
+  become: true
+  notify: "notification_restart_maddy"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "MADDY_LDAP_BIND_PASSWORD"
+      value: "{{ hostvars['console']['ldap']['password']['services']['maddy'] }}"
+    - name: "MADDY_POSTGRES_URL"
+      value: "postgresql://maddy:{{ hostvars['console']['postgresql']['password']['maddy'] | urlencode | replace('/', '%2F') }}\
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/maddy_db?sslmode=verify-full&\
+        sslrootcert=/etc/ssl/maddy/{{ root_cert_filename }}"
+  notify: "notification_restart_maddy"
+  no_log: true
+
+- name: Deploy configuration files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/maddy/data/maddy.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/maddy/maddy.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0400"
+  notify: "notification_restart_maddy"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/foxcpp/maddy"
+    tag: "{{ version['containers']['maddy'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/maddy/maddy.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/maddy.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_maddy"
+
+- name: Enable maddy
+  ansible.builtin.systemd:
+    name: "maddy.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_foxcpp_maddy_{{ version['containers']['maddy'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/foxcpp/maddy:{{ version['containers']['maddy'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_foxcpp_maddy_{{ version['containers']['maddy'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_foxcpp_maddy_{{ version['containers']['maddy'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

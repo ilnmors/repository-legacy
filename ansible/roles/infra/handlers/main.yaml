@@ -83,3 +83,14 @@
   changed_when: false
   listen: "notification_restart_x509-exporter"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart maddy.service
+  ansible.builtin.systemd:
+    name: "maddy.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_maddy"
+  ignore_errors: true # noqa: ignore-errors
