@@ -23,7 +23,9 @@
     group: "{{ node['group'] }}"
     mode: "0770"
   loop:
+    - "data/containers/postgresql/"
     - "data/containers/postgresql/backups"
+    - "data/containers/postgresql/backups/sql"
     - "containers/postgresql"
     - "containers/postgresql/data"
     - "containers/postgresql/config"
@@ -93,62 +95,43 @@
   notify: "notification_reload_postgresql"
   no_log: true
 
-- name: Check data directory empty
-  ansible.builtin.stat:
-    path: "{{ node['home_path'] }}/containers/postgresql/data/.init"
-  become: true
-  register: "is_postgresql_init"
-
-- name: Check init directory empty
+- name: Check initiating SQL file
   ansible.builtin.find:
-    path: "{{ node['home_path'] }}/containers/postgresql/init/"
-    file_type: "any"
+    path: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/"
+    file_type: "file"
     patterns:
-      - "*.sql"
+      - "pg_*.sql"
+    hidden: true
+    recurse: false
   become: true
-  register: "is_init_dir_empty"
+  register: "postgresql_init_sql_files"
 
-- name: Check pg_cluster.sql on console
-  delegate_to: "console"
-  ansible.builtin.stat:
-    path: "{{ hostvars['console']['node']['data_path'] }}/sql/postgresql/pg_cluster.sql"
-  register: is_console_pg_cluster_sql
+- name: Validate initiating SQL file count
+  ansible.builtin.assert:
+    that:
+      - postgresql_init_sql_files.matched == 0 or postgresql_init_sql_files.matched == ((connected_services | length) + 1)
+    fail_msg: >-
+      Init SQL count mismatch.
+      expected=0 or {{ (connected_services | length) + 1 }},
+      actual={{ postgresql_init_sql_files.matched }}.
+      Check pg_cluster.sql and pg_<service>.sql files in
+      {{ node['home_path'] }}/data/containers/postgresql/backups/sql/
 
-- name: Prepare initiating DB
+- name: Remote copy the initiating SQL
+  ansible.builtin.copy:
+    src: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/pg_{{ item }}.sql"
+    remote_src: true
+    dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ '%02d' | format(index_num) }}_pg_{{ item }}.sql"
+    owner: "{{ services['postgresql']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0600"
+  loop: "{{ ['cluster'] + connected_services }}"
+  loop_control:
+    index_var: index_num
+  become: true
   when:
-    - not is_postgresql_init.stat.exists
-    - is_init_dir_empty.matched == 0
-    - is_console_pg_cluster_sql.stat.exists
-    - (connected_services | default([]) | length) > 0
-  become: true
-  block:
-    # `init/pg_cluster.sql` should be fetched from postgresql's backup directory before running initiating
-    - name: Deploy init cluster sql file
-      ansible.builtin.copy:
-        src: "{{ hostvars['console']['node']['data_path'] }}/sql/postgresql/pg_cluster.sql"
-        dest: "{{ node['home_path'] }}/containers/postgresql/init/00_pg_cluster.sql"
-        owner: "{{ services['postgresql']['subuid'] }}"
-        group: "{{ node['group'] }}"
-        mode: "0600"
-
-    - name: Deploy restoring data sql files
-      ansible.builtin.copy:
-        src: "{{ hostvars['console']['node']['data_path'] }}/sql/postgresql/pg_{{ item }}.sql"
-        dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ '%02d' | format(index_num + 1) }}_pg_{{ item }}.sql"
-        owner: "{{ services['postgresql']['subuid'] }}"
-        group: "{{ node['group'] }}"
-        mode: "0600"
-      loop: "{{ connected_services }}"
-      loop_control:
-        index_var: index_num
-
-    - name: Create .init file
-      ansible.builtin.file:
-        path: "{{ node['home_path'] }}/containers/postgresql/data/.init"
-        state: "touch"
-        mode: "0644"
-        owner: "{{ ansible_user }}"
-        group: "{{ node['group'] }}"
+    - (connected_services | length) > 0
+    - postgresql_init_sql_files.matched == (connected_services | length) + 1
 
 - name: Deploy container file
   ansible.builtin.template:
