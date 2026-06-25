@@ -25,12 +25,12 @@
 {{ hostvars['fw']['network4']['blocky']['server'] }} blocky.{{ domain['internal'] }}
 {{ hostvars['fw']['network4']['bind']['server'] }} bind.{{ domain['internal'] }}
 # DB, LDAP, CA, Prometheus, Loki, mail (infra)
-{{ hostvars['fw']['network4']['infra']['server'] }} postgresql.{{ domain['internal'] }} ldap.{{ domain['internal'] }} prometheus.{{ domain['internal'] }} loki.{{ domain['internal'] }} mail.{{ domain['internal'] }} ca.{{ domain['internal'] }}
+{{ hostvars['fw']['network4']['infra']['server'] }} postgresql.{{ domain['internal'] }} ldap.{{ domain['internal'] }} prometheus.{{ domain['internal'] }} loki.{{ domain['internal'] }} maddy.{{ domain['internal'] }} ca.{{ domain['internal'] }}
 # IPv6
 # Crowdsec, blocky, bind(fw)
 {{ hostvars['fw']['network6']['firewall']['server'] }} ntp.{{ domain['internal'] }} crowdsec.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['blocky']['server'] }} blocky.{{ domain['internal'] }}
 {{ hostvars['fw']['network6']['bind']['server'] }} bind.{{ domain['internal'] }}
 # DB, LDAP, CA, Prometheus, Loki, mail (infra)
-{{ hostvars['fw']['network6']['infra']['server'] }} postgresql.{{ domain['internal'] }} ldap.{{ domain['internal'] }} prometheus.{{ domain['internal'] }} loki.{{ domain['internal'] }} mail.{{ domain['internal'] }} ca.{{ domain['internal'] }}
+{{ hostvars['fw']['network6']['infra']['server'] }} postgresql.{{ domain['internal'] }} ldap.{{ domain['internal'] }} prometheus.{{ domain['internal'] }} loki.{{ domain['internal'] }} maddy.{{ domain['internal'] }} ca.{{ domain['internal'] }}
 {% endif %}

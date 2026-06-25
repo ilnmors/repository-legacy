@@ -9,9 +9,9 @@ define HOSTS4_AUTH = {{ hostvars['fw']['network4']['auth']['server'] }}
 define HOSTS6_AUTH = {{ hostvars['fw']['network6']['auth']['server'] }}
 define PORTS_SSH = 22
 define PORTS_HTTP = 80
-define PORTS_HTTP_FORWARD = 2080
+define PORTS_HTTP_FORWARD = {{ services['caddy']['ports']['http'] }}
 define PORTS_HTTPS = 443
-define PORTS_HTTPS_FORWARD = 2443
+define PORTS_HTTPS_FORWARD = {{ services['caddy']['ports']['https'] }}
 
 table inet nat {
     chain prerouting {

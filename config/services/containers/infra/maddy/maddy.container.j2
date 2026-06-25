@@ -4,8 +4,8 @@ DefaultDependencies=false
 [Unit]
 Description=Maddy
 
-After=network-online.target
-Wants=network-online.target
+After=postgresql.service ldap.service
+Requires=postgresql.service ldap.service
 
 [Container]
 Image=docker.io/foxcpp/maddy:{{ version['containers']['maddy'] }}
@@ -19,15 +19,17 @@ PublishPort={{ services['maddy']['ports']['imaps'] }}:993/tcp
 AddHost={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
 AddHost={{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
 
-Volume=%h/containers/maddy/maddy.conf:/data/maddy.conf:ro
 Volume=%h/containers/maddy/ssl:/etc/ssl/maddy:ro
 Volume=%h/data/containers/maddy/data:/data:rw
+Volume=%h/containers/maddy/maddy.conf:/data/maddy.conf:ro
 
 Environment="TZ={{ timezone }}"
 Secret=MADDY_LDAP_BIND_PASSWORD,type=env
 Secret=MADDY_POSTGRES_URL,type=env
 
 [Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} 636
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

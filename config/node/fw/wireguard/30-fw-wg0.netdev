@@ -2,7 +2,7 @@
 Name=wg0
 Kind=wireguard
 [WireGuard]
-ListenPort=11290
+ListenPort={{ services['wireguard']['ports']['udp'] }}
 PrivateKey={{ hostvars['console']['wireguard']['server']['private_key'] }}
 [WireGuardPeer]
 PublicKey={{ hostvars['console']['wireguard']['console']['public_key'] }}

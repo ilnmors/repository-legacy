@@ -48,7 +48,7 @@ define PORTS_WEB = { 80, 443 }
 define PORTS_DHCP = { 67, 68, 546, 547 }
 define PORTS_DNS = 53
 define PORTS_NTP = 123
-define PORTS_VPN = 11290
+define PORTS_VPN = {{ services['wireguard']['ports']['udp'] }}
 define PORTS_CROWDSEC = {{ services['crowdsec']['ports']['https'] }}
 
 table inet nat {

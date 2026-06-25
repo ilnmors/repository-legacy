@@ -7,9 +7,9 @@ define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | jo
 define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
 define PORTS_SSH = 22
 define PORTS_HTTP = 80
-define PORTS_HTTP_FORWARD = 2080
+define PORTS_HTTP_FORWARD = {{ services['caddy']['ports']['http'] }}
 define PORTS_HTTPS = 443
-define PORTS_HTTPS_FORWARD = 2443
+define PORTS_HTTPS_FORWARD = {{ services['caddy']['ports']['https'] }}
 
 table inet nat {
     chain prerouting {

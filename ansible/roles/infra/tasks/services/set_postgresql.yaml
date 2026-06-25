@@ -15,12 +15,6 @@
         | list
       }}
 
-- name: Delete existing init files
-  ansible.builtin.file:
-    path: "{{ node['home_path'] }}/containers/postgresql/init"
-    state: "absent"
-  become: true
-
 - name: Create postgresql directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
@@ -101,6 +95,11 @@
   notify: "notification_reload_postgresql"
   no_log: true
 
+- name: Check postgresql .init marker
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/containers/postgresql/.init"
+  register: "is_postgresql_init_marker"
+
 - name: Check initiating SQL file
   ansible.builtin.find:
     path: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/"
@@ -111,17 +110,6 @@
     recurse: false
   become: true
   register: "postgresql_init_sql_files"
-
-- name: Validate initiating SQL file count
-  ansible.builtin.assert:
-    that:
-      - postgresql_init_sql_files.matched == 0 or postgresql_init_sql_files.matched <= ((connected_services | length) + 1)
-    fail_msg: >-
-      Init SQL count mismatch.
-      expected=0 or above {{ (connected_services | length) + 1 }},
-      actual={{ postgresql_init_sql_files.matched }}.
-      Check pg_cluster.sql and pg_<service>.sql files in
-      {{ node['home_path'] }}/data/containers/postgresql/backups/sql/
 
 - name: Remote copy the initiating SQL
   ansible.builtin.copy:
@@ -137,6 +125,7 @@
   become: true
   when:
     - (connected_services | length) > 0
+    - not is_postgresql_init_marker.stat.exists
     - postgresql_init_sql_files.matched == (connected_services | length) + 1
 
 - name: Deploy container file
@@ -185,6 +174,14 @@
     daemon_reload: true
     scope: "user"
   loop: "{{ connected_services }}"
+
+- name: Create .init file
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/postgresql/.init"
+    state: "touch"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
 
 - name: Check container archive images
   ansible.builtin.stat:

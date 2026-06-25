@@ -21,6 +21,11 @@ domain:
 
 services:
   # common
+  wireguard:
+    domain:
+      public: "vpn"
+    ports:
+      upd: "11290"
   crowdsec:
     domain:
       internal: "crowdsec"
