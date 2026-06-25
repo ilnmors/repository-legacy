@@ -31,6 +31,7 @@ Environment="REDIS_HOST=host.containers.internal"
 Environment="REDIS_HOST_PORT={{ services['nextcloud']['ports']['redis'] }}"
 
 [Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

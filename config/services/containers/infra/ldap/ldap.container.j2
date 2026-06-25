@@ -56,6 +56,7 @@ Secret=LLDAP_KEY_SEED,target="/run/secrets/LLDAP_KEY_SEED"
 Secret=LLDAP_JWT_SECRET,target="/run/secrets/LLDAP_JWT_SECRET"
 
 [Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

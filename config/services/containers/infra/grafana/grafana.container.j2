@@ -35,6 +35,8 @@ Secret=LDAP_BIND_PASSWORD,target=/run/secrets/LDAP_BIND_PASSWORD
 Secret=GF_ADMIN_PASSWORD,target=/run/secrets/GF_ADMIN_PASSWORD
 
 [Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }} 636
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120
