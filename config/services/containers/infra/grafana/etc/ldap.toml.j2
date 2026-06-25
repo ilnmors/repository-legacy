@@ -1,7 +1,7 @@
 # https://github.com/lldap/lldap/blob/main/example_configs/grafana_ldap_config.toml
 [[servers]]
 host = "{{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}"
-port = {{ services['ldap']['ports']['ldaps'] }}
+port = 636
 # Activate STARTTLS or LDAPS
 use_ssl = true
 # true = STARTTLS, false = LDAPS
@@ -17,7 +17,7 @@ root_ca_cert = "/etc/ssl/grafana/{{ root_cert_filename }}"
 bind_dn = "uid=grafana,ou=people,{{ domain['dc'] }}"
 bind_password = "$__file{/run/secrets/LDAP_BIND_PASSWORD}"
 
-search_filter = "(|(uid=%s)(mail=%s))"
+search_filter = "(&(|(uid=%s)(mail=%s))(|(memberOf=cn=admins,ou=groups,{{ domain['dc'] }})(memberOf=cn=users,ou=groups,{{ domain['dc'] }})))"
 search_base_dns = ["{{ domain['dc'] }}"]
 
 [servers.attributes]
@@ -32,13 +32,8 @@ group_search_base_dns = ["ou=groups,{{ domain['dc'] }}"]
 group_search_filter_user_attribute = "uid"
 
 [[servers.group_mappings]]
-group_dn = "cn=lldap_admin,ou=groups,{{ domain['dc'] }}"
-org_role = "Admin"
-grafana_admin = true
-
-[[servers.group_mappings]]
 group_dn = "cn=admins,ou=groups,{{ domain['dc'] }}"
-org_role = "Editor"
+org_role = "Admin"
 grafana_admin = false
 
 [[servers.group_mappings]]

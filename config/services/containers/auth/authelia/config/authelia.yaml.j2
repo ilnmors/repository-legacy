@@ -42,7 +42,7 @@ authentication_backend:
     additional_users_dn: 'ou=people'
     additional_groups_dn: 'ou=groups'
     # LLDAP filters
-    users_filter: '(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person))'
+    users_filter: '(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person)(|(memberOf=cn=admins,ou=groups,{{ domain['dc'] }})(memberOf=cn=users,ou=groups,{{ domain['dc'] }})))'
     groups_filter: '(&(member={dn})(objectClass=groupOfNames))'
     # LLDAP bind account configuration
     user: 'uid=authelia,ou=people,{{ domain['dc'] }}'

@@ -104,7 +104,7 @@
           - "dbus-user-session"
         state: "present"
       become: true
-      tags: ["init", "install-packages"]
+      tags: ["init", "site", "install-packages"]
 
     - name: Set data volume
       ansible.builtin.include_role:
@@ -122,14 +122,6 @@
           tags: ["init", "linger"]
       tags: ["init", "linger"]
 
-    - name: Set podman
-      ansible.builtin.include_role:
-        name: "common"
-        tasks_from: "services/set_podman"
-        apply:
-          tags: ["init", "podman"]
-      tags: ["init", "podman"]
-
     - name: Set nftables
       ansible.builtin.include_role:
         name: "common"
@@ -143,8 +135,8 @@
         name: "common"
         tasks_from: "services/set_alloy"
         apply:
-          tags: ["init", "alloy"]
-      tags: ["init", "alloy"]
+          tags: ["site", "alloy"]
+      tags: ["site", "alloy"]
 
     - name: Set crowdsec
       ansible.builtin.include_role:
@@ -161,6 +153,14 @@
         apply:
           tags: ["site", "kopia"]
       tags: ["site", "kopia"]
+
+    - name: Set podman
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_podman"
+        apply:
+          tags: ["site", "podman"]
+      tags: ["site", "podman"]
 
     - name: Set caddy
       ansible.builtin.include_role:

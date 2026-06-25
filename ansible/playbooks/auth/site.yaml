@@ -114,14 +114,6 @@
           tags: ["init", "linger"]
       tags: ["init", "linger"]
 
-    - name: Set podman
-      ansible.builtin.include_role:
-        name: "common"
-        tasks_from: "services/set_podman"
-        apply:
-          tags: ["init", "podman"]
-      tags: ["init", "podman"]
-
     - name: Set nftables
       ansible.builtin.include_role:
         name: "common"
@@ -137,6 +129,14 @@
         apply:
           tags: ["site", "crowdsec"]
       tags: ["site", "crowdsec"]
+
+    - name: Set podman
+      ansible.builtin.include_role:
+        name: "common"
+        tasks_from: "services/set_podman"
+        apply:
+          tags: ["site", "podman"]
+      tags: ["site", "podman"]
 
     - name: Set caddy
       ansible.builtin.include_role:

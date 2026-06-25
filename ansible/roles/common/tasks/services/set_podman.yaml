@@ -15,14 +15,14 @@
     state: "directory"
     mode: "0700"
 
-- name: Create container data directory for app
+- name: Create container data directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/data/containers"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     state: "directory"
     mode: "0770"
-  when: node['name'] == "app"
+  when: node['name'] in ["infra", "app"]
 
 - name: Create container image archive directory
   ansible.builtin.file:
@@ -35,23 +35,23 @@
     - "{{ node['home_path'] }}/archives"
     - "{{ node['home_path'] }}/archives/containers"
 
-- name: Install podman and reset ssh connection for initiating
-  when: is_podman_installed.rc != 0
+- name: Set subid scope (Overwrite)
+  ansible.builtin.copy:
+    content: |
+      {{ ansible_user }}:100000:65536
+    dest: "/etc/sub{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  loop:
+    - "uid"
+    - "gid"
   become: true
-  block:
-    - name: Set subid scope (Overwrite)
-      ansible.builtin.copy:
-        content: |
-          {{ ansible_user }}:100000:65536
-        dest: "/etc/sub{{ item }}"
-        owner: "root"
-        group: "root"
-        mode: "0644"
-      loop:
-        - "uid"
-        - "gid"
-    - name: Install podman
-      ansible.builtin.apt:
-        name:
-          - "podman"
-        state: "present"
+
+- name: Install podman
+  ansible.builtin.apt:
+    name:
+      - "podman"
+    state: "present"
+  become: true
+  when: is_podman_installed.rc != 0

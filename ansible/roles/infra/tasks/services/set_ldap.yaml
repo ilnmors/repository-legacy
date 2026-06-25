@@ -65,7 +65,7 @@
     - name: Register extra secret value to podman secret
       containers.podman.podman_secret:
         name: "LLDAP_LDAP_USER_PASSWORD"
-        data: "{{ hostvars['console']['ldap']['password']['user'] }}"
+        data: "{{ hostvars['console']['ldap']['password']['services']['admin'] }}"
         state: "present"
         force: true
     # You must check the image version first (following container file on data/config/containers/infra/ldap/ldap.container)
