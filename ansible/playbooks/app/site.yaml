@@ -178,6 +178,14 @@
           tags: ["site", "vaultwarden"]
       tags: ["site", "vaultwarden"]
 
+    - name: Set snappymail
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_snappymail"
+        apply:
+          tags: ["site", "snappymail"]
+      tags: ["site", "snappymail"]
+
     - name: Set gitea
       ansible.builtin.include_role:
         name: "app"

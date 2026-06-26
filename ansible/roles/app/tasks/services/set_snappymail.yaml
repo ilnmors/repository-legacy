@@ -1,0 +1,90 @@
+---
+- name: Create snappymail directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['snappymail']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/snappymail"
+    - "data/containers/snappymail/data"
+    - "containers/snappymail"
+    - "containers/snappymail/ssl"
+    - "containers/snappymail/configs"
+    - "containers/snappymail/domains"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/snappymail/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['snappymail']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_snappymail"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/the-djmaze/snappymail"
+    tag: "{{ version['containers']['snappymail'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy config files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/snappymail/{{ item.src }}.j2"
+    dest: "{{ node['home_path'] }}/containers/snappymail/{{ item.dest }}"
+    owner: "{{ services['snappymail']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  loop:
+    - src: "configs/application.ini"
+      dest: "configs/application.ini"
+    - src: "domains/domain.ini"
+      dest: "domains/{{ domain['internal'] }}.ini"
+  loop_control:
+    label: "{{ item.src | basename }}"
+  become: true
+  notify: "notification_restart_snappymail"
+
+- name: Deploy snappymail.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/snappymail/snappymail.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/snappymail.container"
+    owner: "{{ services['snappymail']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  become: true
+  notify: "notification_restart_snappymail"
+
+- name: Enable snappymail.service
+  ansible.builtin.systemd:
+    name: "snappymail.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/ghcr.io_the-djmaze_snappymail_{{ version['containers']['snappymail'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "ghcr.io/the-djmaze/snappymail:{{ version['containers']['snappymail'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/ghcr.io_the-djmaze_snappymail_{{ version['containers']['snappymail'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/ghcr.io_the-djmaze_snappymail_{{ version['containers']['snappymail'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

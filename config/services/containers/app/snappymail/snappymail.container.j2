@@ -1,0 +1,34 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Snappymail
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/the-djmaze/snappymail:{{ version['containers']['snappymail'] }}
+ContainerName=snappymail
+HostName=snappymail
+
+PublishPort={{ services['snappymail']['ports']['http'] }}:8888/tcp
+
+Volume=%h/data/containers/snappymail/data:/var/lib/snappymail:rw
+Volume=%h/containers/snappymail/ssl:/etc/ssl/snappymail:ro
+Volume=%h/containers/snappymail/configs:/var/lib/snappymail/_data_/_default_/configs:rw
+Volume=%h/containers/snappymail/domains:/var/lib/snappymail/_data_/_default_/domains:rw
+
+# General
+Environment="TZ={{ timezone }}"
+
+[Service]
+# 587: SMTP submission, 993: imaps
+ExecStartPre=/usr/bin/nc -zv {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }} 587
+ExecStartPre=/usr/bin/nc -zv {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }} 993
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

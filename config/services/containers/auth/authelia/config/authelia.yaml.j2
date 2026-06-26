@@ -87,8 +87,21 @@ storage:
 
 # Notification provider
 notifier:
-  filesystem:
-    filename: '/config/notification.txt'
+  smtp:
+    address: 'submission://{{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}:587'
+    timeout: '5 seconds'
+    username: 'authelia'
+    password: '' # $AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE option is designated in container file
+    sender: 'Authelia <authelia@{{ domain['internal'] }}>'
+    identifier: '{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}'
+    subject: '[Authelia] {title}'
+    startup_check_address: 'authelia@{{ domain['internal'] }}'
+    disable_require_tls: false
+    disable_starttls: false
+    disable_html_emails: false
+    tls:
+      server_name: '{{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}'
+      skip_verify: false
 
 # This part needs the clients to integrate with Authelia in order for it to activate.
 identity_providers:

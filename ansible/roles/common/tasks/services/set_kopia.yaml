@@ -120,7 +120,7 @@
         /usr/bin/kopia repository connect filesystem \
         --path="{{ node['home_path'] }}/data/kopia/repository" \
         --override-username="il" \
-        --override-hostname="{{ node['name'] }}.{{ domain['internal'] }}" \
+        --override-hostname="{{ node['name'] }}.{{ domain['internal'] }}"
       when:
         - not is_kopia_repository.stat.exists
         - is_repository_created.rc == 0
@@ -267,7 +267,7 @@
       changed_when: true
       no_log: true
 
-    - name: Deploy kopia servcer service file
+    - name: Deploy kopia server service file
       ansible.builtin.template:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/kopia-server.service.j2"
         dest: "{{ node['home_path'] }}/.config/systemd/user/kopia-server.service"
@@ -276,6 +276,7 @@
         mode: "0644"
         validate: "/usr/bin/systemd-analyze verify %s"
       become: true
+      notify: "notification_restart_kopia_server"
 
     - name: Enable kopia server service
       ansible.builtin.systemd:
@@ -365,6 +366,18 @@
       become: true
       no_log: true
 
+    - name: Check data directory existance
+      ansible.builtin.stat:
+        path: "{{ node['home_path'] }}/data/"
+      register: "is_data_dir"
+
+    - name: Delete lost+found directory on data directory
+      ansible.builtin.file:
+        path: "{{ node['home_path'] }}/data/lost+found/"
+        state: "absent"
+      become: true
+      when: is_data_dir.stat.exists
+
     - name: Check data directory empty
       ansible.builtin.find:
         path: "{{ node['home_path'] }}/data/"
@@ -372,6 +385,7 @@
         hidden: true
         recurse: false
       register: "is_data_dir_empty"
+      when: is_data_dir.stat.exists
 
     - name: Connect kopia server
       environment:
@@ -382,7 +396,7 @@
         --override-username={{ node['name'] }} \
         --override-hostname={{ node['name'] }}.{{ domain['internal'] }}
       become: true
-      when: is_data_dir_empty.matched == 0
+      when: (is_data_dir_empty.matched | default(1)) == 0
       changed_when: false
       failed_when: is_kopia_connected.rc != 0
       register: "is_kopia_connected"
@@ -413,7 +427,7 @@
         {{ node['home_path'] }}/data
       become: true
       when:
-        - is_data_dir_empty.matched == 0
+        - (is_data_dir_empty.matched | default(1)) == 0
         - (is_kopia_connected.rc | default(1)) == 0
         - (is_snapshot_exist.stdout |
            default('[]', true) |
@@ -431,7 +445,7 @@
         /usr/bin/kopia repository disconnect
       become: true
       when:
-        - is_data_dir_empty.matched == 0
+        - (is_data_dir_empty.matched | default(1)) == 0
         - (is_kopia_connected.rc | default(1)) == 0
       changed_when: false
       failed_when: false

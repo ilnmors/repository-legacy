@@ -1,0 +1,174 @@
+; SnappyMail configuration file
+; Managed by Ansible
+
+[webmail]
+title = "SnappyMail"
+loading_description = "SnappyMail"
+favicon_url = ""
+app_path = ""
+
+theme = "Default"
+allow_themes = On
+allow_user_background = Off
+
+language = "en"
+allow_languages_on_settings = On
+allow_additional_accounts = Off
+allow_additional_identities = Off
+popup_identity = Off
+
+messages_per_page = 20
+message_read_delay = 5
+min_refresh_interval = 5
+attachment_size_limit = 25
+compress_output = Off
+
+[interface]
+show_attachment_thumbnail = On
+
+[contacts]
+enable = Off
+allow_sync = Off
+sync_interval = 20
+type = "sqlite"
+pdo_dsn = "host=127.0.0.1;port=3306;dbname=snappymail"
+pdo_user = "root"
+pdo_password = ""
+mysql_ssl_ca = ""
+mysql_ssl_verify = On
+mysql_ssl_ciphers = ""
+sqlite_global = Off
+suggestions_limit = 20
+
+[security]
+custom_server_signature = "SnappyMail"
+x_xss_protection_header = "1; mode=block"
+gnupg = Off
+openpgp = Off
+auto_verify_signatures = Off
+
+allow_admin_panel = Off
+admin_login = ""
+admin_password = ""
+admin_totp = ""
+
+insecure_cryptkey = Off
+force_https = Off
+hide_x_mailer_header = On
+max_sys_getloadavg = 0
+
+content_security_policy = ""
+csp_report = Off
+encrypt_cipher = "aes-256-cbc-hmac-sha1"
+cookie_samesite = "Strict"
+secfetch_allow = ""
+
+[admin_panel]
+host = ""
+key = "admin"
+allow_update = Off
+language = "en"
+
+[ssl]
+verify_certificate = On
+allow_self_signed = Off
+security_level = 1
+cafile = "/etc/ssl/snappymail/{{ root_cert_filename }}"
+capath = ""
+local_cert = ""
+disable_compression = On
+
+[capa]
+dangerous_actions = Off
+attachments_actions = On
+
+[login]
+default_domain = "{{ domain['internal'] }}"
+allow_languages_on_login = On
+determine_user_language = On
+determine_user_domain = Off
+sign_me_auto = "DefaultOff"
+fault_delay = 5
+
+[plugins]
+enable = Off
+enabled_list = ""
+
+[defaults]
+view_editor_type = "Html"
+view_layout = 1
+view_use_checkboxes = On
+view_show_next_message = On
+autologout = 30
+view_html = On
+show_images = Off
+view_images = "ask"
+contacts_autosave = On
+mail_list_grouped = Off
+mail_use_threads = Off
+allow_draft_autosave = On
+mail_reply_same_folder = Off
+msg_default_action = 1
+collapse_blockquotes = On
+allow_spellcheck = Off
+
+[logs]
+enable = On
+path = ""
+level = 4
+hide_passwords = On
+time_zone = "{{ timezone }}"
+filename = "stderr"
+
+auth_logging = On
+auth_logging_filename = "auth.log"
+auth_logging_format = "[{date:Y-m-d H:i:s}] Auth failed: ip={request:ip} user={imap:login} host={imap:host} port={imap:port}"
+auth_syslog = Off
+json_response_write_limit = 300
+
+[debug]
+enable = Off
+javascript = Off
+css = Off
+
+[cache]
+enable = On
+path = ""
+index = "v1"
+fast_cache_index = "v1"
+http = On
+http_expires = 3600
+server_uids = On
+system_data = On
+
+[imap]
+use_force_selection = Off
+use_expunge_all_on_delete = Off
+message_list_fast_simple_search = On
+message_list_permanent_filter = ""
+message_all_headers = Off
+show_login_alert = On
+fetch_new_messages = On
+
+[labs]
+allow_message_append = Off
+smtp_show_server_errors = Off
+mail_func_clear_headers = On
+mail_func_additional_parameters = Off
+folders_spec_limit = 50
+curl_proxy = ""
+curl_proxy_auth = ""
+custom_login_link = ""
+custom_logout_link = ""
+http_client_ip_check_proxy = Off
+use_local_proxy_for_external_images = On
+image_exif_auto_rotate = Off
+cookie_default_path = ""
+cookie_default_secure = Off
+replace_env_in_configuration = ""
+boundary_prefix = ""
+dev_email = ""
+dev_password = ""
+
+[version]
+current = "{{ version['containers']['snappymail'] | regex_replace('^v', '') }}"

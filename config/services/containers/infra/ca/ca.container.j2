@@ -8,7 +8,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=docker.io/smallstep/step-ca:{{ version['containers']['step'] }}
+Image=docker.io/smallstep/step-ca:{{ version['containers']['ca'] }}
 
 ContainerName=ca
 HostName=ca

@@ -146,3 +146,14 @@
   changed_when: false
   listen: "notification_restart_homepage"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart snappymail
+  ansible.builtin.systemd:
+    name: "snappymail.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_snappymail"
+  ignore_errors: true # noqa: ignore-errors

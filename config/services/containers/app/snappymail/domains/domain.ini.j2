@@ -1,0 +1,17 @@
+imap_host = "{{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}"
+imap_port = 993
+imap_secure = "SSL"
+imap_short_login = On
+imap_verify_ssl = On
+imap_allow_self_signed = Off
+
+smtp_host = "{{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}"
+smtp_port = 587
+smtp_secure = "TLS"
+smtp_auth = On
+smtp_short_login = On
+smtp_verify_ssl = On
+smtp_allow_self_signed = Off
+
+sieve_use = Off
+white_list = ""

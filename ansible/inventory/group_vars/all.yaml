@@ -25,7 +25,7 @@ services:
     domain:
       public: "vpn"
     ports:
-      upd: "11290"
+      udp: "11290"
   crowdsec:
     domain:
       internal: "crowdsec"
@@ -142,6 +142,15 @@ services:
       internal: "homepage.app"
     ports:
       http: "3000" # app
+    dependency:
+      web: "app-public"
+  snappymail:
+    domain:
+      public: "webmail"
+      internal: "webmail.app"
+    ports:
+      http: "8888"
+    subuid: "100081"
     dependency:
       web: "app-public"
   vaultwarden:
@@ -270,7 +279,7 @@ version:
     # common
     caddy: "2.11.4"
     # infra
-    step: "0.30.2"
+    ca: "0.30.2"
     ## Postgresql
     postgresql: "18.4"
     ### For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
@@ -292,7 +301,7 @@ version:
     redis: "8.8.0"
     immich: "v2.7.5"
     paperless: "2.20.15"
-    nextcloud: "34.0.0"
+    nextcloud: "34.0.1"
     collabora: "26.04.1.4.1"
     sure: "0.7.1-hotfix.1"
     outline: "1.8.1"
@@ -300,3 +309,4 @@ version:
     mealie: "v3.19.2"
     homebox: "0.26.2"
     homepage: "v1.13.2"
+    snappymail: "v2.38.2"
