@@ -8,16 +8,6 @@
   register: "is_bind_installed"
   ignore_errors: true
 
-- name: Set bind9 zone files
-  ansible.builtin.set_fact:
-    bind_zone_files:
-      - "db.ilnmors.internal"
-      - "db.ilnmors.com"
-      - "db.1.168.192.in-addr.arpa"
-      - "db.10.168.192.in-addr.arpa"
-      - "db.1.00df.ip6.arpa"
-      - "db.10.00df.ip6.arpa"
-
 - name: Install bind9
   ansible.builtin.apt:
     name: "bind9"
@@ -36,23 +26,64 @@
   notify: "notification_restart_bind"
   no_log: true
 
-- name: Deploy db files
-  ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/bind/lib/{{ item }}"
-    dest: "/var/lib/bind/{{ item }}"
+- name: Deploy forward zone files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/bind/lib/{{ item.src }}.j2"
+    dest: "/var/lib/bind/{{ item.dest }}"
     owner: "bind"
     group: "bind"
     mode: "0640"
-  loop: "{{ bind_zone_files }}"
+  loop:
+    - src: "db.public"
+      dest: "db.{{ domain['public'] }}"
+    - src: "db.internal"
+      dest: "db.{{ domain['internal'] }}"
   become: true
   notify: "notification_restart_bind"
   no_log: true
 
+- name: Deploy IPv4 reverse zone files
+  vars:
+    reverse_net: "{{ item.key }}"
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/bind/lib/db.ipv4.rev.j2"
+    dest: "/var/lib/bind/db.{{ item.key }}.ipv4.rev"
+    owner: bind
+    group: bind
+    mode: "0644"
+  loop: "{{ network['reverse_zone']['ipv4'] | dict2items }}"
+  become: true
+  notify: "notification_restart_bind"
+  no_log: true
+
+- name: Deploy IPv6 reverse zones
+  vars:
+    reverse_net: "{{ item.key }}"
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/fw/bind/lib/db.ipv6.rev.j2"
+    dest: "/var/lib/bind/db.{{ item.key }}.ipv6.rev"
+    owner: bind
+    group: bind
+    mode: "0644"
+  loop: "{{ network['reverse_zone']['ipv6'] | dict2items }}"
+  become: true
+  notify: "notification_restart_bind"
+  no_log: true
+
+- name: Find BIND journal files
+  ansible.builtin.find:
+    paths: "/var/lib/bind"
+    patterns: "*.jnl"
+    file_type: file
+  become: true
+  register: bind_journal_files
+  no_log: true
+
 - name: Clean BIND journal files
   ansible.builtin.file:
-    path: "/var/lib/bind/{{ item }}.jnl"
+    path: "{{ item.path }}"
     state: absent
-  loop: "{{ bind_zone_files }}"
+  loop: "{{ bind_journal_files.files }}"
   become: true
   notify: "notification_restart_bind"
   no_log: true
@@ -67,7 +98,7 @@
     validate: "/usr/bin/named-checkconf -z %s"
   become: true
   notify: "notification_restart_bind"
-  no_log: true
+
 
 - name: Create named.service.d
   ansible.builtin.file:

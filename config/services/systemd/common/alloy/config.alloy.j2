@@ -180,6 +180,13 @@ loki.relabel "journal_logs" {
         replacement  = "systemd-journal"
     }
     rule {
+        source_labels = ["__journal__systemd_unit", "__journal__systemd_user_unit", "__journal_syslog_identifier"]
+        separator     = ";"
+        regex         = ";;(ssh|sshd|sudo|su|login|polkitd|cron|crond)"
+        target_label  = "job" 
+        replacement   = "$1"
+    }
+    rule {
         source_labels = ["__journal__systemd_unit"]
         regex         = "(.+)\\.service"
         target_label  = "job"
@@ -196,12 +203,6 @@ loki.relabel "journal_logs" {
         regex         = "(.+)\\.socket"
         target_label  = "job"
         replacement   = "$1.socket"
-    }
-    rule {
-        source_labels = ["__journal_syslog_identifier"]
-        regex         = "(.+)"
-        target_label  = "job"
-        replacement   = "$1"
     }
     rule {
         source_labels = ["job"]
@@ -279,6 +280,44 @@ loki.relabel "journal_logs" {
 
 loki.process "journal_parser" {
     forward_to = [loki.write.loki.receiver]
+    stage.match {
+        selector = "{job=~\".+\"} |~ \"container health_status .*health_status=\""
+        stage.regex {
+            expression = "container (?P<podman_event>health_status) (?P<container_id>[^ ]+)"
+        }
+        stage.regex {
+            expression = "name=(?P<container_name>[^,\\)]+)"
+        }
+        stage.regex {
+            expression = "health_status=(?P<health_status>[^,\\)]+)"
+        }
+        stage.labels {
+            values = {
+                job = "container_name",
+                service_name = "container_name",
+                podman_event = "",
+                health_status = "",
+            }
+        }
+        stage.structured_metadata {
+            values = {
+                container_id = "",
+            }
+        }
+        stage.static_labels {
+            values = {
+                level = "info",
+            }
+        }
+    }
+    stage.match {
+        selector = "{podman_event=\"health_status\",health_status=\"unhealthy\"}"
+        stage.static_labels {
+            values = {
+                level = "error",
+            }
+        }
+    }
     stage.match {
         selector = "{level!=\"fatal\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(fatal|critical|panic|uncaught|unhandled|assertion failed|out of memory|\\bboom\\b|killed process)\""
         stage.static_labels {

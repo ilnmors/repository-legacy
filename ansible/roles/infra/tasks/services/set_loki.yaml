@@ -9,6 +9,8 @@
   loop:
     - "loki"
     - "loki/etc"
+    - "loki/etc/rules"
+    - "loki/etc/rules/{{ domain['internal'] }}"
     - "loki/data"
     - "loki/ssl"
   become: true
@@ -17,6 +19,17 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/etc/loki.yaml.j2"
     dest: "{{ node['home_path'] }}/containers/loki/etc/loki.yaml"
+    owner: "{{ services['loki']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0600"
+  become: true
+  notify: "notification_restart_loki"
+  no_log: true
+
+- name: Deploy loki rules file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/loki/etc/rules.yaml.j2"
+    dest: "{{ node['home_path'] }}/containers/loki/etc/rules/{{ domain['internal'] }}/rules.yaml"
     owner: "{{ services['loki']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0600"

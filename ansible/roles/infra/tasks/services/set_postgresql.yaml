@@ -182,6 +182,7 @@
     mode: "0644"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
+  when: not is_postgresql_init_marker.stat.exists
 
 - name: Check container archive images
   ansible.builtin.stat:

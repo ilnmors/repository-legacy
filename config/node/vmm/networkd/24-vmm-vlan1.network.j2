@@ -3,26 +3,26 @@ Name=vlan1
 
 [Network]
 # IPv4
-Address={{ hostvars['fw']['network4']['vmm']['client'] }}/24
+Address={{ hostvars['fw']['network']['vmm']['ipv4']['client'] }}/24
 # IPv6
-Address={{ hostvars['fw']['network6']['vmm']['client'] }}/64
+Address={{ hostvars['fw']['network']['vmm']['ipv6']['client'] }}/64
 
 [RoutingPolicyRule]
-From={{ hostvars['fw']['network4']['vmm']['client'] }}/32
+From={{ hostvars['fw']['network']['vmm']['ipv4']['client'] }}/32
 Table=1
 Priority=100
 
 [Route]
-Destination={{ hostvars['fw']['network4']['subnet']['client'] }}
+Destination={{ hostvars['fw']['network']['subnet']['ipv4']['client'] }}
 Scope=link
 Table=1
 
 [RoutingPolicyRule]
-From={{ hostvars['fw']['network6']['vmm']['client'] }}/128
+From={{ hostvars['fw']['network']['vmm']['ipv6']['client'] }}/128
 Table=61
 Priority=100
 
 [Route]
-Destination={{ hostvars['fw']['network6']['subnet']['client'] }}
+Destination={{ hostvars['fw']['network']['subnet']['ipv6']['client'] }}
 Scope=link
 Table=61

@@ -6,10 +6,10 @@ whitelist:
         # Console IP lists
         - "127.0.0.1"
         - "::1"
-        - "{{ hostvars['fw']['network4']['console']['client'] }}"
-        - "{{ hostvars['fw']['network4']['console']['wg'] }}"
-        - "{{ hostvars['fw']['network6']['console']['client'] }}"
-        - "{{ hostvars['fw']['network6']['console']['wg'] }}"
+        - "{{ hostvars['fw']['network']['console']['ipv4']['client'] }}"
+        - "{{ hostvars['fw']['network']['console']['ipv4']['wg'] }}"
+        - "{{ hostvars['fw']['network']['console']['ipv6']['client'] }}"
+        - "{{ hostvars['fw']['network']['console']['ipv6']['wg'] }}"
 {% if node['name'] == 'auth' %}
     expression:
         # immich thumbnail request 404 error false positive

@@ -1,12 +1,12 @@
 #!/usr/sbin/nft -f
 flush ruleset
 
-define NET4_SERVER = {{ hostvars['fw']['network4']['subnet']['server'] }}
-define NET6_SERVER = {{ hostvars['fw']['network6']['subnet']['server'] }}
-define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | join(', ') }} }
-define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
-define HOSTS4_AUTH = {{ hostvars['fw']['network4']['auth']['server'] }}
-define HOSTS6_AUTH = {{ hostvars['fw']['network6']['auth']['server'] }}
+define NET4_SERVER = {{ hostvars['fw']['network']['subnet']['ipv4']['server'] }}
+define NET6_SERVER = {{ hostvars['fw']['network']['subnet']['ipv6']['server'] }}
+define HOSTS4_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv4'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS6_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv6'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS4_AUTH = {{ hostvars['fw']['network']['auth']['ipv4']['server'] }}
+define HOSTS6_AUTH = {{ hostvars['fw']['network']['auth']['ipv6']['server'] }}
 define PORTS_SSH = 22
 define PORTS_HTTP = 80
 define PORTS_HTTP_FORWARD = {{ services['caddy']['ports']['http'] }}

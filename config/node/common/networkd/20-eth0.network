@@ -3,11 +3,11 @@ Name=eth0
 
 [Network]
 # IPv4
-Address={{ hostvars['fw']['network4'][target_vm]['server'] }}/24
-Gateway={{ hostvars['fw']['network4']['firewall']['server'] }}
-DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+Address={{ hostvars['fw']['network'][target_vm]['ipv4']['server'] }}/24
+Gateway={{ hostvars['fw']['network']['fw']['ipv4']['server'] }}
+DNS={{ hostvars['fw']['network']['blocky']['ipv4']['server'] }}
 # IPv6
 IPv6AcceptRA=false
-Address={{ hostvars['fw']['network6'][target_vm]['server'] }}/64
-Gateway={{ hostvars['fw']['network6']['firewall']['server'] }}
-DNS={{ hostvars['fw']['network6']['blocky']['server'] }}
+Address={{ hostvars['fw']['network'][target_vm]['ipv6']['server'] }}/64
+Gateway={{ hostvars['fw']['network']['fw']['ipv6']['server'] }}
+DNS={{ hostvars['fw']['network']['blocky']['ipv6']['server'] }}

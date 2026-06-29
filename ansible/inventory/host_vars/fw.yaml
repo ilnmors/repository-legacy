@@ -28,71 +28,126 @@ vm:
   lan_group: "vlan-trunk"
 
 # Network Factors
-# LLA is like MAC address for L3 (Network layer). Usually, subnet is used to separate network.
-network4:
+network:
+  dns_serial: "{{ now().strftime('%Y%m%d') }}00"
   subnet:
-    client: "192.168.1.0/24"
-    server: "192.168.10.0/24"
-    user: "192.168.20.0/24"
-    wg: "192.168.99.0/24"
-    lla: "169.254.0.0/16"
-  # You can use "{{ hostvars['fw']['network4']['firewall'].values() | join(', ') }}" for all
-  firewall:
-    client: "192.168.1.1"
-    server: "192.168.10.1"
-    user: "192.168.20.1"
-    wg: "192.168.99.1"
+    ipv4:
+      client: "192.168.1.0/24"
+      server: "192.168.10.0/24"
+      user: "192.168.20.0/24"
+      wg: "192.168.99.0/24"
+      lla: "169.254.0.0/16"
+    ipv6:
+      client: "fd00:1::/64"
+      server: "fd00:10::/64"
+      wg: "fd00:99::/64"
+      lla: "fe80::/10"
+  reverse_zone:
+    ipv4:
+      client: "1.168.192.in-addr.arpa"
+      server: "10.168.192.in-addr.arpa"
+    ipv6:
+      client: "0.0.0.0.0.0.0.0.1.0.0.0.0.0.d.f.ip6.arpa"
+      server: "0.0.0.0.0.0.0.0.0.1.0.0.0.0.d.f.ip6.arpa"
+  fw:
+    ipv4:
+      client: "192.168.1.1"
+      server: "192.168.10.1"
+      user: "192.168.20.1"
+      wg: "192.168.99.1"
+      reverse: "1"
+    ipv6:
+      client: "fd00:1::1"
+      server: "fd00:10::1"
+      wg: "fd00:99::1"
+      reverse: "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+    alias:
+      - "ntp"
+      - "crowdsec"
   blocky:
-    server: "192.168.10.2"
+    ipv4:
+      server: "192.168.10.2"
+      reverse: "2"
+    ipv6:
+      server: "fd00:10::2"
+      reverse: "2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
   bind:
-    server: "192.168.10.3"
+    ipv4:
+      server: "192.168.10.3"
+      reverse: "3"
+    ipv6:
+      server: "fd00:10::3"
+      reverse: "3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
   console:
-    client: "192.168.1.20"
-    wg: "192.168.99.20"
+    ipv4:
+      client: "192.168.1.20"
+      wg: "192.168.99.20"
+      reverse: "20"
+    ipv6:
+      client: "fd00:1::20"
+      wg: "fd00:99::20"
+      reverse: "0.2.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
   vmm:
-    client: "192.168.1.10"
-    server: "192.168.10.10"
+    ipv4:
+      client: "192.168.1.10"
+      server: "192.168.10.10"
+      reverse: "10"
+    ipv6:
+      client: "fd00:1::10"
+      server: "fd00:10::10"
+      reverse: "0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+    alias:
+      - "init.vmm"
   bk:
-    server: "192.168.10.9"
+    ipv4:
+      server: "192.168.10.9"
+      reverse: "9"
+    ipv6:
+      server: "fd00:10::9"
+      reverse: "9.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+    alias:
+      - "kopia"
   infra:
-    server: "192.168.10.11"
+    ipv4:
+      server: "192.168.10.11"
+      reverse: "11"
+    ipv6:
+      server: "fd00:10::11"
+      reverse: "1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+    alias:
+      - "ca"
+      - "postgresql"
+      - "ldap"
+      - "maddy"
+      - "prometheus"
+      - "loki"
+      - "grafana"
   auth:
-    server: "192.168.10.12"
+    ipv4:
+      server: "192.168.10.12"
+      reverse: "12"
+    ipv6:
+      server: "fd00:10::12"
+      reverse: "2.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+    alias:
+      - "authelia"
   app:
-    server: "192.168.10.13"
+    ipv4:
+      server: "192.168.10.13"
+      reverse: "13"
+    ipv6:
+      server: "fd00:10::13"
+      reverse: "3.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+    alias:
+      - "*.app"
   switch:
-    client: "192.168.1.2"
+    ipv4:
+      client: "192.168.1.2"
+      reverse: "2"
   printer:
-    client: "192.168.1.101"
-
-network6:
-  subnet:
-    client: "fd00:1::/64"
-    server: "fd00:10::/64"
-    wg: "fd00:99::/64"
-    lla: "fe80::/10"
-  firewall:
-    client: "fd00:1::1"
-    server: "fd00:10::1"
-    wg: "fd00:99::1"
-  blocky:
-    server: "fd00:10::2"
-  bind:
-    server: "fd00:10::3"
-  console:
-    client: "fd00:1::20"
-    wg: "fd00:99::20"
-  vmm:
-    client: "fd00:1::10"
-    server: "fd00:10::10"
-  bk:
-    server: "fd00:10::9"
-  infra:
-    server: "fd00:10::11"
-  auth:
-    server: "fd00:10::12"
-  app:
-    server: "fd00:10::13"
+    ipv4:
+      client: "192.168.1.101"
+      reverse: "101"
 
 # Suricata Factors
 # suricata_home_net: '[10.0.0.0/8,172.16.0.0/12,192.168.0.0/16]'

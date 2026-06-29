@@ -1,0 +1,24 @@
+$TTL    86400
+
+@                                   IN    SOA      {{ services['bind']['domain']['internal'] }}.{{ domain['internal'] }}. {{ services['bind']['domain']['internal'] }}.{{ domain['internal'] }}. (
+                                        {{ network['dns_serial'] }} ; serial
+                                        3600       ; refresh (1 hour)
+                                        1800       ; retry (30 minutes)
+                                        604800     ; expire (1 week)
+                                        86400      ; minimum (1 day)
+                                    )
+                                    IN    NS       {{ services['bind']['domain']['internal'] }}.{{ domain['internal'] }}.
+
+{% set hosts = (
+    network
+    | dict2items
+    | rejectattr('key', 'in', ['dns_serial', 'subnet', 'reverse_zone'])
+    | list
+) %}
+{% for item in hosts %}
+{% set name = item['key'] %}
+{% set host = item['value'] %}
+{% if host['ipv6'] is defined and host['ipv6'][reverse_net] is defined and host['ipv6']['reverse'] is defined %}
+{{ "%-36s" | format(host['ipv6']['reverse']) }}IN    PTR      {{ name }}.{{ domain['internal'] }}.
+{% endif %}
+{% endfor %}

@@ -11,6 +11,14 @@ server:
 #  bind_addr: ['::']
 #  bind_port: 7946
 
+ruler:
+  enable_api: true
+  rule_path: /loki/rules
+  storage:
+    type: local
+    local:
+      directory: /etc/loki/rules
+
 schema_config:
   configs:
     - from: "2023-01-01"

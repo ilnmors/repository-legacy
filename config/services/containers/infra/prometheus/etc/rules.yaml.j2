@@ -4,7 +4,7 @@ groups:
 {% for instance in (((groups['hypervisor'] | default([])) + (groups['vms'] | default([]))) | difference(['vmm_init']) | sort) %}
     - alert: {{ instance }}_node_exporter_down
       expr: |
-        (present_over_time(up{instance="{{ instance }}"}[5m]) or on() vector(0)) == 0
+        (max_over_time(up{instance="{{ instance }}"}[5m]) or on() vector(0)) == 0
       for: 30s
       labels:
         severity: critical
@@ -16,7 +16,7 @@ groups:
     rules:
       - alert: Postgresql_Down
         expr: |
-          (present_over_time(pg_up{instance="infra", job="postgres"}[5m]) or on() vector(0)) == 0
+          (max_over_time(pg_up{instance="infra", job="postgres"}[5m]) or on() vector(0)) == 0
         for: 30s
         labels:
           severity: critical

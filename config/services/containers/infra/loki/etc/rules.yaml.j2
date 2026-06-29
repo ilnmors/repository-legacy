@@ -1,0 +1,63 @@
+groups:
+  - name: backup_logs
+    interval: 1m
+    rules:
+      - alert: KopiaBackupFailure
+        expr: |
+          sum by (instance, job, service_name) (
+            count_over_time({job="kopia-backup", level=~"error|fatal"}[20m])
+          ) > 0
+        for: 1m
+        labels:
+          severity: critical
+          source: loki
+          category: backup
+          service: kopia
+        annotations:
+          summary: {% raw %}"Kopia backup failed on {{ $labels.instance }}"{% endraw %}{{ '' }}
+          description: "kopia-backup emitted error/fatal logs."
+      - alert: RcloneBackupFailure
+        expr: |
+          sum by (instance, job, service_name) (
+            count_over_time({job="rclone", level=~"error|fatal"}[20m])
+          ) > 0
+        for: 1m
+        labels:
+          severity: critical
+          source: loki
+          category: backup
+          service: rclone
+        annotations:
+          summary: {% raw %}"rclone backup failed on {{ $labels.instance }}"{% endraw %}{{ '' }}
+          description: "rclone emitted error/fatal logs."
+  - name: caddy_logs
+    interval: 1m
+    rules:
+      - alert: Caddy5xxBurst
+        expr: |
+          sum by (instance, host) (
+            count_over_time({job="caddy_access", status=~"5.."}[5m])
+          ) > 5
+        for: 2m
+        labels:
+          severity: warning
+          source: loki
+          category: http
+          service: caddy
+        annotations:
+          summary: {% raw %}"Caddy 5xx burst on {{ $labels.host }}"{% endraw %}{{ '' }}
+          description: {% raw %}"Caddy returned more than 5 server errors in 5 minutes on {{ $labels.instance }}."{% endraw %}{{ '' }}
+      - alert: CaddyRateLimitBurst
+        expr: |
+          sum by (instance, host) (
+            count_over_time({job="caddy_access", status="429"}[10m])
+          ) > 20
+        for: 2m
+        labels:
+          severity: warning
+          source: loki
+          category: http
+          service: caddy
+        annotations:
+          summary: {% raw %}"Caddy 429 burst on {{ $labels.host }}"{% endraw %}{{ '' }}
+          description: "Caddy returned more than 20 rate-limit responses in 10 minutes."

@@ -3,8 +3,8 @@ include "/etc/bind/acme.key";
 options {
         directory "/var/cache/bind";
 
-        listen-on port 53 { {{ hostvars['fw']['network4']['bind']['server'] }}; };
-        listen-on-v6 port 53 { {{ hostvars['fw']['network6']['bind']['server'] }}; };
+        listen-on port 53 { {{ hostvars['fw']['network']['bind']['ipv4']['server'] }}; };
+        listen-on-v6 port 53 { {{ hostvars['fw']['network']['bind']['ipv6']['server'] }}; };
 
         // Authoritative DNS setting
         allow-recursion { none; };
@@ -16,46 +16,38 @@ options {
         check-names master warn;
 };
 
-zone "ilnmors.internal." {
+zone "{{ domain['internal'] }}." {
         type primary;
-        file "/var/lib/bind/db.ilnmors.internal";
+        file "/var/lib/bind/db.{{ domain['internal'] }}";
         notify yes;
         // ACME-01 challenge policy. It allows only TXT record of subdomain update.
         update-policy {
-                grant acme-key subdomain ilnmors.internal. TXT;
+                grant acme-key subdomain {{ domain['internal'] }}. TXT;
         };
 };
 
-zone "1.168.192.in-addr.arpa" {
-        type primary;
-        file "/var/lib/bind/db.1.168.192.in-addr.arpa";
-        notify yes;
-};
-
-zone "10.168.192.in-addr.arpa" {
-        type primary;
-        file "/var/lib/bind/db.10.168.192.in-addr.arpa";
-        notify yes;
-};
-
-zone "0.0.0.0.0.0.0.0.1.0.0.0.0.0.d.f.ip6.arpa" {
-    type primary;
-    file "/var/lib/bind/db.1.00df.ip6.arpa";
-    notify yes;
-};
-
-zone "0.0.0.0.0.0.0.0.0.1.0.0.0.0.d.f.ip6.arpa" {
-    type primary;
-    file "/var/lib/bind/db.10.00df.ip6.arpa";
-    notify yes;
-};
-
-zone "ilnmors.com." {
+zone "{{ domain['public'] }}." {
         //split horizon dns
         type primary;
-        file "/var/lib/bind/db.ilnmors.com";
+        file "/var/lib/bind/db.{{ domain['public'] }}";
         notify yes;
 };
+
+{% for net, zone in network['reverse_zone']['ipv4'].items() %}
+zone "{{ zone }}" {
+        type primary;
+        file "/var/lib/bind/db.{{ net }}.ipv4.rev";
+        notify yes;
+};
+{% endfor %}
+
+{% for net, zone in network['reverse_zone']['ipv6'].items() %}
+zone "{{ zone }}" {
+        type primary;
+        file "/var/lib/bind/db.{{ net }}.ipv6.rev";
+        notify yes;
+};
+{% endfor %}
 
 logging {
         channel default_log {

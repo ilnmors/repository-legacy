@@ -9,39 +9,39 @@ define IF_SERVER = "server"
 define IF_USER = "user"
 define IF_WG = "wg0"
 
-define NET4_CLIENT = {{ hostvars['fw']['network4']['subnet']['client'] }}
-define NET4_SERVER = {{ hostvars['fw']['network4']['subnet']['server'] }}
-define NET4_USER = {{ hostvars['fw']['network4']['subnet']['user'] }}
-define NET4_WG = {{ hostvars['fw']['network4']['subnet']['wg'] }}
-define NET4_LLA = {{ hostvars['fw']['network4']['subnet']['lla'] }}
+define NET4_CLIENT = {{ hostvars['fw']['network']['subnet']['ipv4']['client'] }}
+define NET4_SERVER = {{ hostvars['fw']['network']['subnet']['ipv4']['server'] }}
+define NET4_USER = {{ hostvars['fw']['network']['subnet']['ipv4']['user'] }}
+define NET4_WG = {{ hostvars['fw']['network']['subnet']['ipv4']['wg'] }}
+define NET4_LLA = {{ hostvars['fw']['network']['subnet']['ipv4']['lla'] }}
 define NET4_RFC1918 = { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 }
 
-define NET6_CLIENT = {{ hostvars['fw']['network6']['subnet']['client'] }}
-define NET6_SERVER = {{ hostvars['fw']['network6']['subnet']['server'] }}
-define NET6_WG = {{ hostvars['fw']['network6']['subnet']['wg'] }}
-define NET6_LLA = {{ hostvars['fw']['network6']['subnet']['lla'] }}
+define NET6_CLIENT = {{ hostvars['fw']['network']['subnet']['ipv6']['client'] }}
+define NET6_SERVER = {{ hostvars['fw']['network']['subnet']['ipv6']['server'] }}
+define NET6_WG = {{ hostvars['fw']['network']['subnet']['ipv6']['wg'] }}
+define NET6_LLA = {{ hostvars['fw']['network']['subnet']['ipv6']['lla'] }}
 
-define HOSTS4_FW = { {{ hostvars['fw']['network4']['firewall'].values() | join(', ') }} }
-define HOSTS4_BLOCKY = {{ hostvars['fw']['network4']['blocky']['server'] }}
-define HOSTS4_BIND = {{ hostvars['fw']['network4']['bind']['server'] }}
-define HOSTS4_CONSOLE = { {{ hostvars['fw']['network4']['console'].values() | join(', ') }} }
-define HOSTS4_VMM = { {{ hostvars['fw']['network4']['vmm'].values() | join(', ') }} }
-define HOSTS4_BK = {{ hostvars['fw']['network4']['bk']['server'] }}
-define HOSTS4_INFRA = {{ hostvars['fw']['network4']['infra']['server'] }}
-define HOSTS4_AUTH = {{ hostvars['fw']['network4']['auth']['server'] }}
-define HOSTS4_APP = {{ hostvars['fw']['network4']['app']['server'] }}
-define HOSTS4_SWITCH = {{ hostvars['fw']['network4']['switch']['client'] }}
-define HOSTS4_PRINTER = {{ hostvars['fw']['network4']['printer']['client'] }}
+define HOSTS4_FW = { {{ hostvars['fw']['network']['fw']['ipv4'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS4_BLOCKY = {{ hostvars['fw']['network']['blocky']['ipv4']['server'] }}
+define HOSTS4_BIND = {{ hostvars['fw']['network']['bind']['ipv4']['server'] }}
+define HOSTS4_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv4'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS4_VMM = { {{ hostvars['fw']['network']['vmm']['ipv4'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS4_BK = {{ hostvars['fw']['network']['bk']['ipv4']['server'] }}
+define HOSTS4_INFRA = {{ hostvars['fw']['network']['infra']['ipv4']['server'] }}
+define HOSTS4_AUTH = {{ hostvars['fw']['network']['auth']['ipv4']['server'] }}
+define HOSTS4_APP = {{ hostvars['fw']['network']['app']['ipv4']['server'] }}
+define HOSTS4_SWITCH = {{ hostvars['fw']['network']['switch']['ipv4']['client'] }}
+define HOSTS4_PRINTER = {{ hostvars['fw']['network']['printer']['ipv4']['client'] }}
 
-define HOSTS6_FW = { {{ hostvars['fw']['network6']['firewall'].values() | join(', ') }} }
-define HOSTS6_BLOCKY = {{ hostvars['fw']['network6']['blocky']['server'] }}
-define HOSTS6_BIND = {{ hostvars['fw']['network6']['bind']['server'] }}
-define HOSTS6_CONSOLE = { {{ hostvars['fw']['network6']['console'].values() | join(', ') }} }
-define HOSTS6_VMM = { {{ hostvars['fw']['network6']['vmm'].values() | join(', ') }} }
-define HOSTS6_BK = {{ hostvars['fw']['network6']['bk']['server'] }}
-define HOSTS6_INFRA = {{ hostvars['fw']['network6']['infra']['server'] }}
-define HOSTS6_AUTH = {{ hostvars['fw']['network6']['auth']['server'] }}
-define HOSTS6_APP = {{ hostvars['fw']['network6']['app']['server'] }}
+define HOSTS6_FW = { {{ hostvars['fw']['network']['fw']['ipv6'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS6_BLOCKY = {{ hostvars['fw']['network']['blocky']['ipv6']['server'] }}
+define HOSTS6_BIND = {{ hostvars['fw']['network']['bind']['ipv6']['server'] }}
+define HOSTS6_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv6'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS6_VMM = { {{ hostvars['fw']['network']['vmm']['ipv6'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS6_BK = {{ hostvars['fw']['network']['bk']['ipv6']['server'] }}
+define HOSTS6_INFRA = {{ hostvars['fw']['network']['infra']['ipv6']['server'] }}
+define HOSTS6_AUTH = {{ hostvars['fw']['network']['auth']['ipv6']['server'] }}
+define HOSTS6_APP = {{ hostvars['fw']['network']['app']['ipv6']['server'] }}
 
 define PORTS_SSH = 22
 define PORTS_WEB = { 80, 443 }

@@ -1,9 +1,9 @@
 # 1. Access Control (IPv4)
-allow {{ hostvars['fw']['network4']['subnet']['client'] }}
-allow {{ hostvars['fw']['network4']['subnet']['server'] }}
-allow {{ hostvars['fw']['network4']['subnet']['wg'] }}
+allow {{ hostvars['fw']['network']['subnet']['ipv4']['client'] }}
+allow {{ hostvars['fw']['network']['subnet']['ipv4']['server'] }}
+allow {{ hostvars['fw']['network']['subnet']['ipv4']['wg'] }}
 
 # 2. Access Control (IPv6)
-allow {{ hostvars['fw']['network6']['subnet']['client'] }}
-allow {{ hostvars['fw']['network6']['subnet']['server'] }}
-allow {{ hostvars['fw']['network6']['subnet']['wg'] }}
+allow {{ hostvars['fw']['network']['subnet']['ipv6']['client'] }}
+allow {{ hostvars['fw']['network']['subnet']['ipv6']['server'] }}
+allow {{ hostvars['fw']['network']['subnet']['ipv6']['wg'] }}

@@ -301,7 +301,7 @@ version:
     redis: "8.8.0"
     immich: "v2.7.5"
     paperless: "2.20.15"
-    nextcloud: "34.0.1"
+    nextcloud: "34.0.0"
     collabora: "26.04.1.4.1"
     sure: "0.7.1-hotfix.1"
     outline: "1.8.1"

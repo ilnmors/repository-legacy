@@ -7,4 +7,4 @@ PrivateKey={{ hostvars['console']['wireguard']['server']['private_key'] }}
 [WireGuardPeer]
 PublicKey={{ hostvars['console']['wireguard']['console']['public_key'] }}
 PresharedKey={{ hostvars['console']['wireguard']['console']['preshared_key'] }}
-AllowedIPs={{ hostvars['fw']["network4"]["console"]["wg"] }}/32, {{ hostvars['fw']["network6"]["console"]["wg"] }}/128
+AllowedIPs={{ hostvars['fw']["network"]["console"]['ipv4']["wg"] }}/32, {{ hostvars['fw']["network"]["console"]['ipv6']["wg"] }}/128

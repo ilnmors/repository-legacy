@@ -184,6 +184,12 @@
 - name: Set crowdsec bouncer
   when: node['name'] in acquisd_list
   block:
+    - name: Update and upgrade crowdsec hub
+      ansible.builtin.shell: |
+        cscli hub update && cscli hub upgrade
+      become: true
+      changed_when: false
+
     - name: Install crowdsec collection
       ansible.builtin.command: |
         cscli collections install {{ item }}

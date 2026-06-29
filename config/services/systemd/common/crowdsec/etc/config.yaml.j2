@@ -53,8 +53,8 @@ api:
     trusted_ips: # IP ranges, or IPs which can have admin API access
       - ::1
       - 127.0.0.1
-      - {{ hostvars['fw']['network6']['subnet']['server'] }}
-      - {{ hostvars['fw']['network4']['subnet']['server'] }}
+      - {{ hostvars['fw']['network']['subnet']['ipv6']['server'] }}
+      - {{ hostvars['fw']['network']['subnet']['ipv4']['server'] }}
     tls:
       cert_file: /etc/crowdsec/ssl/crowdsec.crt
       key_file: /etc/crowdsec/ssl/crowdsec.key

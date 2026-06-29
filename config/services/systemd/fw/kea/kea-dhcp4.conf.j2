@@ -2,7 +2,7 @@
     "Dhcp4": {
         "subnet4": [
             {
-                "subnet": "{{ hostvars['fw']['network4']['subnet']['client'] }}",
+                "subnet": "{{ hostvars['fw']['network']['subnet']['ipv4']['client'] }}",
                 "pools" : [
                     {
                         "pool": "192.168.1.254-192.168.1.254"
@@ -11,11 +11,11 @@
                 "option-data": [
                     {
                         "name": "routers",
-                        "data": "{{ hostvars['fw']['network4']['firewall']['client'] }}"
+                        "data": "{{ hostvars['fw']['network']['fw']['ipv4']['client'] }}"
                     },
                     {
                         "name": "domain-name-servers",
-                        "data": "{{ hostvars['fw']['network4']['blocky']['server'] }}"
+                        "data": "{{ hostvars['fw']['network']['blocky']['ipv4']['server'] }}"
                     },
                     {
                         "name": "domain-name",
@@ -25,17 +25,17 @@
                 "reservations": [
                     {
                         "hw-address": "58:04:4f:18:6c:5e",
-                        "ip-address": "{{ hostvars['fw']['network4']['switch']['client'] }}",
+                        "ip-address": "{{ hostvars['fw']['network']['switch']['ipv4']['client'] }}",
                         "hostname": "switch"
                     },
                     {
                         "hw-address": "d8:e2:df:ff:1b:d5",
-                        "ip-address": "{{ hostvars['fw']['network4']['console']['client'] }}",
+                        "ip-address": "{{ hostvars['fw']['network']['console']['ipv4']['client'] }}",
                         "hostname": "console"
                     },
                     {
                         "hw-address": "38:ca:84:94:5e:06",
-                        "ip-address": "{{ hostvars['fw']['network4']['printer']['client'] }}",
+                        "ip-address": "{{ hostvars['fw']['network']['printer']['ipv4']['client'] }}",
                         "hostname": "printer"
                     }
                 ],
@@ -43,7 +43,7 @@
                 "interface": "client"
             },
             {
-                "subnet": "{{ hostvars['fw']['network4']['subnet']['user'] }}",
+                "subnet": "{{ hostvars['fw']['network']['subnet']['ipv4']['user'] }}",
                 "pools" : [
                     {
                         "pool": "192.168.20.2-192.168.20.254"
@@ -52,11 +52,11 @@
                 "option-data": [
                     {
                         "name": "routers",
-                        "data": "{{ hostvars['fw']['network4']['firewall']['user'] }}"
+                        "data": "{{ hostvars['fw']['network']['fw']['ipv4']['user'] }}"
                     },
                     {
                         "name": "domain-name-servers",
-                        "data": "{{ hostvars['fw']['network4']['blocky']['server'] }}"
+                        "data": "{{ hostvars['fw']['network']['blocky']['ipv4']['server'] }}"
                     },
                     {
                         "name": "domain-name",

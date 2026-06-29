@@ -6,19 +6,19 @@ IPForward=true
 IPv6SendRA=false
 IPv6AcceptRA=false
 # IPv4
-Address={{ hostvars['fw']['network4']['firewall']['server'] }}/24
-DNS={{ hostvars['fw']['network4']['blocky']['server'] }}
+Address={{ hostvars['fw']['network']['fw']['ipv4']['server'] }}/24
+DNS={{ hostvars['fw']['network']['blocky']['ipv4']['server'] }}
 # IPv6
-Address={{ hostvars['fw']['network6']['firewall']['server'] }}/64
-DNS={{ hostvars['fw']['network6']['blocky']['server'] }}
+Address={{ hostvars['fw']['network']['fw']['ipv6']['server'] }}/64
+DNS={{ hostvars['fw']['network']['blocky']['ipv6']['server'] }}
 
 [Address]
-Address={{ hostvars['fw']['network4']['blocky']['server'] }}/24
+Address={{ hostvars['fw']['network']['blocky']['ipv4']['server'] }}/24
 [Address]
-Address={{ hostvars['fw']['network4']['bind']['server'] }}/24
+Address={{ hostvars['fw']['network']['bind']['ipv4']['server'] }}/24
 [Address]
-Address={{ hostvars['fw']['network6']['blocky']['server'] }}/64
+Address={{ hostvars['fw']['network']['blocky']['ipv6']['server'] }}/64
 PreferredLifetime=0
 [Address]
-Address={{ hostvars['fw']['network6']['bind']['server'] }}/64
+Address={{ hostvars['fw']['network']['bind']['ipv6']['server'] }}/64
 PreferredLifetime=0
