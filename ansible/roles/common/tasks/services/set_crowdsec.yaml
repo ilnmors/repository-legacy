@@ -1,36 +1,18 @@
 ---
-- name: Check crowdsec installed
-  ansible.builtin.shell: |
-    command -v crowdsec
-  changed_when: false
-  failed_when: false
-  register: "is_crowdsec_installed"
-  ignore_errors: true
-
-- name: Check crowdsec bouncer installed
-  ansible.builtin.shell: |
-    command -v crowdsec-firewall-bouncer
-  when: node['name'] == "fw"
-  changed_when: false
-  failed_when: false
-  register: "is_crowdsec_bouncer_installed"
-  ignore_errors: true
-
 - name: Install crowdsec
   ansible.builtin.apt:
-    name: "crowdsec"
+    name:
+      - "crowdsec"
     state: "present"
   become: true
-  when: is_crowdsec_installed.rc != 0
 
 - name: Install crowdsec bouncers
   ansible.builtin.apt:
-    name: "crowdsec-firewall-bouncer"
+    name:
+      - "crowdsec-firewall-bouncer"
     state: "present"
   become: true
-  when:
-    - node['name'] == "fw"
-    - is_crowdsec_bouncer_installed.rc != 0
+  when: node['name'] == "fw"
 
 - name: Set acquis.d list for bouncer
   ansible.builtin.set_fact:
@@ -132,7 +114,7 @@
 
     - name: Set goal machines' name
       ansible.builtin.set_fact:
-        machines_name: ["fw", "vmm", "bk", "infra", "auth", "app"]
+        machines_name: "{{ services['crowdsec']['sub']['machines'] | list }}"
       no_log: true
 
     - name: Prune unknown (random) machines
@@ -170,7 +152,7 @@
 
     - name: Set bouncers' name
       ansible.builtin.set_fact:
-        bouncers_name: ["fw", "caddy"]
+        bouncers_name: "{{ services['crowdsec']['sub']['bouncers'] | list }}"
 
     - name: Register Firewall Bouncer to LAPI
       ansible.builtin.command: |

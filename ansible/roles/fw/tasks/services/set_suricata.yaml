@@ -1,12 +1,4 @@
 ---
-- name: Check suricata installation
-  ansible.builtin.shell: |
-    command -v suricata
-  changed_when: false
-  failed_when: false
-  register: "is_suricata_installed"
-  ignore_errors: true
-
 - name: Install suricata
   ansible.builtin.apt:
     name:
@@ -14,7 +6,6 @@
       - "suricata-update"
     state: "present"
   become: true
-  when: is_suricata_installed.rc != 0
 
 - name: Deploy suricata-update service files
   ansible.builtin.copy:

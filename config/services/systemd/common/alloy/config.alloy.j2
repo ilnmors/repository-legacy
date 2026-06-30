@@ -39,6 +39,14 @@ prometheus.relabel "system_metrics" {
         target_label  = "name"
         replacement   = "$1.socket"
     }
+{% if node['name'] == "vmm" %}
+    rule {
+        source_labels = ["__name__"]
+        regex         = "smartctl_.+"
+        target_label  = "job"
+        replacement   = "smartctl"
+    }
+{% endif %}
 }
 
 // Generic service metrics relabel
@@ -89,6 +97,11 @@ prometheus.exporter.unix "system" {
         mount_points_exclude = "^/(boot|sys|proc|dev|run|mnt|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
         fs_types_exclude     = "^(tmpfs|devtmpfs|devfs|iso9660|overlay|aufs|squashfs)$"
     }
+{% if node['name'] == "vmm" %}
+    textfile {
+        directory = "/etc/smartctl-exporter"
+    }
+{% endif %}
 }
 
 prometheus.scrape "system" {
@@ -227,6 +240,12 @@ loki.relabel "journal_logs" {
         regex         = "(.+)\\.socket"
         target_label  = "job"
         replacement   = "$1.socket"
+    }
+    rule {
+        source_labels = ["__journal_syslog_identifier"]
+        regex         = "podman"
+        target_label  = "job"
+        replacement   = "podman"
     }
     rule {
         source_labels = ["job"]

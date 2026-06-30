@@ -23,7 +23,7 @@ groups:
         annotations:
           summary: "Postgresql Heartbeat Lost: postgresql"
           description: "postgresql node is down for 5 mins."
-  - name: Certificate_expiry_check
+  - name: certificate_expiry_check
     rules:
 {% for filename in ['root', 'intermediate'] + (services | dict2items | selectattr('value.dependency.cert', 'defined') | selectattr('value.dependency.cert', 'equalto', true) | map(attribute='key') | list) %}
       - alert: {{ filename | replace('.', '_') }}_is_expired_soon
@@ -36,3 +36,232 @@ groups:
           summary: "{{ filename }}.crt is expired in 30 days"
           description: "{{ filename }}.crt is expired in 30 days."
 {% endfor %}
+  - name: smartctl
+    rules:
+      - alert: SmartctlMetricsMissing
+        expr: |
+          absent_over_time(smartctl_devices{job="smartctl", instance="vmm"}[15m])
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMART metrics are missing on vmm"
+          description: "No smartctl_devices metric has been received from vmm for 15 minutes. Check smartctl-generator.timer, Alloy textfile collector, and /etc/smartctl-exporter/smartctl.prom."
+
+      - alert: SmartctlNoDevices
+        expr: |
+          smartctl_devices{job="smartctl", instance="vmm"} < 1
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No SMART devices discovered on vmm"
+          description: "smartctl-generator is running, but it reports fewer than one SMART device. Check USB filtering, /sys/class/block discovery, and smartctl output."
+
+      - alert: SmartctlDeviceHealthFailed
+        expr: |
+          (
+            smartctl_device_smart_status{job="smartctl"}
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMART health failed"
+          description: "SMART overall-health failed. Check the alert labels for instance, device, model_name, serial_number, and protocol."
+
+      - alert: SmartctlCommandFailed
+        expr: |
+          (
+            (floor(smartctl_device_smartctl_exit_status{job="smartctl"} / 4) % 2)
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl", protocol!~"NVMe|nvme"}
+          ) == 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "smartctl command or log read failed"
+          description: "smartctl exit status has bit 2 set on a non-NVMe device. Check smartctl output, cable/backplane, and device logs. NVMe devices are intentionally excluded because bit 2 is often caused by unsupported optional log pages."
+
+      - alert: SmartctlDiskFailing
+        expr: |
+          (
+            (floor(smartctl_device_smartctl_exit_status{job="smartctl"} / 8) % 2)
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "smartctl reports disk failing"
+          description: "smartctl exit status has bit 3 set. Check the alert labels and replace or evacuate the device if confirmed."
+
+      - alert: SmartctlPrefailAttributeThreshold
+        expr: |
+          (
+            (floor(smartctl_device_smartctl_exit_status{job="smartctl"} / 16) % 2)
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMART prefail attribute threshold hit"
+          description: "smartctl exit status has bit 4 set. Check the alert labels and the SMART attribute table."
+
+      - alert: SmartctlDiskTemperatureHigh
+        expr: |
+          (
+            smartctl_device_temperature{job="smartctl", temperature_type="current"}
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) > 50
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SMART disk temperature high"
+          description: "Disk temperature is above 50C for 15 minutes. Check the alert labels for the affected disk."
+
+      - alert: SmartctlDiskTemperatureCritical
+        expr: |
+          (
+            smartctl_device_temperature{job="smartctl", temperature_type="current"}
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) > 55
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMART disk temperature critical"
+          description: "Disk temperature is above 55C. Check cooling and disk workload immediately."
+
+      - alert: SmartctlCriticalAttributeNonZero
+        expr: |
+          (
+            smartctl_device_attribute{
+              job="smartctl",
+              attribute_value_type="raw",
+              attribute_name=~"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable|Spin_Retry_Count"
+            }
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) > 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMART critical attribute is non-zero"
+          description: "A critical SMART raw attribute is non-zero. Check the alert labels for attribute_name, instance, device, model_name, and serial_number."
+
+      - alert: SmartctlCrcErrorIncreased
+        expr: |
+          (
+            delta(smartctl_device_attribute{
+              job="smartctl",
+              attribute_value_type="raw",
+              attribute_name="UDMA_CRC_Error_Count"
+            }[24h])
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SMART CRC error count increased"
+          description: "UDMA_CRC_Error_Count increased in the last 24 hours. Check SATA cable, backplane, and power path."
+
+      - alert: SmartctlErrorLogIncreased
+        expr: |
+          (
+            delta(smartctl_device_error_log_count{job="smartctl"}[24h])
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SMART error log increased"
+          description: "SMART error log count increased in the last 24 hours. Check smartctl output and the alert labels."
+
+      - alert: SmartctlSelfTestErrorsPresent
+        expr: |
+          (
+            smartctl_device_self_test_log_error_count{job="smartctl"}
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl"}
+          ) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SMART self-test errors present"
+          description: "SMART self-test error count is non-zero. Check self-test history and rerun a long self-test if needed."
+
+      - alert: SmartctlNvmeCriticalWarning
+        expr: |
+          (
+            smartctl_device_critical_warning{job="smartctl"}
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl", protocol=~"NVMe|nvme"}
+          ) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NVMe SMART critical warning"
+          description: "NVMe critical_warning is non-zero. This is a real NVMe health signal; check smartctl output and alert labels."
+
+      - alert: SmartctlNvmeMediaErrorsIncreased
+        expr: |
+          (
+            delta(smartctl_device_media_errors{job="smartctl"}[24h])
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl", protocol=~"NVMe|nvme"}
+          ) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NVMe media errors increased"
+          description: "NVMe media error count increased in the last 24 hours. Check smartctl output and alert labels."
+
+      - alert: SmartctlNvmePercentageUsedHigh
+        expr: |
+          (
+            smartctl_device_percentage_used{job="smartctl"}
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl", protocol=~"NVMe|nvme"}
+          ) > 90
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "NVMe percentage used high"
+          description: "NVMe percentage_used is above 90. Check remaining endurance and plan replacement."
+
+      - alert: SmartctlNvmeAvailableSpareLow
+        expr: |
+          (
+            (
+              smartctl_device_available_spare{job="smartctl"}
+              <= on(instance, device)
+              smartctl_device_available_spare_threshold{job="smartctl"}
+            )
+            * on(instance, device) group_left(model_name, serial_number, protocol)
+              smartctl_device{job="smartctl", protocol=~"NVMe|nvme"}
+          )
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NVMe available spare below threshold"
+          description: "NVMe available_spare is at or below available_spare_threshold. Check smartctl output and alert labels."

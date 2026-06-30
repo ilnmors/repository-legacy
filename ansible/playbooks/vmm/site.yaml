@@ -143,6 +143,15 @@
       when: inventory_hostname != "vmm_init"
       tags: ["site", "crowdsec"]
 
+    - name: Set smartctl generator
+      ansible.builtin.include_role:
+        name: "vmm"
+        tasks_from: "services/set_smart_metric_generator"
+        apply:
+          tags: ["site", "smart"]
+      when: inventory_hostname != "vmm_init"
+      tags: ["site", "smart"]
+
     - name: Set alloy
       ansible.builtin.include_role:
         name: "common"

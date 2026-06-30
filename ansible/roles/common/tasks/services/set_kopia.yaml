@@ -52,6 +52,7 @@
         deb: "/var/cache/apt/archives/kopia-{{ version['packages']['kopia'] }}.deb"
         state: "present"
       become: true
+      notify: "notification_restart_kopia_server"
 
     - name: Deploy kopia env
       ansible.builtin.template:

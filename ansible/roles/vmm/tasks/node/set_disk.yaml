@@ -1,18 +1,10 @@
 ---
-- name: Check btrfs installation
-  ansible.builtin.shell: |
-    command -v btrfs
-  become: true # btrfs is located in /usr/sbin, which means root permission is needed.
-  changed_when: false
-  failed_when: false
-  register: "is_btrfs_installed"
-
 - name: Install btrfs
   ansible.builtin.apt:
-    name: "btrfs-progs"
+    name:
+      - "btrfs-progs"
     state: "present"
   become: true
-  when: is_btrfs_installed.rc != 0
 
 - name: Mount data disk
   block:

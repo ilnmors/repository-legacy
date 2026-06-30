@@ -1,12 +1,4 @@
 ---
-- name: Check podman installation
-  ansible.builtin.shell: |
-    command -v podman
-  changed_when: false
-  failed_when: false
-  register: "is_podman_installed"
-  ignore_errors: true
-
 - name: Create container directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/containers"
@@ -54,4 +46,3 @@
       - "podman"
     state: "present"
   become: true
-  when: is_podman_installed.rc != 0

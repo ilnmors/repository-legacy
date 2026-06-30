@@ -1,19 +1,10 @@
 ---
-- name: Check nftables installation
-  ansible.builtin.shell: |
-    command -v nft
-  become: true # nftables is located in /usr/sbin, which means root permission is needed.
-  changed_when: false
-  failed_when: false
-  register: "is_nftables_installed"
-  ignore_errors: true
-
 - name: Install nftables
   ansible.builtin.apt:
-    name: "nftables"
+    name:
+      - "nftables"
     state: "present"
   become: true
-  when: is_nftables_installed.rc != 0
 
 - name: Enable nftables.service
   ansible.builtin.systemd:

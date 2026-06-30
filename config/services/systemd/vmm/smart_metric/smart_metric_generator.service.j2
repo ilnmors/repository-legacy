@@ -1,0 +1,11 @@
+[Unit]
+Description=SMART Metric generator
+
+[Service]
+Type=oneshot
+
+StandardOutput=journal
+StandardError=journal
+
+# Run the script
+ExecStart=/usr/local/sbin/smart_metric_generator.sh

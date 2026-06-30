@@ -1,19 +1,10 @@
 ---
-- name: Check bind9 installation
-  ansible.builtin.shell: |
-    command -v named
-  become: true # named is located in /usr/sbin, which means root permission is needed.
-  changed_when: false
-  failed_when: false
-  register: "is_bind_installed"
-  ignore_errors: true
-
 - name: Install bind9
   ansible.builtin.apt:
-    name: "bind9"
+    name:
+      - "bind9"
     state: "present"
   become: true
-  when: is_bind_installed.rc != 0
 
 - name: Deploy acme.key
   ansible.builtin.copy:

@@ -15,10 +15,6 @@ domain:
   dc: "dc=ilnmors,dc=internal"
   org: "ilnmors"
 
-# DNS configuration including bind and blocky should be set manually.
-# named.conf.j2 is also set manually.
-# Check the hosts.j2 when cname records are fixed
-
 services:
   # common
   wireguard:
@@ -31,6 +27,17 @@ services:
       internal: "crowdsec"
     ports:
       https: "8080"
+    sub:
+      machines:
+        - "fw"
+        - "vmm"
+        - "bk"
+        - "infra"
+        - "auth"
+        - "app"
+      bouncers:
+        - "fw"
+        - "caddy"
     dependency:
       cert: true
   kopia:
@@ -272,9 +279,9 @@ version:
   packages:
     sops: "3.13.1"
     step: "0.30.2"
-    kopia: "0.23.0"
-    blocky: "0.29.0"
-    alloy: "1.16.1"
+    kopia: "0.23.1"
+    blocky: "0.32.1"
+    alloy: "1.17.0"
   containers:
     # common
     caddy: "2.11.4"
@@ -291,8 +298,8 @@ version:
     maddy: "0.9.5"
     x509-exporter: "4.1.0"
     prometheus: "v3.12.0"
-    loki: "3.7.1"
-    grafana: "13.0.1"
+    loki: "3.7.3"
+    grafana: "13.0.2"
     # Auth
     authelia: "4.39.20"
     # App

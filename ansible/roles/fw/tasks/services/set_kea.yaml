@@ -1,20 +1,10 @@
 ---
-- name: Check Kea dhcp4 installation
-  ansible.builtin.shell: |
-    command -v kea-dhcp4
-  become: true # kea-dhcp4 is located in /usr/sbin, which means root permission is needed.
-  changed_when: false
-  failed_when: false
-  register: "is_kea4_installed"
-  ignore_errors: true
-
 - name: Install kea dhcp 4
   ansible.builtin.apt:
     name:
       - "kea-dhcp4-server"
     state: "present"
   become: true
-  when: is_kea4_installed.rc != 0
 
 - name: Deploy kea dhcp4 conf
   ansible.builtin.template:

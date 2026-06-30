@@ -1,18 +1,10 @@
 ---
-- name: Check chrnoy installation
-  ansible.builtin.shell: |
-    command -v chronyc
-  changed_when: false
-  failed_when: false
-  register: "is_chrony_installed"
-  ignore_errors: true
-
 - name: Install chrony
   ansible.builtin.apt:
-    name: "chrony"
+    name:
+      - "chrony"
     state: "present"
   become: true
-  when: is_chrony_installed.rc != 0
 
 - name: Deploy local acl file
   ansible.builtin.template:
