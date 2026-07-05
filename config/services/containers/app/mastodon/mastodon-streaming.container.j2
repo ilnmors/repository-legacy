@@ -1,0 +1,46 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Mastodon Streaming
+
+After=network-online.target redis_mastodon.service
+Wants=network-online.target redis_mastodon.service
+
+[Container]
+Image=ghcr.io/mastodon/mastodon-streaming:{{ version['containers']['mastodon'] }}
+ContainerName=mastodon-streaming
+HostName=mastodon-streaming
+
+PublishPort={{ services['mastodon']['ports']['streaming'] }}:4000/tcp
+
+Volume=%h/containers/mastodon/ssl:/etc/ssl/mastodon:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="LOCAL_DOMAIN={{ services['mastodon']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="LOG_LEVEL=info"
+
+# PostgreSQL
+Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="DB_NAME=mastodon_db"
+Environment="DB_USER=mastodon"
+Environment="DB_SSLMODE=verify-full"
+Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/mastodon/{{ root_cert_filename }}"
+Secret=MASTODON_POSTGRES_PASSWORD,type=env,target=DB_PASS
+
+# Redis
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon']['ports']['redis'] }}"
+
+# Process
+Exec=node ./streaming/index.js
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

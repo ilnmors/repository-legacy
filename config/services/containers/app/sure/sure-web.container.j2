@@ -42,11 +42,11 @@ Environment="REDIS_URL=redis://host.containers.internal:{{ services['sure']['por
 Environment="OIDC_CLIENT_ID=sure"
 Environment="OIDC_ISSUER=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="OIDC_REDIRECT_URI=https://{{ services['sure']['domain']['public'] }}.{{ domain['public'] }}/auth/openid_connect/callback"
-Secret=SURE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
 Environment="OIDC_BUTTON_LABEL=Sign in with Authelia"
 Environment="AUTH_JIT_MODE=create_and_link"
 # email's domain, e.g. ilnmors.internal then only user@ilnmors.internal is allowed to sign-up
 Environment="ALLOWED_OIDC_DOMAINS="
+Secret=SURE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
 
 # WebAuthn / Passkey
 Environment="WEBAUTHN_RP_ID={{ domain['public'] }}"

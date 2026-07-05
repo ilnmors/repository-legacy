@@ -157,3 +157,18 @@
   changed_when: false
   listen: "notification_restart_snappymail"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart mastodon
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  loop:
+    - "mastodon-web.service"
+    - "mastodon-worker.service"
+    - "mastodon-streaming.service"
+  changed_when: false
+  listen: "notification_restart_mastodon"
+  ignore_errors: true # noqa: ignore-errors

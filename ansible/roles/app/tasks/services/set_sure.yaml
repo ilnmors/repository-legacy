@@ -78,7 +78,7 @@
     force: true
   loop:
     - name: "SURE_SECRET_KEY_BASE"
-      value: "{{ hostvars['console']['sure']['session_secret'] }}"
+      value: "{{ hostvars['console']['sure']['secret_key'] }}"
     - name: "SURE_POSTGRES_PASSWORD"
       value: "{{ hostvars['console']['postgresql']['password']['sure'] }}"
     - name: "SURE_OIDC_CLIENT_SECRET"

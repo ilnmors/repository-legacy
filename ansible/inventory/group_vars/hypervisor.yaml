@@ -22,12 +22,23 @@ hardware:
     slot: "0x02"
     function: "0x0"
   disk:
+    # NVMe is set when the hypervisor is initiated manually.
+    nvme:
+      serials:
+        - "S5GXNX0T228635E"
+      fs:
+        type: "ext4"
+        label: ""
+        mount_point:
+          - "/"
+          - "/var/lib/libvirt"
+        mount_opts: ""
     data:
       serials:
         - "WMC6N0E617S8"
-        - "P6HVTL0W"
-        - "P2GH354H"
-        - "P6GJKSMP"
+        - "PN1134P6HVTL0W"
+        - "PN1138P2GH354H"
+        - "PN2131P6GJKSMP"
       fs:
         type: "btrfs"
         label: "DATA"

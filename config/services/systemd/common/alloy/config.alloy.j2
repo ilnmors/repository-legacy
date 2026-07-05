@@ -338,7 +338,7 @@ loki.process "journal_parser" {
         }
     }
     stage.match {
-        selector = "{level!=\"fatal\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(fatal|critical|panic|uncaught|unhandled|assertion failed|out of memory|\\bboom\\b|killed process)\""
+        selector = "{level!=\"fatal\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(panic|assertion failed|out of memory|segfault|killed process)\""
         stage.static_labels {
             values = {
                 level = "fatal",
@@ -346,7 +346,7 @@ loki.process "journal_parser" {
         }
     }
     stage.match {
-        selector = "{level=~\"info|debug\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(\\berror\\b|\\berr\\b|\\bfailed\\b|\\bfailure\\b|\\bexception\\b|traceback|segfault|exit-code|container died|permission denied|access denied|connection refused|connection reset|timed out|timeout exceeded|no such file|authentication failed|sqlstate|duplicate key|relation .* does not exist|column .* does not exist|database .* does not exist|relation .* already exists|column .* already exists|x509|unknown authority|certificate .*expired|tls handshake|bad gateway|upstream .*failed|upstream .*error)\""
+        selector = "{level=~\"info|debug\", job!~\"loki|prometheus|grafana\"} |~ \"(?i)(\\berror\\b|\\berr\\b|\\bfailed\\b|\\bfailure\\b|\\bexception\\b|traceback|exit-code|container died|permission denied|access denied|connection refused|connection reset|timed out|timeout exceeded|no such file|authentication failed|sqlstate|duplicate key|relation .* does not exist|column .* does not exist|database .* does not exist|relation .* already exists|column .* already exists|x509|unknown authority|certificate .*expired|tls handshake|bad gateway|upstream .*failed|upstream .*error)\""
         stage.static_labels {
             values = {
                 level = "error",

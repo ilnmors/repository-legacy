@@ -28,7 +28,7 @@ groups:
 {% for filename in ['root', 'intermediate'] + (services | dict2items | selectattr('value.dependency.cert', 'defined') | selectattr('value.dependency.cert', 'equalto', true) | map(attribute='key') | list) %}
       - alert: {{ filename | replace('.', '_') }}_is_expired_soon
         expr: |
-          max(x509_cert_not_after{filename="{{ filename }}.crt"}) - time() < 2592000
+          min(x509_cert_not_after{filename="{{ filename }}.crt"}) - time() < 2592000
         for: 1d
         labels:
           severity: critical
@@ -57,6 +57,20 @@ groups:
         annotations:
           summary: "No SMART devices discovered on vmm"
           description: "smartctl-generator is running, but it reports fewer than one SMART device. Check USB filtering, /sys/class/block discovery, and smartctl output."
+
+{% set devices_count = 
+    (hostvars['vmm']['hardware']['disk']['data']['serials'] | default([]) | length) + 
+    (hostvars['vmm']['hardware']['disk']['backup']['serials'] | default([]) | length) +
+    (hostvars['vmm']['hardware']['disk']['nvme']['serials'] | default([]) | length) %}
+      - alert: SmartctlDeviceCountLow
+        expr: |
+          (max_over_time(smartctl_devices{job="smartctl", instance="vmm"}[5m]) or on() vector(0)) < {{ devices_count }}
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMART device count is low on vmm"
+          description: "Expected {{ devices_count }} SMART devices on vmm, but fewer than {{ devices_count }} are currently reported. Check missing HDD/NVMe devices, smartctl output, and device discovery."
 
       - alert: SmartctlDeviceHealthFailed
         expr: |

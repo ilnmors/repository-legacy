@@ -91,7 +91,7 @@
     force: true
   loop:
     - name: "OUTLINE_SECRET_KEY"
-      value: "{{ hostvars['console']['outline']['session_secret'] }}"
+      value: "{{ hostvars['console']['outline']['secret_key'] }}"
     - name: "OUTLINE_UTILS_SECRET"
       value: "{{ hostvars['console']['outline']['utils_secret'] }}"
     - name: "OUTLINE_DATABASE_PASSWORD"

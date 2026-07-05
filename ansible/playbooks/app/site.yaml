@@ -266,6 +266,14 @@
           tags: ["site", "homebox"]
       tags: ["site", "homebox"]
 
+    - name: Set mastodon
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_mastodon"
+        apply:
+          tags: ["site", "mastodon"]
+      tags: ["site", "mastodon"]
+
     - name: Set homepage
       ansible.builtin.include_role:
         name: "app"

@@ -324,3 +324,24 @@ identity_providers:
         grant_types:
           - 'authorization_code'
         token_endpoint_auth_method: 'client_secret_basic'
+      # mastodon
+      - client_id: 'mastodon'
+        client_name: 'mastodon'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['mastodon']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['mastodon']['domain']['public'] }}.{{ domain['public'] }}/auth/auth/openid_connect/callback'
+        scopes:
+          - 'openid'
+          - 'groups'
+          - 'email'
+          - 'profile'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        token_endpoint_auth_method: 'client_secret_basic'

@@ -78,7 +78,7 @@
 - name: Initialize nextcloud
   when: not is_nextcloud_init.stat.exists
   block:
-    - name: Execute init command (Including pulling image)
+    - name: Execute init command
       containers.podman.podman_container:
         name: "nextcloud_init"
         image: "docker.io/library/nextcloud:{{ version['containers']['nextcloud'] }}"

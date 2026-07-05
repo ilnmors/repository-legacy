@@ -84,6 +84,12 @@
 {% elif node['name'] == 'app' %}
 {{ service['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
+{% if service['ports']['streaming'] is defined %}
+        @streaming path /api/v1/streaming*
+        reverse_proxy @streaming host.containers.internal:{{ service['ports']['streaming'] }} {
+                header_up Host {http.request.header.X-Forwarded-Host}
+        }
+{% endif %}
         reverse_proxy host.containers.internal:{{ service['ports']['http'] }} {
                header_up Host {http.request.header.X-Forwarded-Host}
         }

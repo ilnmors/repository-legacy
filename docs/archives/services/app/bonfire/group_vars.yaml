@@ -1,0 +1,14 @@
+---
+services:
+  bonfire:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+    dependency:
+      web: ""
+      db: ""
+
+version:
+  bonfire: "1.0.5-social-amd64"

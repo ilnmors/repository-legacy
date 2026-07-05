@@ -1,0 +1,57 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Mastodon worker
+
+After=network-online.target redis_mastodon.service
+Wants=network-online.target redis_mastodon.service
+
+[Container]
+Image=ghcr.io/mastodon/mastodon:{{ version['containers']['mastodon'] }}
+ContainerName=mastodon-worker
+HostName=mastodon-worker
+
+Volume=%h/data/containers/mastodon/system:/mastodon/public/system:rw
+Volume=%h/containers/mastodon/ssl:/etc/ssl/mastodon:ro
+
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="LOCAL_DOMAIN={{ services['mastodon']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="LIMITED_FEDERATION_MODE=true"
+Environment="DISALLOW_UNAUTHENTICATED_API_ACCESS=true"
+Environment="ES_ENABLED=false"
+Environment="RAILS_LOG_LEVEL=info"
+
+# PostgreSQL
+Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="DB_NAME=mastodon_db"
+Environment="DB_USER=mastodon"
+Environment="DB_SSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/mastodon/{{ root_cert_filename }}"
+Secret=MASTODON_POSTGRES_PASSWORD,type=env,target=DB_PASS
+
+# Redis
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon']['ports']['redis'] }}"
+
+# Rails secrets
+Secret=MASTODON_SECRET_KEY_BASE,type=env,target=SECRET_KEY_BASE
+Secret=MASTODON_ENCRYPTION_PRIMARY_KEY,type=env,target=ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+Secret=MASTODON_ENCRYPTION_DETERMINISTIC_KEY,type=env,target=ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+Secret=MASTODON_ENCRYPTION_SALT,type=env,target=ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+Secret=MASTODON_VAPID_PRIVATE_KEY,type=env,target=VAPID_PRIVATE_KEY
+Secret=MASTODON_VAPID_PUBLIC_KEY,type=env,target=VAPID_PUBLIC_KEY
+
+# Process
+Exec=bundle exec sidekiq
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

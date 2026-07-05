@@ -1,0 +1,59 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Bonfire
+
+[Container]
+Image=docker.io/bonfirenetworks/bonfire:{{ version['containers']['bonfire'] }}
+
+ContainerName=bonfire
+HostName=bonfire
+
+PublishPort={{ services['bonfire']['ports']['http'] }}:4000
+
+# Volumes
+Volume=%h/data/containers/bonfire/uploads:/opt/app/data/uploads:rw
+Volume=%h/containers/bonfire/ssl:/etc/ssl/bonfire:ro
+Volume=%h/containers/bonfire/config/runtime.exs:/opt/app/releases/{{ version['containers']['bonfire'] | replace('-amd64', '') }}/runtime.exs:ro
+
+# Environment
+Environment="TZ={{ timezone }}"
+Environment="MIX_ENV=prod"
+Environment="FLAVOUR=social"
+Environment="WITH_DOCKER=true"
+Environment="HOSTNAME={{ services['bonfire']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="PUBLIC_PORT=443"
+Environment="SERVER_PORT={{ services['bonfire']['ports']['http'] }}"
+
+# Secrets
+Secret=BONFIRE_SESSION_SECRET,type=env,target=SECRET_KEY_BASE
+Secret=BONFIRE_SESSION_SALT,type=env,target=SIGNING_SALT
+Secret=BONFIRE_ENCRYPT_SALT,type=env,target=ENCRYPTION_SALT
+Secret=BONFIRE_RELEASE_COOKIE,type=env,target=RELEASE_COOKIE
+
+# Database
+Environment="POSTGRES_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="POSTGRES_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="POSTGRES_USER=bonfire"
+Environment="POSTGRES_DB=bonfire_db"
+Environment="DB_SSL=true"
+Environment="DB_CA_CERT_FILE=/etc/ssl/bonfire/{{ root_cert_filename }}"
+Secret=BONFIRE_DB_PASSWORD,type=env,target=POSTGRES_PASSWORD
+
+# OIDC
+Environment="OPENID_1_DISCOVERY=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
+Environment="OPENID_1_CLIENT_ID=bonfire"
+Environment="OPENID_1_DISPLAY_NAME=Authelia"
+Environment="OPENID_1_SCOPE=openid email profile groups"
+Environment="OPENID_1_ENABLE_SIGNUP=true"
+Secret=BONFIRE_OIDC_CLIENT_SECRET,type=env,target=OPENID_1_CLIENT_SECRET
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

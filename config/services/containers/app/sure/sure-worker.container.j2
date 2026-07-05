@@ -15,14 +15,9 @@ HostName=sure-worker
 Volume=%h/data/containers/sure/storage:/rails/storage:rw
 Volume=%h/containers/sure/ssl:/etc/ssl/sure:ro
 
-Exec=bundle exec sidekiq
-
 # General
 Environment="TZ={{ timezone }}"
 Environment="SELF_HOSTED=true"
-Environment="ONBOARDING_STATE=closed"
-Environment="RAILS_FORCE_SSL=false"
-Environment="RAILS_ASSUME_SSL=true"
 Environment="APP_DOMAIN={{ services['sure']['domain']['public'] }}.{{ domain['public'] }}"
 Secret=SURE_SECRET_KEY_BASE,type=env,target=SECRET_KEY_BASE
 
@@ -38,24 +33,12 @@ Secret=SURE_POSTGRES_PASSWORD,type=env,target=POSTGRES_PASSWORD
 # Redis
 Environment="REDIS_URL=redis://host.containers.internal:{{ services['sure']['ports']['redis'] }}/1"
 
-# OIDC - Authelia
-Environment="OIDC_CLIENT_ID=sure"
-Environment="OIDC_ISSUER=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
-Environment="OIDC_REDIRECT_URI=https://{{ services['sure']['domain']['public'] }}.{{ domain['public'] }}/auth/openid_connect/callback"
-Secret=SURE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
-Environment="OIDC_BUTTON_LABEL=Sign in with Authelia"
-Environment="AUTH_JIT_MODE=create_and_link"
-# email's domain, e.g. ilnmors.internal then only user@ilnmors.internal is allowed to sign-up
-Environment="ALLOWED_OIDC_DOMAINS="
-
-# WebAuthn / Passkey
-Environment="WEBAUTHN_RP_ID={{ domain['public'] }}"
-Environment="WEBAUTHN_ALLOWED_ORIGINS=https://{{ services['sure']['domain']['public'] }}.{{ domain['public'] }}"
-
 # Provider
 ## Currency
 Environment="EXCHANGE_RATE_PROVIDER=yahoo_finance"
 Environment="SECURITIES_PROVIDER=yahoo_finance"
+
+Exec=bundle exec sidekiq
 
 [Service]
 ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}

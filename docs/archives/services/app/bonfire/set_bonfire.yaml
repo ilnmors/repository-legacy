@@ -1,0 +1,101 @@
+---
+- name: Create bonfire directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/bonfire"
+    - "data/containers/bonfire/uploads"
+    - "containers/bonfire"
+    - "containers/bonfire/ssl"
+    - "containers/bonfire/config"
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/bonfire/ssl/{{ root_cert_filename }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  notify: "notification_restart_bonfire"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "BONFIRE_SESSION_SECRET"
+      value: "{{ hostvars['console']['bonfire']['session_secret'] }}"
+    - name: "BONFIRE_SESSION_SALT"
+      value: "{{ hostvars['console']['bonfire']['session_salt'] }}"
+    - name: "BONFIRE_ENCRYPT_SALT"
+      value: "{{ hostvars['console']['bonfire']['encrypt_salt'] }}"
+    - name: "BONFIRE_RELEASE_COOKIE"
+      value: "{{ hostvars['console']['bonfire']['release_cookie'] }}"
+    - name: "BONFIRE_DB_PASSWORD"
+      value: "{{ hostvars['console']['postgresql']['password']['bonfire'] }}"
+    - name: "BONFIRE_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['bonfire']['oidc']['secret'] }}"
+  notify: "notification_restart_bonfire"
+  no_log: true
+
+- name: Deploy config file
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/bonfire/config/runtime.exs"
+    dest: "{{ node['home_path'] }}/containers/bonfire/config/runtime.exs"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  notify: "notification_restart_bonfire"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/bonfirenetworks/bonfire"
+    tag: "{{ version['containers']['bonfire'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy bonfire.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/bonfire/bonfire.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/bonfire.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_bonfire"
+
+- name: Enable bonfire.service
+  ansible.builtin.systemd:
+    name: "bonfire.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_bonfirenetworks_bonfire_{{ version['containers']['bonfire'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/bonfirenetworks/bonfire:{{ version['containers']['bonfire'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_bonfirenetworks_bonfire_{{ version['containers']['bonfire'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_bonfirenetworks_bonfire_{{ version['containers']['bonfire'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true
