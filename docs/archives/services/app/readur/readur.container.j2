@@ -1,0 +1,47 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Readur
+
+[Container]
+Image=ghcr.io/readur/readur:{{ version['containers']['readur'] }}
+
+ContainerName=readur
+HostName=readur
+
+PublishPort={{ services['readur']['ports']['http'] }}:8000/tcp
+
+# Volumes
+Volume=%h/data/containers/readur/uploads:/app/uploads:rw
+Volume=%h/data/containers/readur/watch:/app/watch:rw
+Volume=%h/containers/readur/ssl:/etc/ssl/readur:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="ALLOW_LOCAL_AUTH=false"
+Environment="OCR_LANGUAGE=eng+kor"
+Secret=READUR_JWT_SECRET,type=env,target=JWT_SECRET
+
+# Database
+Secret=READUR_DATABASE_URL,type=env,target=DATABASE_URL
+
+# OIDC
+Environment="OIDC_ENABLED=true"
+Environment="OIDC_CLIENT_ID=readur"
+Environment="OIDC_ISSUER_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="OIDC_REDIRECT_URI=https://{{ services['readur']['domain']['public'] }}.{{ domain['public'] }}/api/auth/oidc/callback"
+Environment="OIDC_AUTO_REGISTER=true"
+Secret=READUR_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+# Logging
+Environment="RUST_LOG=warn"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

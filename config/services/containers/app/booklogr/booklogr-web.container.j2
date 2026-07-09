@@ -1,0 +1,42 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=BookLogr Web
+
+After=network-online.target booklogr-api.service
+Wants=network-online.target booklogr-api.service
+
+[Container]
+Image=docker.io/mozzo/booklogr-web:{{ version['containers']['booklogr'] }}
+ContainerName=booklogr-web
+HostName=booklogr-web
+
+PublishPort={{ services['booklogr']['ports']['http'] }}:80/tcp
+
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="BL_DEMO_MODE=false"
+Environment="BL_DEBUG=false"
+Environment="BL_CHECK_UPDATES=true"
+
+# API
+Environment="BL_API_ENDPOINT=https://{{ services['booklogr']['domain']['public'] }}.{{ domain['public'] }}"
+
+# Authentication UI
+Environment="BL_SINGLE_USER_MODE=false"
+Environment="BL_ALLOW_MANUAL_LOGIN=false"
+Environment="BL_ALLOW_REGISTRATION=false"
+
+# OIDC - Authelia
+Environment="BL_OIDC_AUTHORITY=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="BL_OIDC_CLIENT_ID=booklogr"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

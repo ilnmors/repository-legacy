@@ -1,0 +1,51 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=BookLogr API
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/mozzo/booklogr:{{ version['containers']['booklogr'] }}
+ContainerName=booklogr-api
+HostName=booklogr-api
+
+PublishPort={{ services['booklogr']['ports']['api'] }}:5000/tcp
+
+Volume=%h/data/containers/booklogr/profile_pictures:/app/profile_pictures:rw
+Volume=%h/data/containers/booklogr/export_data:/app/export_data:rw
+Volume=%h/containers/booklogr/ssl:/etc/ssl/booklogr:ro
+
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="SINGLE_USER_MODE=false"
+Environment="EXPORT_FOLDER=/app/export_data"
+
+# PostgreSQL
+Environment="DATABASE_URL=postgresql://booklogr@{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}/booklogr_db"
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/booklogr/{{ root_cert_filename }}"
+Secret=BOOKLOGR_POSTGRES_PASSWORD,type=env,target=PGPASSWORD
+
+# Authentication
+Environment="AUTH_ALLOW_REGISTRATION=true"
+Environment="AUTH_REQUIRE_VERIFICATION=false"
+Secret=BOOKLOGR_AUTH_SECRET_KEY,type=env,target=AUTH_SECRET_KEY
+
+# OIDC - Authelia
+Environment="OIDC_CLIENT_ID=booklogr"
+Environment="OIDC_REDIRECT_URI=https://{{ services['booklogr']['domain']['public'] }}.{{ domain['public'] }}/callback"
+Environment="OIDC_DISCOVERY_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
+Secret=BOOKLOGR_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

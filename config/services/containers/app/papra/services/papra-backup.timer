@@ -1,0 +1,14 @@
+[Unit]
+Description=Run Papra Data Backup service every day
+
+[Timer]
+# Execute service after 1 min on booting
+OnBootSec=1min
+
+OnCalendar=*-*-* 23:50:00
+
+# When timer is activated, Service also starts.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

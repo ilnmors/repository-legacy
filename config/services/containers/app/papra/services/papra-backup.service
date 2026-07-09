@@ -1,0 +1,68 @@
+[Unit]
+Description=Papra sqlite backup
+Requires=papra.service
+After=papra.service
+
+[Service]
+Type=oneshot
+# Create a consistent SQLite snapshot and atomically publish it.
+ExecStart=/usr/bin/podman exec -u nonroot papra node --input-type=module -e '\
+        import { createClient } from "@libsql/client"; \
+        import { rename, rm } from "node:fs/promises"; \
+        \
+        /* Paths */ \
+        const databaseUrl = "file:/app/app-data/db/db.sqlite"; \
+        const backupDir = "/app/backup"; \
+        \
+        /* Build the backup name from the container-local date. */ \
+        const now = new Date(); \
+        const date = [ \
+            now.getFullYear(), \
+            String(now.getMonth() + 1).padStart(2, "0"), \
+            String(now.getDate()).padStart(2, "0"), \
+        ].join("-"); \
+        \
+        const dst = backupDir + "/db_" + date + ".sqlite"; \
+        const tmp = dst + ".tmp"; \
+        \
+        /* Never expose a partially-created backup as a completed one. */ \
+        let completed = false; \
+        try { \
+            await rm(tmp, { force: true }); \
+            \
+            /* Create a transactionally consistent SQLite snapshot. */ \
+            const db = createClient({ url: databaseUrl }); \
+            try { \
+                await db.execute({ \
+                    sql: "VACUUM INTO ?", \
+                    args: [tmp], \
+                }); \
+            } finally { \
+                db.close(); \
+            } \
+            \
+            /* Publish only after VACUUM INTO has completed successfully. */ \
+            await rename(tmp, dst); \
+            completed = true; \
+        } finally { \
+            if (!completed) { \
+                await rm(tmp, { force: true }); \
+            } \
+        }'
+ExecStart=/usr/bin/podman exec -u nonroot papra sh -c "find /app/backup/ -maxdepth 1 -type f -name 'db_*.sqlite' -mtime +7 -delete"
+
+# Verify
+#podman exec -u nonroot -w /app papra \
+#  node --input-type=module -e '
+#    const m=await import(process.argv[1]);
+#    const db=m.createClient({url:process.argv[2]});
+#    try {
+#      const r=await db.execute("PRAGMA quick_check");
+#      console.log(r.rows);
+#    } finally {
+#      db.close();
+#    }
+#  ' \
+#  "@libsql/client" \
+#  "file:/app/backup/test-backup.sqlite"
+# > Result: [ { quick_check: 'ok' } ]

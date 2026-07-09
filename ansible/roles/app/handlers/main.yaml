@@ -43,17 +43,6 @@
   listen: "notification_restart_immich-ml"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart paperless
-  ansible.builtin.systemd:
-    name: "paperless.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_paperless"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart nextcloud
   ansible.builtin.systemd:
     name: "nextcloud.service"
@@ -171,4 +160,40 @@
     - "mastodon-streaming.service"
   changed_when: false
   listen: "notification_restart_mastodon"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart booklogr
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  loop:
+    - "booklogr-api.service"
+    - "booklogr-web.service"
+  changed_when: false
+  listen: "notification_restart_booklogr"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart papra
+  ansible.builtin.systemd:
+    name: "papra.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_papra"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart romm
+  ansible.builtin.systemd:
+    name: "romm.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_romm"
   ignore_errors: true # noqa: ignore-errors

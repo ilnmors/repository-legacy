@@ -12,7 +12,7 @@ Image=ghcr.io/mastodon/mastodon-streaming:{{ version['containers']['mastodon'] }
 ContainerName=mastodon-streaming
 HostName=mastodon-streaming
 
-PublishPort={{ services['mastodon']['ports']['streaming'] }}:4000/tcp
+PublishPort={{ services['mastodon']['ports']['api'] }}:4000/tcp
 
 Volume=%h/containers/mastodon/ssl:/etc/ssl/mastodon:ro
 

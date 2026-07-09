@@ -1,0 +1,21 @@
+---
+identity_providers:
+  oidc:
+      # readur
+      - client_id: 'readur'
+        client_name: 'readur'
+        consent_mode: 'implicit'
+        client_secret: ''
+        public: false
+        authorization_policy: 'one_factor'
+        redirect_uris:
+          - 'https://readur.example.com/api/auth/oidc/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        token_endpoint_auth_method: 'client_secret_basic'

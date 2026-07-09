@@ -23,7 +23,6 @@
 {% if node['name'] == 'app' %}
 {
         servers {
-                # Only accept packets from auth main caddy
                 trusted_proxies static {{ hostvars['fw']['network']['auth']['ipv4']['server'] }} {{ hostvars['fw']['network']['auth']['ipv6']['server'] }}
         }
 }
@@ -84,9 +83,13 @@
 {% elif node['name'] == 'app' %}
 {{ service['domain']['internal'] }}.{{ domain['internal'] }} {
         import private_tls
-{% if service['ports']['streaming'] is defined %}
-        @streaming path /api/v1/streaming*
-        reverse_proxy @streaming host.containers.internal:{{ service['ports']['streaming'] }} {
+{% if service['route'] is defined and service['route']['deny'] is defined %}
+        @deny path {{ service['route']['deny'] }}
+        respond @deny 404
+{% endif %}
+{% if service['route'] is defined and service['route']['api'] is defined %}
+        @api path {{ service['route']['api'] }}
+        reverse_proxy @api host.containers.internal:{{ service['ports']['api'] }} {
                 header_up Host {http.request.header.X-Forwarded-Host}
         }
 {% endif %}

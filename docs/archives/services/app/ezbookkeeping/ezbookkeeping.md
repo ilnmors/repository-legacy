@@ -6,7 +6,7 @@
 
 - Create the password with `openssl rand -base64 32`
   - Save this value in secrets.yaml in `postgresql.password.ezbookkeeping`
-  - Access infra server to create paperless_db with `podman exec -it postgresql psql -U postgres`
+  - Access infra server to create ezbookkeeping_db with `podman exec -it postgresql psql -U postgres`
 
 ```SQL
 CREATE USER ezbookkeeping WITH PASSWORD '<redacted>';

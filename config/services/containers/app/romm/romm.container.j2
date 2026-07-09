@@ -1,0 +1,80 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=RomM
+
+After=redis_romm.service
+Wants=redis_romm.service
+
+[Container]
+Image=docker.io/rommapp/romm:{{ version['containers']['romm'] }}
+ContainerName=romm
+HostName=romm
+
+PublishPort={{ services['romm']['ports']['http'] }}:8080/tcp
+
+# Volumes
+Volume=%h/data/containers/romm/library:/romm/library:rw
+Volume=%h/data/containers/romm/resources:/romm/resources:rw
+Volume=%h/data/containers/romm/assets:/romm/assets:rw
+Volume=%h/containers/romm/ssl:/etc/ssl/romm:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="ROMM_BASE_URL=https://{{ services['romm']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="DISABLE_SETUP_WIZARD=true"
+Environment="DISABLE_USERPASS_LOGIN=true"
+
+# Secrets
+Secret=ROMM_AUTH_SECRET_KEY,type=env,target=ROMM_AUTH_SECRET_KEY
+
+# Database
+Environment="ROMM_DB_DRIVER=postgresql"
+Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="DB_NAME=romm_db"
+Environment="DB_USER=romm"
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/romm/{{ root_cert_filename }}"
+Secret=ROMM_DATABASE_PASSWORD,type=env,target=DB_PASSWD
+
+# Redis
+Environment="REDIS_HOST=host.containers.internal"
+Environment="REDIS_PORT={{ services['romm']['ports']['redis'] }}"
+
+# OIDC
+Environment="OIDC_ENABLED=true"
+Environment="OIDC_PROVIDER=authelia"
+Environment="OIDC_CLIENT_ID=romm"
+Environment="OIDC_REDIRECT_URI=https://{{ services['romm']['domain']['public'] }}.{{ domain['public'] }}/api/oauth/openid"
+Environment="OIDC_SERVER_APPLICATION_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="OIDC_USERNAME_ATTRIBUTE=preferred_username"
+Environment="OIDC_ALLOW_REGISTRATION=true"
+Environment="OIDC_CLAIM_ROLES=groups"
+Environment="OIDC_ROLE_ADMIN=admins"
+Environment="OIDC_ROLE_VIEWER=users"
+Environment="OIDC_AUTOLOGIN=false"
+Secret=ROMM_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+# Players
+Environment="DISABLE_EMULATOR_JS=false"
+Environment="DISABLE_RUFFLE_RS=false"
+
+# Metadata
+Environment="HASHEOUS_API_ENABLED=true"
+#Environment="PLAYMATCH_API_ENABLED=true"
+
+# Optional
+Environment="LOGLEVEL=INFO"
+Environment="DISABLE_LOGS_VIEWER=true"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

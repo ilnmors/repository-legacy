@@ -202,14 +202,6 @@
           tags: ["site", "immich"]
       tags: ["site", "immich"]
 
-    - name: Set paperless
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_paperless"
-        apply:
-          tags: ["site", "paperless"]
-      tags: ["site", "paperless"]
-
     - name: Set nextcloud
       ansible.builtin.include_role:
         name: "app"
@@ -273,6 +265,30 @@
         apply:
           tags: ["site", "mastodon"]
       tags: ["site", "mastodon"]
+
+    - name: Set booklogr
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_booklogr"
+        apply:
+          tags: ["site", "booklogr"]
+      tags: ["site", "booklogr"]
+
+    - name: Set papra
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_papra"
+        apply:
+          tags: ["site", "papra"]
+      tags: ["site", "papra"]
+
+    - name: Set romm
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_romm"
+        apply:
+          tags: ["site", "romm"]
+      tags: ["site", "romm"]
 
     - name: Set homepage
       ansible.builtin.include_role:

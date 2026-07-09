@@ -184,10 +184,12 @@ services:
       public: "mastodon"
       internal: "mastodon.app"
     ports:
-      http: "3006"
-      streaming: "4000"
-      redis: "6385"
+      http: "3002"
+      api: "4000"
+      redis: "6379"
     subuid: "100990"
+    route:
+      api: "/api/v1/streaming*"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -196,8 +198,8 @@ services:
       public: "nextcloud"
       internal: "nextcloud.app"
     ports:
-      http: "8002"
-      redis: "6382"
+      http: "8001"
+      redis: "6380"
     subuid: "100032"
     dependency:
       web: "app-public"
@@ -217,20 +219,33 @@ services:
       internal: "immich.app"
     ports:
       http: "2283"
-      redis: "6379"
+      redis: "6381"
     dependency:
       web: "app-public"
       db: "postgresql"
   immich-ml:
     ports:
       http: "3003"
+  booklogr:
+    domain:
+      public: "booklogr"
+      internal: "booklogr.app"
+    ports:
+      http: "5150"
+      api: "5000"
+    route:
+      api: "/v1 /v1/*"
+      deny: "/v1/login /v1/login/* /v1/register /v1/register/*"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   outline:
     domain:
       public: "outline"
       internal: "outline.app"
     ports:
       http: "3004"
-      redis: "6384"
+      redis: "6382"
     subuid: "101000"
     dependency:
       web: "app-public"
@@ -250,29 +265,27 @@ services:
       public: "sure"
       internal: "sure.app"
     ports:
-      http: "3002"
+      http: "3006"
       redis: "6383"
     subuid: "100999"
     dependency:
       web: "app-public"
       db: "postgresql"
-  paperless:
+  papra:
     domain:
-      public: "paperless"
-      internal: "paperless.app"
+      public: "papra"
+      internal: "papra.app"
     ports:
-      http: "8001"
-      redis: "6380"
-    subuid: "100999"
+      http: "1221"
+    subuid: "100998"
     dependency:
       web: "app-public"
-      db: "postgresql"
   mealie:
     domain:
       public: "mealie"
       internal: "mealie.app"
     ports:
-      http: "9001"
+      http: "9000"
     subuid: "100910"
     dependency:
       web: "app-public"
@@ -286,6 +299,18 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
+  romm:
+    domain:
+      public: "romm"
+      internal: "romm.app"
+    ports:
+      http: "8002"
+      redis: "6384"
+    subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+
 
 version:
   packages:
@@ -303,8 +328,6 @@ version:
     postgresql: "18.4"
     ### For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
     vectorchord: "1.1.1"
-    ### For bonfire
-    postgis: "3"
     ## lldap
     ldap: "v0.6.3"
     ## maddy
@@ -320,7 +343,6 @@ version:
     gitea: "1.26.4"
     redis: "8.8.0"
     immich: "v3.0.1"
-    paperless: "2.20.15"
     nextcloud: "34.0.1"
     collabora: "26.04.2.1.1"
     sure: "0.7.2"
@@ -331,3 +353,6 @@ version:
     homepage: "v1.13.2"
     snappymail: "v2.38.2"
     mastodon: "v4.6.3"
+    booklogr: "v1.11.1"
+    papra: "26.6.1-rootless"
+    romm: "5.0.0-beta.2"

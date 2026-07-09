@@ -1,0 +1,14 @@
+services:
+  paperless:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: ""
+      redis: ""
+    subuid: "100999"
+    dependency:
+      web: ""
+      db: ""
+version:
+    paperless: "2.20.15"

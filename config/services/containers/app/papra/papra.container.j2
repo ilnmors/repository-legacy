@@ -1,0 +1,43 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Papra
+
+[Container]
+Image=ghcr.io/papra-hq/papra:{{ version['containers']['papra'] }}
+
+ContainerName=papra
+HostName=papra
+
+PublishPort={{ services['papra']['ports']['http'] }}:1221/tcp
+
+# Volumes
+Volume=%h/data/containers/papra/data:/app/app-data:rw
+Volume=%h/data/containers/papra/backup:/app/backup:rw
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="APP_BASE_URL=https://{{ services['papra']['domain']['public'] }}.{{ domain['public'] }}"
+
+# Authentication
+Environment="AUTH_PROVIDERS_EMAIL_IS_ENABLED=false"
+Environment="AUTH_IS_PASSWORD_RESET_ENABLED=false"
+Environment="AUTH_SHOW_LEGAL_LINKS=false"
+Secret=PAPRA_AUTH_SECRET,type=env,target=AUTH_SECRET
+
+# OIDC
+Secret=PAPRA_AUTH_PROVIDERS_CUSTOMS,type=env,target=AUTH_PROVIDERS_CUSTOMS
+
+# Documents
+Environment="DOCUMENTS_CONTENT_EXTRACTION_ENABLED=true"
+Environment="DOCUMENTS_OCR_LANGUAGES=eng,kor"
+Environment="DOCUMENT_STORAGE_MAX_UPLOAD_SIZE=0"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

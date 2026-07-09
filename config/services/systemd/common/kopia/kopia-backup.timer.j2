@@ -2,7 +2,11 @@
 Description=Daily Kopia backup timer
 
 [Timer]
-OnCalendar=*-*-* 03:00:00
+{% if node['name'] == "app" %}
+OnCalendar=*-*-* 00:00:00
+{% elif node['name'] == "infra" %}
+OnCalendar=*-*-* 01:00:00
+{% endif %}
 Persistent=true
 RandomizedDelaySec=300
 

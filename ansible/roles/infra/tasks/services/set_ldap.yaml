@@ -59,12 +59,11 @@
 # The reason why this task doesn't use the way to check ".init" file is this tasks can override original database.
 # Absent of ".init" file cannot guarantee DB is empty.
   when: false
-  become: true
   no_log: true
   block:
     - name: Register extra secret value to podman secret
       containers.podman.podman_secret:
-        name: "LLDAP_LDAP_USER_PASSWORD"
+        name: "LLDAP_LDAP_USER_PASS"
         data: "{{ hostvars['console']['ldap']['password']['services']['admin'] }}"
         state: "present"
         force: true
@@ -83,15 +82,17 @@
           - "LLDAP_DATABASE_URL,type=env"
           - "LLDAP_KEY_SEED,type=env"
           - "LLDAP_JWT_SECRET,type=env"
-          - "LLDAP_LDAP_USER_PASSWORD,type=env"
+          - "LLDAP_LDAP_USER_PASS,type=env"
         volumes:
           - "{{ node['home_path'] }}/containers/ldap/data:/data:rw"
           - "{{ node['home_path'] }}/containers/ldap/ssl:/etc/ssl/ldap:ro"
+        etc_hosts:
+          "{{ {} | combine({ services['postgresql']['domain']['internal'] ~ '.' ~ domain['internal']: 'host-gateway' }) }}"
 
   always:
     - name: Clean extra secret value from podman secret
       containers.podman.podman_secret:
-        name: "LLDAP_LDAP_USER_PASSWORD"
+        name: "LLDAP_LDAP_USER_PASS"
         state: "absent"
 
 - name: Pull image

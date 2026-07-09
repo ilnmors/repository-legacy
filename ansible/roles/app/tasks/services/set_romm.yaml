@@ -1,0 +1,146 @@
+---
+- name: Set redis service name
+  ansible.builtin.set_fact:
+    redis_service: "romm"
+
+- name: Create redis_romm directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['redis']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "containers/redis"
+    - "containers/redis/{{ redis_service }}"
+    - "containers/redis/{{ redis_service }}/data"
+  become: true
+
+- name: Deploy redis config file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  register: "is_redis_conf"
+
+- name: Deploy redis container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  register: "is_redis_containerfile"
+
+- name: Enable (Restart) redis service
+  ansible.builtin.systemd:
+    name: "redis_{{ redis_service }}.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
+
+- name: Create romm directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['romm']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/romm"
+    - "data/containers/romm/library"
+    - "data/containers/romm/resources"
+    - "data/containers/romm/assets"
+    - "containers/romm"
+    - "containers/romm/ssl"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/romm/ssl/{{ root_cert_filename }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  notify: "notification_restart_romm"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "ROMM_AUTH_SECRET_KEY"
+      value: "{{ hostvars['console']['romm']['secret_key'] }}"
+    - name: "ROMM_DATABASE_PASSWORD"
+      value: "{{ hostvars['console']['postgresql']['password']['romm'] }}"
+    - name: "ROMM_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['romm']['oidc']['secret'] }}"
+  notify: "notification_restart_romm"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/rommapp/romm"
+    tag: "{{ version['containers']['romm'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy romm.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/romm/romm.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/romm.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_romm"
+
+- name: Enable romm.service
+  ansible.builtin.systemd:
+    name: "romm.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
+  loop:
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+      file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
+    - name: "romm"
+      image: "docker.io/rommapp/romm:{{ version['containers']['romm'] }}"
+      file: "docker.io_rommapp_romm_{{ version['containers']['romm'] }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "{{ item.item.image }}"
+    dest: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    format: "oci-archive"
+    force: false
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"
+  when: not item.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"

@@ -1,0 +1,148 @@
+---
+- name: Set redis service name
+  ansible.builtin.set_fact:
+    redis_service: "readur"
+
+- name: Create redis_readur directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['redis']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "containers/redis"
+    - "containers/redis/{{ redis_service }}"
+    - "containers/redis/{{ redis_service }}/data"
+  become: true
+
+- name: Deploy redis config file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  register: "is_redis_conf"
+
+- name: Deploy redis container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  register: "is_redis_containerfile"
+
+- name: Enable (Restart) redis service
+  ansible.builtin.systemd:
+    name: "redis_{{ redis_service }}.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
+
+- name: Create readur directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/readur"
+    - "data/containers/readur/uploads"
+    - "data/containers/readur/watch"
+    - "containers/readur"
+    - "containers/readur/ssl"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/readur/ssl/{{ root_cert_filename }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_readur"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/readur/readur"
+    tag: "{{ version['containers']['readur'] }}"
+    state: "present"
+    pull: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "READUR_JWT_SECRET"
+      value: "{{ hostvars['console']['readur']['jwt_secret'] }}"
+    - name: "READUR_DATABASE_URL"
+      value: "postgresql://readur:{{ hostvars['console']['postgresql']['password']['readur'] | urlencode | replace('/', '%2F') }}\
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/readur_db?sslmode=verify-full&\
+        sslrootcert=/etc/ssl/readur/{{ root_cert_filename }}"
+    - name: "READUR_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['readur']['oidc']['secret'] }}"
+  notify: "notification_restart_readur"
+  no_log: true
+
+- name: Deploy readur.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/readur/readur.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/readur.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_readur"
+
+- name: Enable readur.service
+  ansible.builtin.systemd:
+    name: "readur.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
+  loop:
+    - name: "redis"
+      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
+      file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
+    - name: "readur"
+      image: "ghcr.io/readur/readur:{{ version['containers']['readur'] }}"
+      file: "ghcr.io_readur_readur_{{ version['containers']['readur'] }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "{{ item.item.image }}"
+    dest: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    format: "oci-archive"
+    force: false
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"
+  when: not item.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/{{ item.item.file }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true
+  loop: "{{ container_archive_images.results }}"
+  loop_control:
+    label: "{{ item.item.file }}"

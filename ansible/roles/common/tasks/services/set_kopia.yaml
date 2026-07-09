@@ -106,7 +106,7 @@
         set +a
         /usr/bin/kopia repository create filesystem \
         --path="{{ node['home_path'] }}/data/kopia/repository" \
-        --description="ilnmors.internal kopia repository" \
+        --description="{{ domain['internal'] }} kopia repository" \
         --create-only
       when: not is_kopia_repository.stat.exists
       changed_when: true
@@ -138,17 +138,16 @@
         --user-password {{ item.password | quote }} \
         {{ item.name }}
       loop:
-        - name: "console@console.ilnmors.internal"
+        - name: "console@console.{{ domain['internal'] }}"
           password: "{{ hostvars['console']['kopia']['users']['console'] }}"
-        - name: "infra@infra.ilnmors.internal"
+        - name: "infra@infra.{{ domain['internal'] }}"
           password: "{{ hostvars['console']['kopia']['users']['infra'] }}"
-        - name: "app@app.ilnmors.internal"
+        - name: "app@app.{{ domain['internal'] }}"
           password: "{{ hostvars['console']['kopia']['users']['app'] }}"
       when:
         - not is_kopia_repository.stat.exists
         - is_repository_connected.rc == 0
       changed_when: true
-      register: "is_user_created"
       no_log: true
 
     - name: Set kopia console ACL
@@ -157,7 +156,7 @@
         . /etc/secrets/{{ node['uid'] }}/kopia.env
         set +a
         /usr/bin/kopia server acl add \
-        --user console@console.ilnmors.internal \
+        --user console@console.{{ domain['internal'] }} \
         --target {{ item }} \
         --access FULL
       loop:
@@ -178,7 +177,7 @@
         . /etc/secrets/{{ node['uid'] }}/kopia.env
         set +a
         /usr/bin/kopia server acl add \
-        --user infra@infra.ilnmors.internal \
+        --user infra@infra.{{ domain['internal'] }} \
         --target {{ item.target }} \
         --access {{ item.access }}
       loop:
@@ -186,7 +185,7 @@
           access: "FULL"
         - target: "type=policy"
           access: "READ"
-        - target: "type=policy,username=infra,hostname=infra.ilnmors.internal"
+        - target: "type=policy,username=infra,hostname=infra.{{ domain['internal'] }}"
           access: "FULL"
         - target: "type=content"
           access: "APPEND"
@@ -202,7 +201,7 @@
         . /etc/secrets/{{ node['uid'] }}/kopia.env
         set +a
         /usr/bin/kopia server acl add \
-        --user app@app.ilnmors.internal \
+        --user app@app.{{ domain['internal'] }} \
         --target {{ item.target }} \
         --access {{ item.access }}
       loop:
@@ -210,7 +209,7 @@
           access: "FULL"
         - target: "type=policy"
           access: "READ"
-        - target: "type=policy,username=app,hostname=app.ilnmors.internal"
+        - target: "type=policy,username=app,hostname=app.{{ domain['internal'] }}"
           access: "FULL"
         - target: "type=content"
           access: "APPEND"
@@ -232,7 +231,7 @@
             --global \
             --compression=zstd
         - content: |
-            infra@infra.ilnmors.internal \
+            infra@infra.{{ domain['internal'] }} \
             --compression=zstd \
             --keep-latest=10 \
             --keep-hourly=0 \
@@ -241,7 +240,7 @@
             --keep-monthly=6 \
             --keep-annual=1
         - content: |
-            app@app.ilnmors.internal \
+            app@app.{{ domain['internal'] }} \
             --compression=none \
             --keep-latest=10 \
             --keep-hourly=0 \

@@ -1,3 +1,4 @@
+---
 - name: Restart ca
   ansible.builtin.systemd:
     name: "ca.service"
@@ -73,7 +74,7 @@
   listen: "notification_restart_grafana"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart x509-exporter.service
+- name: Restart x509-exporter
   ansible.builtin.systemd:
     name: "x509-exporter.service"
     state: "restarted"
@@ -84,7 +85,7 @@
   listen: "notification_restart_x509-exporter"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart maddy.service
+- name: Restart maddy
   ansible.builtin.systemd:
     name: "maddy.service"
     state: "restarted"

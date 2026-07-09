@@ -157,7 +157,7 @@
 
 - name: Deploy nextcloud-cron service
   ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/systemd/{{ item }}"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/nextcloud/services/{{ item }}"
     dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
