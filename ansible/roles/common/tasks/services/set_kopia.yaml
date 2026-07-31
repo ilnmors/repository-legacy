@@ -85,11 +85,6 @@
       notify: "notification_restart_kopia_server"
       no_log: true
 
-    - name: Check repository existance
-      ansible.builtin.stat:
-        path: "{{ node['home_path'] }}/data/kopia/repository"
-      register: "is_kopia_repository"
-
     - name: Create repository directory
       ansible.builtin.file:
         path: "{{ node['home_path'] }}/data/kopia/repository"
@@ -97,7 +92,14 @@
         owner: "{{ ansible_user }}"
         group: "{{ node['group'] }}"
         mode: "0770"
-      when: not is_kopia_repository.stat.exists
+
+    - name: Check repository directory empty
+      ansible.builtin.find:
+        path: "{{ node['home_path'] }}/data/kopia/repository/"
+        file_type: "any"
+        hidden: true
+        recurse: false
+      register: "is_kopia_repository_empty"
 
     - name: Create kopia repository
       ansible.builtin.shell: |
@@ -106,11 +108,9 @@
         set +a
         /usr/bin/kopia repository create filesystem \
         --path="{{ node['home_path'] }}/data/kopia/repository" \
-        --description="{{ domain['internal'] }} kopia repository" \
-        --create-only
-      when: not is_kopia_repository.stat.exists
+        --description="{{ domain['internal'] }} kopia repository"
+      when: is_kopia_repository_empty.matched == 0
       changed_when: true
-      register: "is_repository_created"
       no_log: true
 
     - name: Connect to kopia repository
@@ -122,10 +122,11 @@
         --path="{{ node['home_path'] }}/data/kopia/repository" \
         --override-username="il" \
         --override-hostname="{{ node['name'] }}.{{ domain['internal'] }}"
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_created.rc == 0
-      changed_when: true
+      when: is_kopia_repository_empty.matched > 0
+      changed_when: false
+      failed_when:
+        - is_kopia_repository_empty.matched > 0
+        - is_repository_connected.rc != 0
       register: "is_repository_connected"
       no_log: true
 
@@ -144,10 +145,27 @@
           password: "{{ hostvars['console']['kopia']['users']['infra'] }}"
         - name: "app@app.{{ domain['internal'] }}"
           password: "{{ hostvars['console']['kopia']['users']['app'] }}"
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_connected.rc == 0
-      changed_when: true
+      when: is_kopia_repository_empty.matched == 0
+      changed_when: false
+      no_log: true
+
+    - name: Update kopia user
+      ansible.builtin.shell: |
+        set -a
+        . /etc/secrets/{{ node['uid'] }}/kopia.env
+        set +a
+        /usr/bin/kopia server users set \
+        --user-password {{ item.password | quote }} \
+        {{ item.name }}
+      loop:
+        - name: "console@console.{{ domain['internal'] }}"
+          password: "{{ hostvars['console']['kopia']['users']['console'] }}"
+        - name: "infra@infra.{{ domain['internal'] }}"
+          password: "{{ hostvars['console']['kopia']['users']['infra'] }}"
+        - name: "app@app.{{ domain['internal'] }}"
+          password: "{{ hostvars['console']['kopia']['users']['app'] }}"
+      when: is_kopia_repository_empty.matched > 0
+      changed_when: false
       no_log: true
 
     - name: Set kopia console ACL
@@ -158,17 +176,15 @@
         /usr/bin/kopia server acl add \
         --user console@console.{{ domain['internal'] }} \
         --target {{ item }} \
-        --access FULL
+        --access FULL \
+        --overwrite
       loop:
         - "type=snapshot"
         - "type=policy"
         - "type=user"
         - "type=acl"
         - "type=content"
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_connected.rc == 0
-      changed_when: true
+      changed_when: false
       no_log: true
 
     - name: Set kopia infra ACL
@@ -179,7 +195,8 @@
         /usr/bin/kopia server acl add \
         --user infra@infra.{{ domain['internal'] }} \
         --target {{ item.target }} \
-        --access {{ item.access }}
+        --access {{ item.access }} \
+        --overwrite
       loop:
         - target: "type=snapshot"
           access: "FULL"
@@ -189,10 +206,7 @@
           access: "FULL"
         - target: "type=content"
           access: "APPEND"
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_connected.rc == 0
-      changed_when: true
+      changed_when: false
       no_log: true
 
     - name: Set kopia app ACL
@@ -203,7 +217,8 @@
         /usr/bin/kopia server acl add \
         --user app@app.{{ domain['internal'] }} \
         --target {{ item.target }} \
-        --access {{ item.access }}
+        --access {{ item.access }} \
+        --overwrite
       loop:
         - target: "type=snapshot"
           access: "FULL"
@@ -213,10 +228,7 @@
           access: "FULL"
         - target: "type=content"
           access: "APPEND"
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_connected.rc == 0
-      changed_when: true
+      changed_when: false
       no_log: true
 
     - name: Set kopia policy
@@ -248,10 +260,7 @@
             --keep-weekly=4 \
             --keep-monthly=6 \
             --keep-annual=1
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_connected.rc == 0
-      changed_when: true
+      changed_when: false
       no_log: true
 
     - name: Set kopia parameters
@@ -261,10 +270,7 @@
         set +a
         /usr/bin/kopia repository set-parameters \
         --max-pack-size-mb=100
-      when:
-        - not is_kopia_repository.stat.exists
-        - is_repository_connected.rc == 0
-      changed_when: true
+      changed_when: false
       no_log: true
 
     - name: Deploy kopia server service file
@@ -289,10 +295,6 @@
 - name: Set infra/app backup kopia
   when: node['name'] in ["infra", "app"]
   block:
-    - name: Set kopia uid
-      ansible.builtin.set_fact:
-        kopia_uid: 951
-
     - name: Download kopia deb file (x86_64)
       ansible.builtin.get_url:
         url: "https://github.com/kopia/kopia/releases/download/v{{ version['packages']['kopia'] }}/\
@@ -318,14 +320,14 @@
     - name: Create kopia group
       ansible.builtin.group:
         name: "kopia"
-        gid: "{{ kopia_uid }}"
+        gid: "{{ services['kopia']['uid'] }}"
         state: "present"
       become: true
 
     - name: Create kopia user
       ansible.builtin.user:
         name: "kopia"
-        uid: "{{ kopia_uid }}"
+        uid: "{{ services['kopia']['uid'] }}"
         group: "kopia"
         shell: "/usr/sbin/nologin"
         password_lock: true
@@ -359,8 +361,8 @@
     - name: Deploy kopia env
       ansible.builtin.template:
         src: "{{ hostvars['console']['node']['config_path'] }}/services/systemd/common/kopia/kopia.env.j2"
-        dest: "/etc/secrets/{{ kopia_uid }}/kopia.env"
-        owner: "{{ kopia_uid }}"
+        dest: "/etc/secrets/{{ services['kopia']['uid'] }}/kopia.env"
+        owner: "{{ services['kopia']['uid'] }}"
         group: "root"
         mode: "0400"
       become: true
@@ -413,7 +415,7 @@
       become: true
       when: (is_kopia_connected.rc | default(1)) == 0
       changed_when: false
-      failed_when: false
+      failed_when: is_snapshot_exist.rc != 0
       register: "is_snapshot_exist"
       no_log: true
 

@@ -34,6 +34,11 @@
     - "containers/postgresql/build"
   become: true
 
+- name: Check postgresql .init marker
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/containers/postgresql/.init"
+  register: "is_postgresql_init_marker"
+
 - name: Deploy containerfile for build
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postgresql/build/postgresql.containerfile.j2"
@@ -95,38 +100,56 @@
   notify: "notification_reload_postgresql"
   no_log: true
 
-- name: Check postgresql .init marker
-  ansible.builtin.stat:
-    path: "{{ node['home_path'] }}/containers/postgresql/.init"
-  register: "is_postgresql_init_marker"
+- name: Initiating Postgresql
+  when: not is_postgresql_init_marker.stat.exists
+  block:
+    - name: Check initiating SQL files
+      ansible.builtin.find:
+        path: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/"
+        file_type: "file"
+        patterns:
+          - "pg_*.sql"
+        hidden: true
+        recurse: false
+      become: true
+      register: "postgresql_init_sql_files"
 
-- name: Check initiating SQL file
-  ansible.builtin.find:
-    path: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/"
-    file_type: "file"
-    patterns:
-      - "pg_*.sql"
-    hidden: true
-    recurse: false
-  become: true
-  register: "postgresql_init_sql_files"
+    - name: Set initiating SQL file lists
+      ansible.builtin.set_fact:
+        postgresql_init_sql_file_list: >-
+          {{
+            postgresql_init_sql_files.files
+            | map(attribute='path')
+            | map('basename')
+            | map('regex_replace', '^pg_', '')
+            | map('regex_replace', '\\.sql$', '')
+            | list
+          }}
 
-- name: Remote copy the initiating SQL
-  ansible.builtin.copy:
-    src: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/pg_{{ item }}.sql"
-    remote_src: true
-    dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ '%02d' | format(index_num) }}_pg_{{ item }}.sql"
-    owner: "{{ services['postgresql']['subuid'] }}"
-    group: "{{ node['group'] }}"
-    mode: "0600"
-  loop: "{{ ['cluster'] + connected_services }}"
-  loop_control:
-    index_var: index_num
-  become: true
-  when:
-    - (connected_services | length) > 0
-    - not is_postgresql_init_marker.stat.exists
-    - postgresql_init_sql_files.matched == (connected_services | length) + 1
+    - name: Fail on invalid initiating SQL file set
+      ansible.builtin.fail:
+      when:
+        - postgresql_init_sql_files.matched > 0
+        - ((['cluster'] + connected_services)
+          | symmetric_difference(postgresql_init_sql_file_list)
+          | length) > 0
+
+    - name: Remote copy the initiating SQL
+      ansible.builtin.copy:
+        src: "{{ node['home_path'] }}/data/containers/postgresql/backups/sql/pg_{{ item }}.sql"
+        remote_src: true
+        dest: "{{ node['home_path'] }}/containers/postgresql/init/{{ '%02d' | format(index_num) }}_pg_{{ item }}.sql"
+        owner: "{{ services['postgresql']['subuid'] }}"
+        group: "{{ node['group'] }}"
+        mode: "0600"
+      loop: "{{ ['cluster'] + connected_services }}"
+      loop_control:
+        index_var: index_num
+      become: true
+      when:
+        - ((['cluster'] + connected_services)
+          | symmetric_difference(postgresql_init_sql_file_list)
+          | length) == 0
 
 - name: Deploy container file
   ansible.builtin.template:

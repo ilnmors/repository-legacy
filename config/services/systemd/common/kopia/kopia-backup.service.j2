@@ -24,9 +24,9 @@ BindReadOnlyPaths={{ node['home_path'] }}/data
 
 # In root namescope, %u always bring 0
 BindPaths=/etc/kopia
-BindPaths=/etc/secrets/{{ kopia_uid }}
+BindPaths=/etc/secrets/{{ services['kopia']['uid'] }}
 BindPaths=/var/cache/kopia
-EnvironmentFile=/etc/secrets/{{ kopia_uid }}/kopia.env
+EnvironmentFile=/etc/secrets/{{ services['kopia']['uid'] }}/kopia.env
 
 ExecStartPre=/usr/bin/nc -zv {{ services['kopia']['domain']['internal'] }}.{{ domain['internal'] }} 443
 

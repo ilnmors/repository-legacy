@@ -45,6 +45,7 @@ services:
       internal: "kopia"
     ports:
       https: "51515"
+    uid: "951"
     dependency:
       cert: true
   caddy:
@@ -333,26 +334,26 @@ version:
     ## maddy
     maddy: "0.9.5"
     x509-exporter: "4.1.0"
-    prometheus: "v3.13.0"
-    loki: "3.7.3"
-    grafana: "13.1.0"
+    prometheus: "v3.13.2"
+    loki: "3.7.4"
+    grafana: "13.1.1"
     # Auth
     authelia: "4.39.20"
     # App
-    vaultwarden: "1.36.0"
-    gitea: "1.26.4"
-    redis: "8.8.0"
-    immich: "v3.0.1"
-    nextcloud: "34.0.1"
-    collabora: "26.04.2.1.1"
+    vaultwarden: "1.37.1"
+    gitea: "1.27.1"
+    redis: "8.10.0"
+    immich: "v3.1.0"
+    nextcloud: "34.0.2"
+    collabora: "26.04.2.4.1"
     sure: "0.7.2"
-    outline: "1.8.1"
-    memos: "0.29.1"
-    mealie: "v3.20.1"
+    outline: "1.9.2"
+    memos: "0.30.0"
+    mealie: "v3.22.0"
     homebox: "0.26.2"
     homepage: "v1.13.2"
     snappymail: "v2.38.2"
-    mastodon: "v4.6.3"
+    mastodon: "v4.6.4"
     booklogr: "v1.11.1"
     papra: "26.6.1-rootless"
-    romm: "5.0.0-beta.2"
+    romm: "5.1.0"

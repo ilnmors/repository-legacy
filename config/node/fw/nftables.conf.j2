@@ -112,6 +112,7 @@ table inet filter {
                 jump global comment "set global condition"
                 iifname "lo" accept comment "allow local connection: FW > FW"
                 udp dport $PORTS_VPN accept comment "allow vpn connection: > FW"
+                ip6 saddr $NET6_LLA meta l4proto icmpv6 accept comment "allow icmpv6 connection: ipv6 LLA > FW"
                 iifname { $IF_CLIENT, $IF_SERVER, $IF_USER, $IF_WG } meta l4proto { icmp, icmpv6 } accept comment "allow icmp, icmpv6 connection: CLIENT/SERVER/USER/WG > FW"
                 iifname { $IF_CLIENT, $IF_SERVER, $IF_WG } udp dport $PORTS_NTP accept comment "allow ntp connection: CLIENT/SERVER/WG > FW"
                 # Global chain contains "WAN !> :SSH_PORT"
