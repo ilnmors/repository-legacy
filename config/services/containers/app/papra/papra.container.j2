@@ -14,6 +14,7 @@ PublishPort={{ services['papra']['ports']['http'] }}:1221/tcp
 
 # Volumes
 Volume=%h/data/containers/papra/data:/app/app-data:rw
+Volume=%h/containers/papra/db:/app/app-data/db:rw
 Volume=%h/data/containers/papra/backup:/app/backup:rw
 
 # General

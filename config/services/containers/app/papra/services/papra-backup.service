@@ -8,7 +8,7 @@ Type=oneshot
 # Create a consistent SQLite snapshot and atomically publish it.
 ExecStart=/usr/bin/podman exec -u nonroot papra node --input-type=module -e '\
         import { createClient } from "@libsql/client"; \
-        import { rename, rm } from "node:fs/promises"; \
+        import { rename, copyFile, rm } from "node:fs/promises"; \
         \
         /* Paths */ \
         const databaseUrl = "file:/app/app-data/db/db.sqlite"; \
@@ -22,7 +22,8 @@ ExecStart=/usr/bin/podman exec -u nonroot papra node --input-type=module -e '\
             String(now.getDate()).padStart(2, "0"), \
         ].join("-"); \
         \
-        const dst = backupDir + "/db_" + date + ".sqlite"; \
+        const dst = backupDir + "/db.sqlite"; \
+        const dated_dst = backupDir + "/db_" + date + ".sqlite"; \
         const tmp = dst + ".tmp"; \
         \
         /* Never expose a partially-created backup as a completed one. */ \
@@ -43,6 +44,7 @@ ExecStart=/usr/bin/podman exec -u nonroot papra node --input-type=module -e '\
             \
             /* Publish only after VACUUM INTO has completed successfully. */ \
             await rename(tmp, dst); \
+            await copyFile(dst, dated_dst); \
             completed = true; \
         } finally { \
             if (!completed) { \

@@ -10,7 +10,20 @@
     - "data/containers/papra"
     - "data/containers/papra/data"
     - "data/containers/papra/backup"
+    - "containers/papra"
+    - "containers/papra/script"
+    - "containers/papra/db"
   become: true
+
+- name: Check backup file
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/data/containers/papra/backup/db.sqlite"
+  register: "is_db_backup"
+
+- name: Check database file
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/containers/papra/db/db.sqlite"
+  register: "is_db"
 
 - name: Pull image
   containers.podman.podman_image:
@@ -45,6 +58,19 @@
   notify: "notification_restart_papra"
   no_log: true
 
+- name: Restore db file
+  ansible.builtin.copy:
+    src: "{{ node['home_path'] }}/data/containers/papra/backup/db.sqlite"
+    remote_src: true
+    dest: "{{ node['home_path'] }}/containers/papra/db/db.sqlite"
+    owner: "{{ services['papra']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0660"
+  become: true
+  when:
+    - is_db_backup.stat.exists
+    - not is_db.stat.exists
+
 - name: Deploy papra.container file
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/papra/papra.container.j2"
@@ -66,10 +92,10 @@
     - "papra-backup.service"
     - "papra-backup.timer"
 
-- name: Deploy papra exporter
+- name: Deploy papra script
   ansible.builtin.copy:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/papra/script/papra-exporter.sh"
-    dest: "{{ node['home_path'] }}/data/containers/papra/"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/papra/script/"
+    dest: "{{ node['home_path'] }}/containers/papra/script/"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0755"
