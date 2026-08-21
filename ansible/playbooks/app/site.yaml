@@ -282,6 +282,14 @@
           tags: ["site", "papra"]
       tags: ["site", "papra"]
 
+    - name: Set tandoor
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_tandoor"
+        apply:
+          tags: ["site", "tandoor"]
+      tags: ["site", "tandoor"]
+
     - name: Set romm
       ansible.builtin.include_role:
         name: "app"

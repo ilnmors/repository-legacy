@@ -291,6 +291,15 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
+  tandoor:
+    domain:
+      public: "tandoor"
+      internal: "tandoor.app"
+    ports:
+      http: "8003"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   homebox:
     domain:
       public: "homebox"
@@ -357,3 +366,4 @@ version:
     booklogr: "v1.11.1"
     papra: "26.6.1-rootless"
     romm: "5.1.0"
+    tandoor: "2.6.13"

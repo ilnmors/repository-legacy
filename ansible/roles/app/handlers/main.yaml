@@ -197,3 +197,14 @@
   changed_when: false
   listen: "notification_restart_romm"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart tandoor
+  ansible.builtin.systemd:
+    name: "tandoor.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_tandoor"
+  ignore_errors: true # noqa: ignore-errors

@@ -1,0 +1,58 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Tandoor Recipes
+
+[Container]
+Image=docker.io/vabene1111/recipes:{{ version['containers']['tandoor'] }}
+
+ContainerName=tandoor
+HostName=tandoor
+
+PublishPort={{ services['tandoor']['ports']['http'] }}:80/tcp
+
+# Volumes
+Volume=%h/data/containers/tandoor/mediafiles:/opt/recipes/mediafiles:rw
+Volume=%h/containers/tandoor/ssl:/etc/ssl/tandoor:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="ALLOWED_HOSTS={{ services['tandoor']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="CSRF_TRUSTED_ORIGINS=https://{{ services['tandoor']['domain']['public'] }}.{{ domain['public'] }}"
+# auth Caddy -> app Caddy -> Tandoor built-in nginx
+Environment="ALLAUTH_TRUSTED_PROXY_COUNT=3"
+
+# Secrets
+Secret=TANDOOR_SECRET_KEY,type=env,target=SECRET_KEY
+
+# Database (PostgreSQL)
+Environment="DB_ENGINE=django.db.backends.postgresql"
+Environment="POSTGRES_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="POSTGRES_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="POSTGRES_USER=tandoor"
+Environment="POSTGRES_DB=tandoor_db"
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/tandoor/{{ root_cert_filename }}"
+Secret=TANDOOR_POSTGRES_PASSWORD,type=env,target=POSTGRES_PASSWORD
+
+# Login
+Environment="HIDE_LOGIN_FORM=1"
+Environment="ENABLE_SIGNUP=0"
+
+# OIDC
+Environment="SOCIAL_PROVIDERS=allauth.socialaccount.providers.openid_connect"
+Environment="SOCIALACCOUNT_AUTO_SIGNUP=1"
+Environment="SOCIALACCOUNT_LOGIN_ON_GET=1"
+Environment="SOCIAL_DEFAULT_ACCESS=1"
+Environment="SOCIAL_DEFAULT_GROUP=user"
+Secret=TANDOOR_SOCIALACCOUNT_PROVIDERS,type=env,target=SOCIALACCOUNT_PROVIDERS
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

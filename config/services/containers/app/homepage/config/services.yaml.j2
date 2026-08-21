@@ -1,12 +1,17 @@
+{% set icon_map = {
+  'tandoor': 'tandoor-recipes',
+  'ldap': 'lldap'
+} %}
+
 - Services:
 {% for item in (homepage_public_services | reject('in', ['homepage', 'collabora'])) %}
     - {{ item }}:
-        icon: {{ item }}.svg
+        icon: {{ icon_map.get(item, item) }}.svg
         href: https://{{ services[item]['domain']['public'] }}.{{ domain['public'] }}
 {% endfor %}
 - Admin:
 {% for item in homepage_internal_services %}
     - {{ item }}:
-        icon: {{ 'lldap' if item == 'ldap' else item }}.svg
+        icon: {{ icon_map.get(item, item) }}.svg
         href: https://{{ services[item]['domain']['internal'] }}.{{ domain['internal'] }}
 {% endfor %}
