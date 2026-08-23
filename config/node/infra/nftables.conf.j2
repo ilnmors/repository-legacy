@@ -8,7 +8,7 @@ define NET6_SERVER = {{ hostvars['fw']['network']['subnet']['ipv6']['server'] }}
 define HOSTS4_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv4'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
 define HOSTS6_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv6'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
 define PORTS_SSH = 22
-define PORTS_DB = 5432
+define PORTS_DB = { 5432, 3306 }
 define PORTS_CA = {{ services['ca']['ports']['https'] }}
 define PORTS_LDAPS = 636
 define PORTS_LDAPS_FORWARD = {{ services['ldap']['ports']['ldaps'] }}

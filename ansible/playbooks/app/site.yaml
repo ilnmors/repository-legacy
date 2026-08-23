@@ -234,14 +234,6 @@
           tags: ["site", "outline"]
       tags: ["site", "outline"]
 
-    - name: Set memos
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_memos"
-        apply:
-          tags: ["site", "memos"]
-      tags: ["site", "memos"]
-
     - name: Set mealie
       ansible.builtin.include_role:
         name: "app"

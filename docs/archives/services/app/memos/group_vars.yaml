@@ -1,0 +1,16 @@
+---
+services:
+  memos:
+    domain:
+      public: ""
+      internal: ""
+    ports:
+      http: "3005"
+    subuid: "110000"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+
+version:
+  containers:
+    memos: "0.30.0"

@@ -1,0 +1,26 @@
+[Unit]
+Description=MariaDB Data %i Backup Service
+After=mariadb.service
+BindsTo=mariadb.service
+
+[Service]
+Type=oneshot
+
+# logging
+StandardOutput=journal
+StandardError=journal
+
+ExecStartPre=/usr/bin/podman exec mariadb sh -c "mkdir -p /backups/%i && chown mysql:root /backups/%i && chmod 770 /backups/%i"
+ExecStartPre=/usr/bin/podman exec mariadb sh -c "mkdir -p /backups/sql && chown mysql:root /backups/sql && chmod 770 /backups/sql"
+
+# Run the script
+## User SQL
+ExecStart=/usr/bin/podman exec -u mysql mariadb sh -c 'mariadb -uroot -N -B -e \"SHOW CREATE USER \'%i\'@\'%%\';\" | sed "s/$/;/" > /backups/%i/mariadb_%i_$(date "+%%Y-%%m-%%d").sql'
+## Database SQL
+ExecStart=/usr/bin/podman exec -u mysql mariadb sh -c 'mariadb-dump -uroot --single-transaction --routines --events --triggers --databases %i_db >> /backups/%i/mariadb_%i_$(date "+%%Y-%%m-%%d").sql'
+## Grant SQL
+ExecStart=/usr/bin/podman exec -u mysql mariadb sh -c 'mariadb -uroot -N -B -e \"SHOW GRANTS FOR \'%i\'@\'%%\';\" | sed "s/$/;/" >> /backups/%i/mariadb_%i_$(date "+%%Y-%%m-%%d").sql'
+ExecStart=/usr/bin/podman exec -u mysql mariadb sh -c 'cp -a /backups/%i/mariadb_%i_$(date "+%%Y-%%m-%%d").sql /backups/sql/mariadb_%i.sql'
+ExecStart=/usr/bin/podman exec -u mysql mariadb sh -c "find /backups/%i -maxdepth 1 -type f -name 'mariadb_%i_*.sql' -mtime +7 -delete"
+ExecStart=/usr/bin/podman exec mariadb sh -c "chown -R mysql:root /backups/%i && chmod 660 /backups/%i/*"
+ExecStart=/usr/bin/podman exec mariadb sh -c "chown -R mysql:root /backups/sql && chmod 660 /backups/sql/mariadb_%i.sql"

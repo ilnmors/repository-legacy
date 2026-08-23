@@ -1,0 +1,37 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=MariaDB
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/library/mariadb:{{ version['containers']['mariadb'] }}
+
+ContainerName=mariadb
+HostName=mariadb
+
+PublishPort={{ services['mariadb']['ports']['tcp'] }}:3306/tcp
+
+Volume=%h/containers/mariadb/data:/var/lib/mysql:rw
+Volume=%h/containers/mariadb/config:/etc/mysql/conf.d/:ro
+Volume=%h/containers/mariadb/ssl:/etc/ssl/mariadb:ro
+Volume=%h/containers/mariadb/init:/docker-entrypoint-initdb.d/:ro
+Volume=%h/data/containers/mariadb/backups:/backups:rw
+
+# General
+Environment="TZ={{ timezone }}"
+
+# root is only available in container (localhost)
+Environment="MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1"
+Environment="MARIADB_ROOT_HOST=localhost"
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

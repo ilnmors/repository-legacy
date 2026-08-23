@@ -162,6 +162,14 @@
           tags: ["site", "postgresql"]
       tags: ["site", "postgresql"]
 
+    - name: Set mariadb
+      ansible.builtin.include_role:
+        name: "infra"
+        tasks_from: "services/set_mariadb"
+        apply:
+          tags: ["site", "mariadb"]
+      tags: ["site", "mariadb"]
+
     - name: Set caddy
       ansible.builtin.include_role:
         name: "common"

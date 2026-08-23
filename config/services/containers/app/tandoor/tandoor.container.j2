@@ -22,6 +22,9 @@ Environment="ALLOWED_HOSTS={{ services['tandoor']['domain']['public'] }}.{{ doma
 Environment="CSRF_TRUSTED_ORIGINS=https://{{ services['tandoor']['domain']['public'] }}.{{ domain['public'] }}"
 # auth Caddy -> app Caddy -> Tandoor built-in nginx
 Environment="ALLAUTH_TRUSTED_PROXY_COUNT=3"
+# Set Django gunicorn worker as 1, and threads as 2
+Environment="GUNICORN_WORKERS=1"
+Environment="GUNICORN_THREADS=2"
 
 # Secrets
 Secret=TANDOOR_SECRET_KEY,type=env,target=SECRET_KEY

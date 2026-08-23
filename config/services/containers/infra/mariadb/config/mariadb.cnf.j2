@@ -1,0 +1,39 @@
+#------------------------------------------------------------------------------
+# CUSTOMIZED OPTIONS
+#------------------------------------------------------------------------------
+[mariadb]
+
+# Listen address
+bind-address = 0.0.0.0
+
+# Max connections
+max_connections = 250
+
+# Listen port
+port = {{ services['mariadb']['ports']['tcp'] }}
+
+# SSL
+ssl-ca = /etc/ssl/mariadb/{{ root_cert_filename }}
+ssl-cert = /etc/ssl/mariadb/mariadb.crt
+ssl-key = /etc/ssl/mariadb/mariadb.key
+ssl-cipher = HIGH:!aNULL:!MD5
+require_secure_transport = ON
+
+# InnoDB
+innodb_buffer_pool_size = 512M
+innodb_log_file_size = 5G
+innodb_flush_log_at_trx_commit = 1
+
+# Temporary memory
+tmp_table_size = 16M
+max_heap_table_size = 16M
+
+# IO
+innodb_io_capacity = 200
+
+# SSD
+innodb_flush_neighbors = 0
+
+[client]
+protocol=socket
+skip-ssl

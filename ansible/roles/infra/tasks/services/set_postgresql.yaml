@@ -122,7 +122,7 @@
             | map(attribute='path')
             | map('basename')
             | map('regex_replace', '^pg_', '')
-            | map('regex_replace', '\\.sql$', '')
+            | map('regex_replace', '[.]sql$', '')
             | list
           }}
 

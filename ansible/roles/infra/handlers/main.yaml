@@ -30,6 +30,18 @@
   listen: "notification_restart_postgresql"
   ignore_errors: true # noqa: ignore-errors
 
+- name: Restart mariadb
+  ansible.builtin.systemd:
+    name: "mariadb.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  when: is_mariadb_init_marker.stat.exists
+  changed_when: false
+  listen: "notification_restart_mariadb"
+  ignore_errors: true # noqa: ignore-errors
+
 - name: Restart ldap
   ansible.builtin.systemd:
     name: "ldap.service"

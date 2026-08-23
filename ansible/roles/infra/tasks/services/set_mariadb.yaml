@@ -1,0 +1,197 @@
+---
+- name: Initialize connected services list
+  ansible.builtin.set_fact:
+    connected_services: []
+
+- name: Set connected services list
+  ansible.builtin.set_fact:
+    connected_services: >-
+      {{
+        services
+        | dict2items
+        | selectattr('value.dependency.db', 'defined')
+        | selectattr('value.dependency.db', 'equalto', 'mariadb')
+        | map(attribute='key')
+        | list
+      }}
+
+- name: Create mariadb directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['mariadb']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/mariadb/"
+    - "data/containers/mariadb/backups"
+    - "data/containers/mariadb/backups/sql"
+    - "containers/mariadb"
+    - "containers/mariadb/data"
+    - "containers/mariadb/config"
+    - "containers/mariadb/ssl"
+    - "containers/mariadb/init"
+  become: true
+
+- name: Check mariadb .init marker
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/containers/mariadb/.init"
+  register: "is_mariadb_init_marker"
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/library/mariadb"
+    tag: "{{ version['containers']['mariadb'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy mariadb configuration files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/mariadb/config/mariadb.cnf.j2"
+    dest: "{{ node['home_path'] }}/containers/mariadb/config/mariadb.cnf"
+    owner: "{{ services['mariadb']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0600"
+  become: true
+  notify: "notification_restart_mariadb"
+  no_log: true
+
+- name: Deploy mariadb certificate and key
+  ansible.builtin.copy:
+    content: |
+      {{ item.value }}
+    dest: "{{ node['home_path'] }}/containers/mariadb/ssl/{{ item.name }}"
+    owner: "{{ services['mariadb']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "{{ root_cert_filename }}"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      mode: "0440"
+    - name: "mariadb.crt"
+      value: |
+        {{ hostvars['console']['mariadb']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "mariadb.key"
+      value: "{{ hostvars['console']['mariadb']['key'] }}"
+      mode: "0400"
+  become: true
+  notify: "notification_restart_mariadb"
+  no_log: true
+
+- name: Initiating mariadb
+  when: not is_mariadb_init_marker.stat.exists
+  block:
+    - name: Check initiating SQL files
+      ansible.builtin.find:
+        path: "{{ node['home_path'] }}/data/containers/mariadb/backups/sql/"
+        file_type: "file"
+        patterns:
+          - "mariadb_*.sql"
+        hidden: true
+        recurse: false
+      become: true
+      register: "mariadb_init_sql_files"
+
+    - name: Set initiating SQL file lists
+      ansible.builtin.set_fact:
+        mariadb_init_sql_file_list: >-
+          {{
+            mariadb_init_sql_files.files
+            | map(attribute='path')
+            | map('basename')
+            | map('regex_replace', '^mariadb_', '')
+            | map('regex_replace', '[.]sql$', '')
+            | list
+          }}
+
+    - name: Fail on invalid initiating SQL file set
+      ansible.builtin.fail:
+      when:
+        - mariadb_init_sql_files.matched > 0
+        - ((connected_services)
+          | symmetric_difference(mariadb_init_sql_file_list)
+          | length) > 0
+
+    - name: Remote copy the initiating SQL
+      ansible.builtin.copy:
+        src: "{{ node['home_path'] }}/data/containers/mariadb/backups/sql/mariadb_{{ item }}.sql"
+        remote_src: true
+        dest: "{{ node['home_path'] }}/containers/mariadb/init/{{ '%02d' | format(index_num) }}_mariadb_{{ item }}.sql"
+        owner: "{{ services['mariadb']['subuid'] }}"
+        group: "{{ node['group'] }}"
+        mode: "0600"
+      loop: "{{ connected_services }}"
+      loop_control:
+        index_var: index_num
+      become: true
+      when:
+        - ((connected_services)
+          | symmetric_difference(mariadb_init_sql_file_list)
+          | length) == 0
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/mariadb/mariadb.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/mariadb.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_mariadb"
+
+- name: Deploy backup service files
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/mariadb/services/{{ item }}"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  loop:
+    - "mariadb-data-backup@.service"
+    - "mariadb-data-backup@.timer"
+
+- name: Enable mariadb
+  ansible.builtin.systemd:
+    name: "mariadb.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Enable data backup timer
+  ansible.builtin.systemd:
+    name: "mariadb-data-backup@{{ item }}.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  loop: "{{ connected_services }}"
+
+- name: Create .init file
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/containers/mariadb/.init"
+    state: "touch"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+  when: not is_mariadb_init_marker.stat.exists
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/library/mariadb:{{ version['containers']['mariadb'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}"
+    format: "oci-archive"
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

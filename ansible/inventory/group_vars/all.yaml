@@ -76,6 +76,14 @@ services:
     subuid: "100998"
     dependency:
       cert: true
+  mariadb:
+    domain:
+      internal: "mariadb"
+    ports:
+      tcp: "3306" # mariadb db connection port
+    subuid: "100998"
+    dependency:
+      cert: true
   ldap:
     domain:
       internal: "ldap"
@@ -251,16 +259,6 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
-  memos:
-    domain:
-      public: "memos"
-      internal: "memos.app"
-    ports:
-      http: "3005"
-    subuid: "110000"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
   sure:
     domain:
       public: "sure"
@@ -336,6 +334,8 @@ version:
     ca: "0.30.2"
     ## Postgresql
     postgresql: "18.4"
+    ## Mariadb
+    mariadb: "12.3.2"
     ### For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
     vectorchord: "1.1.1"
     ## lldap
@@ -357,7 +357,6 @@ version:
     collabora: "26.04.3.1.1"
     sure: "0.7.3"
     outline: "1.9.2"
-    memos: "0.30.0"
     mealie: "v3.22.0"
     homebox: "0.26.2"
     homepage: "v2.0.0"
