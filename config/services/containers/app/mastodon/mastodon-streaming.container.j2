@@ -20,6 +20,7 @@ Volume=%h/containers/mastodon/ssl:/etc/ssl/mastodon:ro
 Environment="TZ={{ timezone }}"
 Environment="LOCAL_DOMAIN={{ services['mastodon']['domain']['public'] }}.{{ domain['public'] }}"
 Environment="LOG_LEVEL=info"
+Environment="TRUSTED_PROXY_IP={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }},{{ hostvars['fw']['network']['auth']['ipv4']['server'] }},{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
 
 # PostgreSQL
 Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"

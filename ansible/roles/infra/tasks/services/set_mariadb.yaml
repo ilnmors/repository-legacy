@@ -179,19 +179,19 @@
 
 - name: Check container archive images
   ansible.builtin.stat:
-    path: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}"
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}.tar"
   register: container_archive_images
 
 - name: Save container archive images
   containers.podman.podman_save:
     image:
       - "docker.io/library/mariadb:{{ version['containers']['mariadb'] }}"
-    dest: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}.tar"
     format: "oci-archive"
   when: not container_archive_images.stat.exists
 
 - name: Fetch container archive images
   ansible.builtin.fetch:
-    src: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}"
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_library_mariadb_{{ version['containers']['mariadb'] }}.tar"
     dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
     flat: true

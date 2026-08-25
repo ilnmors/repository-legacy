@@ -1,0 +1,88 @@
+---
+- name: Create bookstack directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['bookstack']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/bookstack"
+    - "data/containers/bookstack/public"
+    - "data/containers/bookstack/storage"
+    - "containers/bookstack"
+    - "containers/bookstack/ssl"
+  become: true
+
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/bookstack/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['bookstack']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_bookstack"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "BOOKSTACK_SECRET_KEY"
+      value: "{{ hostvars['console']['bookstack']['secret_key'] }}"
+    - name: "BOOKSTACK_DB_PASSWORD"
+      value: "{{ hostvars['console']['mariadb']['password']['bookstack'] }}"
+    - name: "BOOKSTACK_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['bookstack']['oidc']['secret'] }}"
+  notify: "notification_restart_bookstack"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/solidnerd/bookstack"
+    tag: "{{ version['containers']['bookstack'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy bookstack.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/bookstack/bookstack.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/bookstack.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_bookstack"
+
+- name: Enable bookstack.service
+  ansible.builtin.systemd:
+    name: "bookstack.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_solidnerd_bookstack_{{ version['containers']['bookstack'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/solidnerd/bookstack:{{ version['containers']['bookstack'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_solidnerd_bookstack_{{ version['containers']['bookstack'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_solidnerd_bookstack_{{ version['containers']['bookstack'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

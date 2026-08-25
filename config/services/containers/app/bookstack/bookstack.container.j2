@@ -1,0 +1,60 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Bookstack
+
+[Container]
+Image=docker.io/solidnerd/bookstack:{{ version['containers']['bookstack'] }}
+
+ContainerName=bookstack
+HostName=bookstack
+
+PublishPort={{ services['bookstack']['ports']['http'] }}:8080/tcp
+
+# Volumes
+Volume=%h/data/containers/bookstack/public:/var/www/bookstack/public/uploads:rw
+Volume=%h/data/containers/bookstack/storage:/var/www/bookstack/storage/uploads:rw
+Volume=%h/containers/bookstack/ssl:/etc/ssl/bookstack:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="APP_ENV=production"
+Environment="APP_DEBUG=false"
+Environment="APP_URL=https://{{ services['bookstack']['domain']['public'] }}.{{ domain['public'] }}"
+# 169.254.1.2 is podman pasta APIPA ip address to communicate the other container in the same host
+Environment="APP_PROXIES={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }},{{ hostvars['fw']['network']['auth']['ipv4']['server'] }},{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
+
+# Secrets
+Secret=BOOKSTACK_SECRET_KEY,type=env,target=APP_KEY
+
+# Database (MariaDB)
+Environment="DB_HOST={{ services['mariadb']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['mariadb']['ports']['tcp'] }}"
+Environment="DB_DATABASE=bookstack_db"
+Environment="DB_USERNAME=bookstack"
+Environment="MYSQL_ATTR_SSL_CA=/etc/ssl/bookstack/{{ root_cert_filename }}"
+Secret=BOOKSTACK_DB_PASSWORD,type=env,target=DB_PASSWORD
+
+# OIDC
+Environment="AUTH_METHOD=oidc"
+Environment="AUTH_AUTO_INITIATE=false"
+Environment="OIDC_NAME=Authelia"
+Environment="OIDC_ISSUER=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="OIDC_ISSUER_DISCOVER=true"
+Environment="OIDC_CLIENT_ID=bookstack"
+Environment="OIDC_ADDITIONAL_SCOPES=groups"
+Environment="OIDC_DISPLAY_NAME_CLAIMS=name"
+Environment="OIDC_GROUPS_CLAIM=groups"
+Environment="OIDC_USER_TO_GROUPS=true"
+Environment="OIDC_REMOVE_FROM_GROUPS=true"
+Environment="OIDC_END_SESSION_ENDPOINT=false"
+Secret=BOOKSTACK_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['mariadb']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['mariadb']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

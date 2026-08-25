@@ -42,6 +42,9 @@ network:
       server: "fd00:10::/64"
       wg: "fd00:99::/64"
       lla: "fe80::/10"
+  podman:
+    ipv4:
+      lla: "169.254.1.2"
   reverse_zone:
     ipv4:
       client: "1.168.192.in-addr.arpa"
@@ -117,6 +120,7 @@ network:
     alias:
       - "ca"
       - "postgresql"
+      - "mariadb"
       - "ldap"
       - "maddy"
       - "prometheus"

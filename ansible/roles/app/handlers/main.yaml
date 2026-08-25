@@ -197,3 +197,14 @@
   changed_when: false
   listen: "notification_restart_tandoor"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart bookstack
+  ansible.builtin.systemd:
+    name: "bookstack.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_bookstack"
+  ignore_errors: true # noqa: ignore-errors

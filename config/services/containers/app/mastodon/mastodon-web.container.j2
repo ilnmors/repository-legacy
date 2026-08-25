@@ -25,6 +25,7 @@ Environment="LIMITED_FEDERATION_MODE=true"
 Environment="DISALLOW_UNAUTHENTICATED_API_ACCESS=true"
 Environment="ES_ENABLED=false"
 Environment="RAILS_LOG_LEVEL=info"
+Environment="TRUSTED_PROXY_IP={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }},{{ hostvars['fw']['network']['auth']['ipv4']['server'] }},{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
 
 # PostgreSQL
 Environment="DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"

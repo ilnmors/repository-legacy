@@ -12,7 +12,6 @@
     - "data/containers/booklogr/export_data"
     - "containers/booklogr"
     - "containers/booklogr/ssl"
-  become: true
 
 
 - name: Deploy root certificate
@@ -23,7 +22,6 @@
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0440"
-  become: true
   notify: "notification_restart_booklogr"
   no_log: true
 

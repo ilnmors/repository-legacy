@@ -21,6 +21,8 @@ Volume=%h/data/containers/nextcloud/html:/var/www/html:rw
 
 # General
 Environment="TZ={{ timezone }}"
+Environment="APACHE_DISABLE_REWRITE_IP=1"
+Environment="TRUSTED_PROXIES={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }} {{ hostvars['fw']['network']['auth']['ipv4']['server'] }} {{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
 # PostgreSQL
 Environment="PGSSLMODE=verify-full"
 Environment="PGSSLROOTCERT=/etc/ssl/nextcloud/{{ root_cert_filename }}"

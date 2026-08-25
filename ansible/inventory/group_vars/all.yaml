@@ -259,6 +259,16 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
+  bookstack:
+    domain:
+      public: "bookstack"
+      internal: "bookstack.app"
+    ports:
+      http: "8004"
+    subuid: "100032"
+    dependency:
+      web: "app-public"
+      db: "mariadb"
   sure:
     domain:
       public: "sure"
@@ -366,3 +376,4 @@ version:
     papra: "26.6.1-rootless"
     romm: "5.1.0"
     tandoor: "2.6.13"
+    bookstack: "26.5.3"

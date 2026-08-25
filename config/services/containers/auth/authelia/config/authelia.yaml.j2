@@ -389,7 +389,7 @@ identity_providers:
       - client_id: 'tandoor'
         client_name: 'tandoor'
         consent_mode: 'implicit'
-        client_secret: '$pbkdf2-sha512$310000$IOvwfqSgUvMZ5nxZ.dEDTw$FX3x1XaH3.S9gNFHiv0DdcCSCEomFMdoxd.yA3PEmVksRyd7D8LuSdooN.DA3B.jyVDVLFSJ9isIChEbJSmEvw'
+        client_secret: '{{ hostvars['console']['tandoor']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
         require_pkce: false
@@ -400,6 +400,29 @@ identity_providers:
           - 'openid'
           - 'profile'
           - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'
+      # https://www.authelia.com/integration/openid-connect/clients/bookstack/
+      - client_id: 'bookstack'
+        client_name: 'bookstack'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['bookstack']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['bookstack']['domain']['public'] }}.{{ domain['public'] }}/oidc/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
         response_types:
           - 'code'
         grant_types:

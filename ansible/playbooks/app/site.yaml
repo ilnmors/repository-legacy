@@ -282,6 +282,14 @@
           tags: ["site", "tandoor"]
       tags: ["site", "tandoor"]
 
+    - name: Set bookstack
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_bookstack"
+        apply:
+          tags: ["site", "bookstack"]
+      tags: ["site", "bookstack"]
+
     - name: Set romm
       ansible.builtin.include_role:
         name: "app"

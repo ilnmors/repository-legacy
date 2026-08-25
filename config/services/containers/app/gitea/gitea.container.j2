@@ -21,6 +21,8 @@ Volume=%h/containers/gitea/ssl:/etc/ssl/gitea:ro
 # General
 Environment="TZ={{ timezone }}"
 Environment="GITEA__server__DISABLE_SSH=true"
+Environment="GITEA__server__REVERSE_PROXY_LIMIT=2"
+Environment="GITEA__server__REVERSE_PROXY_TRUSTED_PROXIES={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }},{{ hostvars['fw']['network']['auth']['ipv4']['server'] }},{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
 # Database
 Environment="GITEA__database__DB_TYPE=postgres"
 Environment="GITEA__database__HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
