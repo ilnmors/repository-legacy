@@ -1,0 +1,87 @@
+---
+- name: Create linkwarden directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/linkwarden"
+    - "data/containers/linkwarden/data"
+    - "containers/linkwarden"
+    - "containers/linkwarden/ssl"
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/linkwarden/ssl/{{ root_cert_filename }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_linkwarden"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "LINKWARDEN_SECRET_KEY"
+      value: "{{ hostvars['console']['linkwarden']['secret_key'] }}"
+    - name: "LINKWARDEN_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['linkwarden']['oidc']['secret'] }}"
+    - name: "LINKWARDEN_DATABASE_URL"
+      value: "postgresql://linkwarden:{{ hostvars['console']['postgresql']['password']['linkwarden'] | urlencode | replace('/', '%2F') }}\
+        @{{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}/linkwarden_db?sslmode=require&\
+        sslcert=/etc/ssl/linkwarden/{{ root_cert_filename }}&sslaccept=strict"
+  notify: "notification_restart_linkwarden"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/linkwarden/linkwarden"
+    tag: "{{ version['containers']['linkwarden'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/linkwarden/linkwarden.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/linkwarden.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_linkwarden"
+
+- name: Enable linkwarden.service
+  ansible.builtin.systemd:
+    name: "linkwarden.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/ghcr.io_linkwarden_linkwarden_{{ version['containers']['linkwarden'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "ghcr.io/linkwarden/linkwarden:{{ version['containers']['linkwarden'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/ghcr.io_linkwarden_linkwarden_{{ version['containers']['linkwarden'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/ghcr.io_linkwarden_linkwarden_{{ version['containers']['linkwarden'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

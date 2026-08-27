@@ -28,10 +28,10 @@
 
     - name: Check disk number
       ansible.builtin.fail:
-        msg: "Below 4 disks for RAID10, found {{ data_disk_path.stdout_lines | length }}"
+        msg: "Below 2 disks for RAID, found {{ data_disk_path.stdout_lines | length }}"
       when: (data_disk_path.stdout_lines | length) < hardware['disk']['data']['fs']['btrfs']['min_devices']
 
-    - name: Set btrfs raid10 volume
+    - name: Set data btrfs volume
       ansible.builtin.shell: |
         mkfs.btrfs -f \
         -L {{ hardware['disk']['data']['fs']['label'] }} \
@@ -54,7 +54,7 @@
         mode: "0711"
       become: true
 
-    - name: Mount btrfs raid10 volume
+    - name: Mount data btrfs volume
       ansible.posix.mount:
         path: "{{ hardware['disk']['data']['fs']['mount_point'] }}"
         src: "LABEL={{ hardware['disk']['data']['fs']['label'] }}"
@@ -92,7 +92,7 @@
       failed_when: false
       register: "is_backup_disk_fs"
 
-    - name: Set btrfs volume
+    - name: Set backup btrfs volume
       ansible.builtin.shell: |
         mkfs.btrfs -f \
         -L {{ hardware['disk']['backup']['fs']['label'] }} \
@@ -115,7 +115,7 @@
         mode: "0711"
       become: true
 
-    - name: Mount btrfs volume
+    - name: Mount backup btrfs volume
       ansible.posix.mount:
         path: "{{ hardware['disk']['backup']['fs']['mount_point'] }}"
         src: "LABEL={{ hardware['disk']['backup']['fs']['label'] }}"

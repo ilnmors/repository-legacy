@@ -58,7 +58,7 @@
     - "containers/nextcloud/ini"
   become: true
 
-- name: Check data directory empty
+- name: Check .init file
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/data/containers/nextcloud/.init"
   register: "is_nextcloud_init"

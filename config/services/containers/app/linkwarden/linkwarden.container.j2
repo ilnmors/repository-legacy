@@ -1,0 +1,59 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=LinkWarden
+
+[Container]
+Image=ghcr.io/linkwarden/linkwarden:{{ version['containers']['linkwarden'] }}
+ContainerName=linkwarden
+HostName=linkwarden
+PublishPort={{ services['linkwarden']['ports']['http'] }}:3000/tcp
+
+# Volumes
+Volume=%h/data/containers/linkwarden/data:/data/data:rw
+Volume=%h/containers/linkwarden/ssl:/etc/ssl/linkwarden:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="NEXTAUTH_URL=https://{{ services['linkwarden']['domain']['public'] }}.{{ domain['public'] }}/api/v1/auth"
+Environment="ALLOW_PRIVATE_NETWORK_ACCESS=true"
+Environment="ALLOW_INSECURE_TLS=false"
+Secret=LINKWARDEN_SECRET_KEY,type=env,target=NEXTAUTH_SECRET
+
+# Database (PostgreSQL)
+# postgresql://linkwarden:PASSWORD@db.example.com:5432/linkwarden_db?sslmode=require&sslrootcert=/run/secrets/postgres-ca.crt&sslaccept=strict
+Secret=LINKWARDEN_DATABASE_URL,type=env,target=DATABASE_URL
+
+# OIDC
+Environment="NEXT_PUBLIC_OIDC_ENABLED=true"
+Environment="OIDC_CUSTOM_NAME=Authelia"
+Environment="OIDC_WELLKNOWN_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
+Environment="OIDC_CLIENT_ID=linkwarden"
+Environment="OIDC_SCOPES=openid groups email profile"
+Environment="NEXT_PUBLIC_DISABLE_REGISTRATION=true"
+Environment="NEXT_PUBLIC_CREDENTIALS_ENABLED=false"
+Environment="DISABLE_NEW_SSO_USERS=false"
+Secret=LINKWARDEN_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+# Archiving
+Environment="DISABLE_BROWSER=false"
+Environment="BROWSER_LIFECYCLE=on-demand"
+Environment="ARCHIVE_TAKE_COUNT=2"
+Environment="NEXT_PUBLIC_MAX_FILE_BUFFER=250"
+Environment="MONOLITH_MAX_BUFFER=250"
+Environment="PDF_MAX_BUFFER=100"
+Environment="SCREENSHOT_MAX_BUFFER=100"
+
+# Meili search
+# Environment=MEILI_HOST=""
+# Environment=MEILI_MASTER_KEY=""
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

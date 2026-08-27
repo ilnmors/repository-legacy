@@ -178,6 +178,7 @@
           - python3-apt
           - python3-libvirt
           - python3-lxml
+          - rsync
         state: "present"
       become: true
       when: "'init' is not in ansible_run_tags"

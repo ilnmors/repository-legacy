@@ -6,12 +6,12 @@
 - Services:
 {% for item in (homepage_public_services | reject('in', ['homepage', 'collabora'])) %}
     - {{ item }}:
-        icon: {{ icon_map.get(item, item) }}.svg
+        icon: {{ icon_map.get(item, item) }}
         href: https://{{ services[item]['domain']['public'] }}.{{ domain['public'] }}
 {% endfor %}
 - Admin:
 {% for item in homepage_internal_services %}
     - {{ item }}:
-        icon: {{ icon_map.get(item, item) }}.svg
+        icon: {{ icon_map.get(item, item) }}
         href: https://{{ services[item]['domain']['internal'] }}.{{ domain['internal'] }}
 {% endfor %}

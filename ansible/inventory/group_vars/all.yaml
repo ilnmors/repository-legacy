@@ -178,6 +178,15 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
+  linkwarden:
+    domain:
+      public: "link"
+      internal: "link.app"
+    ports:
+      http: "3005"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   gitea:
     domain:
       public: "gitea"
@@ -329,7 +338,6 @@ services:
       web: "app-public"
       db: "postgresql"
 
-
 version:
   packages:
     sops: "3.13.2"
@@ -377,3 +385,4 @@ version:
     romm: "5.1.0"
     tandoor: "2.6.13"
     bookstack: "26.5.3"
+    linkwarden: "v2.16.1"

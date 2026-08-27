@@ -35,8 +35,6 @@ hardware:
         mount_opts: ""
     data:
       serials:
-        - "WMC6N0E617S8"
-        - "PN1134P6HVTL0W"
         - "PN1138P2GH354H"
         - "PN2131P6GJKSMP"
       fs:
@@ -50,12 +48,14 @@ hardware:
           - "degraded"
           - "nofail"
         btrfs:
-          data_profile: "raid10"
-          metadata_profile: "raid10"
-          min_devices: 4
+          data_profile: "raid1"
+          metadata_profile: "raid1"
+          min_devices: 2
     backup:
       serials:
-        - "6261S5G4S75H"
+        - "PN1134P6HVTL0W"
+      # Spare
+      # - "WMC6N0E617S8"
       fs:
         type: "btrfs"
         label: "BACKUP"

@@ -298,6 +298,14 @@
           tags: ["site", "romm"]
       tags: ["site", "romm"]
 
+    - name: Set linkwarden
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_linkwarden"
+        apply:
+          tags: ["site", "linkwarden"]
+      tags: ["site", "linkwarden"]
+
     - name: Set homepage
       ansible.builtin.include_role:
         name: "app"

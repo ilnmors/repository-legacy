@@ -25,7 +25,7 @@ vm:
   data_storage:
     name: "vdb"
     pool: "data"
-    size: 3.5
+    size: 1.75
   lan_mac: "0a:49:6e:4d:03:00"
   lan_net: "lan-net"
   lan_group: "vlan10-access"
