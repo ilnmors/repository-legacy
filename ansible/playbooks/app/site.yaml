@@ -102,7 +102,24 @@
           - "jq"
           - "netcat-openbsd"
           - "dbus-user-session"
+          - "ksmtuned"
         state: "present"
+      become: true
+      tags: ["init", "site", "install-packages"]
+
+    - name: Enable ksm.service
+      ansible.builtin.systemd:
+        name: "ksm.service"
+        state: "started"
+        enabled: true
+      become: true
+      tags: ["init", "site", "install-packages"]
+
+    - name: Disable ksmtuned.service
+      ansible.builtin.systemd:
+        name: "ksmtuned.service"
+        state: "stopped"
+        enabled: false
       become: true
       tags: ["init", "site", "install-packages"]
 
@@ -234,14 +251,6 @@
           tags: ["site", "outline"]
       tags: ["site", "outline"]
 
-    - name: Set mealie
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_mealie"
-        apply:
-          tags: ["site", "mealie"]
-      tags: ["site", "mealie"]
-
     - name: Set homebox
       ansible.builtin.include_role:
         name: "app"
@@ -257,14 +266,6 @@
         apply:
           tags: ["site", "mastodon"]
       tags: ["site", "mastodon"]
-
-    - name: Set booklogr
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_booklogr"
-        apply:
-          tags: ["site", "booklogr"]
-      tags: ["site", "booklogr"]
 
     - name: Set papra
       ansible.builtin.include_role:
@@ -290,21 +291,13 @@
           tags: ["site", "bookstack"]
       tags: ["site", "bookstack"]
 
-    - name: Set romm
+    - name: Set linkding
       ansible.builtin.include_role:
         name: "app"
-        tasks_from: "services/set_romm"
+        tasks_from: "services/set_linkding"
         apply:
-          tags: ["site", "romm"]
-      tags: ["site", "romm"]
-
-    - name: Set linkwarden
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_linkwarden"
-        apply:
-          tags: ["site", "linkwarden"]
-      tags: ["site", "linkwarden"]
+          tags: ["site", "linkding"]
+      tags: ["site", "linkding"]
 
     - name: Set homepage
       ansible.builtin.include_role:

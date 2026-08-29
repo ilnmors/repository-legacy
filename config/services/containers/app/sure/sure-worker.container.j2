@@ -41,6 +41,7 @@ Environment="SECURITIES_PROVIDER=yahoo_finance"
 Exec=bundle exec sidekiq
 
 [Service]
+MemoryKSM=yes
 ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s

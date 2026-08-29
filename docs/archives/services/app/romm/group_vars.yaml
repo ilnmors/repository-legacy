@@ -1,0 +1,15 @@
+services:
+  romm:
+    domain:
+      public: "romm"
+      internal: "romm.app"
+    ports:
+      http: "8002"
+      redis: "6384"
+    subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+version:
+  containers:
+    romm: "5.1.0"

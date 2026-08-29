@@ -20,7 +20,7 @@ vm:
     <vcpupin vcpu='5' cpuset='11'/>
     <emulatorpin cpuset='10-11'/>
   shares: 1024
-  memory: 16
+  memory: 48
   storage: 256
   data_storage:
     name: "vdb"

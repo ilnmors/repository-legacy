@@ -92,17 +92,6 @@
   listen: "notification_restart_outline"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart mealie
-  ansible.builtin.systemd:
-    name: "mealie.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_mealie"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart homebox
   ansible.builtin.systemd:
     name: "homebox.service"
@@ -151,20 +140,6 @@
   listen: "notification_restart_mastodon"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart booklogr
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  loop:
-    - "booklogr-api.service"
-    - "booklogr-web.service"
-  changed_when: false
-  listen: "notification_restart_booklogr"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart papra
   ansible.builtin.systemd:
     name: "papra.service"
@@ -174,17 +149,6 @@
     daemon_reload: true
   changed_when: false
   listen: "notification_restart_papra"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart romm
-  ansible.builtin.systemd:
-    name: "romm.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_romm"
   ignore_errors: true # noqa: ignore-errors
 
 - name: Restart tandoor
@@ -209,13 +173,13 @@
   listen: "notification_restart_bookstack"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart linkwarden
+- name: Restart linkding
   ansible.builtin.systemd:
-    name: "linkwarden.service"
+    name: "linkding.service"
     state: "restarted"
     enabled: true
     scope: "user"
     daemon_reload: true
   changed_when: false
-  listen: "notification_restart_linkwarden"
+  listen: "notification_restart_linkding"
   ignore_errors: true # noqa: ignore-errors

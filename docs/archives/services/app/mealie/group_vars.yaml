@@ -1,0 +1,14 @@
+services:
+  mealie:
+    domain:
+      public: "mealie"
+      internal: "mealie.app"
+    ports:
+      http: "9000"
+    subuid: "100910"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+version:
+  containers:
+    mealie: "v3.22.0"

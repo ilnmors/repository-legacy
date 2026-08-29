@@ -17,6 +17,7 @@ Environment="aliasgroup1=https://{{ services['nextcloud']['domain']['public'] }}
 Environment="extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:server_name={{ services['collabora']['domain']['public'] }}.{{ domain['public'] }} --o:admin_console.enable=false"
 
 [Service]
+MemoryKSM=yes
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

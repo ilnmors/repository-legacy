@@ -38,6 +38,7 @@ Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon'][
 Exec=node ./streaming/index.js
 
 [Service]
+MemoryKSM=yes
 ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s

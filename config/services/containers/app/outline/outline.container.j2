@@ -69,6 +69,7 @@ Secret=OUTLINE_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
 Environment="LOG_LEVEL=warn"
 
 [Service]
+MemoryKSM=yes
 ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 Restart=always
 RestartSec=10s

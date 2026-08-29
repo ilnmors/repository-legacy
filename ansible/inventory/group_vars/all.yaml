@@ -178,12 +178,13 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
-  linkwarden:
+  linkding:
     domain:
-      public: "link"
-      internal: "link.app"
+      public: "linkding"
+      internal: "linkding.app"
     ports:
-      http: "3005"
+      http: "9090"
+    subuid: "100032"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -244,19 +245,6 @@ services:
   immich-ml:
     ports:
       http: "3003"
-  booklogr:
-    domain:
-      public: "booklogr"
-      internal: "booklogr.app"
-    ports:
-      http: "5150"
-      api: "5000"
-    route:
-      api: "/v1 /v1/*"
-      deny: "/v1/login /v1/login/* /v1/register /v1/register/*"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
   outline:
     domain:
       public: "outline"
@@ -298,16 +286,6 @@ services:
     subuid: "100998"
     dependency:
       web: "app-public"
-  mealie:
-    domain:
-      public: "mealie"
-      internal: "mealie.app"
-    ports:
-      http: "9000"
-    subuid: "100910"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
   tandoor:
     domain:
       public: "tandoor"
@@ -323,17 +301,6 @@ services:
       internal: "homebox.app"
     ports:
       http: "7745"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
-  romm:
-    domain:
-      public: "romm"
-      internal: "romm.app"
-    ports:
-      http: "8002"
-      redis: "6384"
-    subuid: "100999"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -375,14 +342,11 @@ version:
     collabora: "26.04.3.1.1"
     sure: "0.7.3"
     outline: "1.9.2"
-    mealie: "v3.22.0"
     homebox: "0.26.2"
     homepage: "v2.0.0"
     snappymail: "v2.38.2"
     mastodon: "v4.6.6"
-    booklogr: "v1.11.1"
     papra: "26.6.1-rootless"
-    romm: "5.1.0"
     tandoor: "2.6.13"
     bookstack: "26.5.3"
-    linkwarden: "v2.16.1"
+    linkding: "1.46.2"

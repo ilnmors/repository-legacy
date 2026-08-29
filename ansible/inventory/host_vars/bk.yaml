@@ -17,7 +17,7 @@ vm:
     <emulatorpin cpuset='6-7'/>
   shares: 512
   memory: 2
-  storage: 32
+  storage: 64
   data_storage:
     name: "vdb"
     pool: "backup"

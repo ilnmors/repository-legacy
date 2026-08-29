@@ -1,0 +1,17 @@
+services:
+  booklogr:
+    domain:
+      public: "booklogr"
+      internal: "booklogr.app"
+    ports:
+      http: "5150"
+      api: "5000"
+    route:
+      api: "/v1 /v1/*"
+      deny: "/v1/login /v1/login/* /v1/register /v1/register/*"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+version:
+  containers:
+    booklogr: "v1.11.1"

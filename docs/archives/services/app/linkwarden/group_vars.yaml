@@ -1,0 +1,13 @@
+services:
+  linkwarden:
+    domain:
+      public: "link"
+      internal: "link.app"
+    ports:
+      http: "3005"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+version:
+  containers:
+    linkwarden: "v2.16.1"

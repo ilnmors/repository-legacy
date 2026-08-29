@@ -1,0 +1,84 @@
+---
+- name: Create linkding directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['linkding']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/linkding"
+    - "data/containers/linkding/data"
+    - "containers/linkding"
+    - "containers/linkding/ssl"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/linkding/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['linkding']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_linkding"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "LINKDING_DB_PASSWORD"
+      value: "{{ hostvars['console']['postgresql']['password']['linkding'] }}"
+    - name: "LINKDING_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['linkding']['oidc']['secret'] }}"
+  notify: "notification_restart_linkding"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/sissbruecker/linkding"
+    tag: "{{ version['containers']['linkding'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy linkding.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/linkding/linkding.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/linkding.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_linkding"
+
+- name: Enable linkding.service
+  ansible.builtin.systemd:
+    name: "linkding.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/ghcr.io_sissbruecker_linkding_{{ version['containers']['linkding'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "ghcr.io/sissbruecker/linkding:{{ version['containers']['linkding'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/ghcr.io_sissbruecker_linkding_{{ version['containers']['linkding'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/ghcr.io_sissbruecker_linkding_{{ version['containers']['linkding'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

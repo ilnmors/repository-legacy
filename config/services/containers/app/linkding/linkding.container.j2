@@ -1,0 +1,58 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Linkding
+
+[Container]
+Image=ghcr.io/sissbruecker/linkding:{{ version['containers']['linkding'] }}
+ContainerName=linkding
+HostName=linkding
+
+PublishPort={{ services['linkding']['ports']['http'] }}:9090/tcp
+
+# Persistent data
+Volume=%h/data/containers/linkding/data:/etc/linkding/data:rw
+Volume=%h/containers/linkding/ssl:/etc/ssl/linkding:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="LD_DISABLE_BACKGROUND_TASKS=False"
+Environment="LD_REQUEST_MAX_CONTENT_LENGTH=268435456"
+
+# PostgreSQL
+Environment="LD_DB_ENGINE=postgres"
+Environment="LD_DB_DATABASE=linkding_db"
+Environment="LD_DB_USER=linkding"
+Environment="LD_DB_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="LD_DB_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/linkding/{{ root_cert_filename }}"
+Environment="PGSSLCERTMODE=disable"
+Secret=LINKDING_DB_PASSWORD,type=env,target=LD_DB_PASSWORD
+
+# OIDC
+Environment="LD_ENABLE_OIDC=True"
+Environment="LD_DISABLE_LOGIN_FORM=True"
+Environment="OIDC_OP_AUTHORIZATION_ENDPOINT=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/api/oidc/authorization"
+Environment="OIDC_OP_TOKEN_ENDPOINT=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/api/oidc/token"
+Environment="OIDC_OP_USER_ENDPOINT=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/api/oidc/userinfo"
+Environment="OIDC_OP_JWKS_ENDPOINT=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/jwks.json"
+Environment="OIDC_RP_CLIENT_ID=linkding"
+Environment="OIDC_RP_SCOPES=openid email profile"
+Environment="OIDC_USERNAME_CLAIM=preferred_username"
+Environment="OIDC_USE_PKCE=True"
+Environment="OIDC_VERIFY_SSL=True"
+Secret=LINKDING_OIDC_CLIENT_SECRET,type=env,target=OIDC_RP_CLIENT_SECRET
+
+# Reverse proxy
+Environment="LD_CSRF_TRUSTED_ORIGINS=https://{{ services['linkding']['domain']['public'] }}.{{ domain['public'] }}"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=60
+
+[Install]
+WantedBy=default.target

@@ -118,30 +118,6 @@ identity_providers:
       access_token: '1h'
       id_token: '1h'
       refresh_token: '720h'
-    cors:
-      # booklogr cors configuration
-      endpoints:
-        - 'authorization'
-        - 'token'
-        - 'userinfo'
-      allowed_origins:
-        - 'https://{{ services['booklogr']['domain']['public'] }}.{{ domain['public'] }}'
-    claims_policies:
-      romm:
-        id_token:
-          - 'email'
-          - 'email_verified'
-          - 'alt_emails'
-          - 'preferred_username'
-          - 'name'
-          - 'groups'
-      linkwarden:
-        id_token:
-          - 'preferred_username'
-          - 'name'
-          - 'email'
-          - 'email_verified'
-          - 'groups'
     clients:
       # https://www.authelia.com/integration/openid-connect/clients/gitea/
       - client_id: 'gitea'
@@ -191,7 +167,7 @@ identity_providers:
         token_endpoint_auth_method: 'client_secret_post'
       # https://www.authelia.com/integration/openid-connect/clients/nextcloud/#openid-connect-user-backend-app
       - client_id: 'nextcloud'
-        client_name: 'Nextcloud'
+        client_name: 'nextcloud'
         consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['nextcloud']['oidc']['hash'] }}'
         public: false
@@ -214,7 +190,7 @@ identity_providers:
         token_endpoint_auth_method: 'client_secret_post'
       # https://www.authelia.com/integration/openid-connect/clients/sure/
       - client_id: 'sure'
-        client_name: 'Sure'
+        client_name: 'sure'
         consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['sure']['oidc']['hash'] }}'
         public: false
@@ -237,7 +213,7 @@ identity_providers:
         token_endpoint_auth_method: 'client_secret_basic'
       # https://www.authelia.com/integration/openid-connect/clients/outline/
       - client_id: 'outline'
-        client_name: 'Outline'
+        client_name: 'outline'
         consent_mode: 'implicit'
         client_secret: '{{ hostvars['console']['outline']['oidc']['hash'] }}'
         public: false
@@ -259,29 +235,6 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
-      # https://www.authelia.com/integration/openid-connect/clients/mealie/
-      - client_id: 'mealie'
-        client_name: 'Mealie'
-        consent_mode: 'implicit'
-        client_secret: '{{ hostvars['console']['mealie']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: true
-        pkce_challenge_method: 'S256'
-        redirect_uris:
-          - 'https://{{ services['mealie']['domain']['public'] }}.{{ domain['public'] }}/login'
-        scopes:
-          - 'openid'
-          - 'email'
-          - 'profile'
-          - 'groups'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
       # https://www.authelia.com/integration/openid-connect/clients/homebox/
       - client_id: 'homebox'
         client_name: 'homebox'
@@ -324,28 +277,6 @@ identity_providers:
         grant_types:
           - 'authorization_code'
         token_endpoint_auth_method: 'client_secret_basic'
-      # https://booklogr.app/docs/Configuration/OIDC-sign-in
-      - client_id: 'booklogr'
-        client_name: 'booklogr'
-        consent_mode: 'implicit'
-        client_secret: '{{ hostvars['console']['booklogr']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['booklogr']['domain']['public'] }}.{{ domain['public'] }}/callback'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_post'
       # https://www.authelia.com/integration/openid-connect/clients/papra/
       - client_id: 'papra'
         client_name: 'papra'
@@ -368,30 +299,6 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
-      # https://www.authelia.com/integration/openid-connect/clients/romm/
-      - client_id: 'romm'
-        claims_policy: 'romm'
-        client_name: 'romm'
-        consent_mode: 'implicit'
-        client_secret: '{{ hostvars['console']['romm']['oidc']['hash'] }}'
-        public: false
-        authorization_policy: 'one_factor'
-        require_pkce: false
-        pkce_challenge_method: ''
-        redirect_uris:
-          - 'https://{{ services['romm']['domain']['public'] }}.{{ domain['public'] }}/api/oauth/openid'
-        scopes:
-          - 'openid'
-          - 'groups'
-          - 'profile'
-          - 'email'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
-        access_token_signed_response_alg: 'none'
-        userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
       # https://www.authelia.com/integration/openid-connect/clients/tandoor/
       - client_id: 'tandoor'
         client_name: 'tandoor'
@@ -437,27 +344,21 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_basic'
-      # https://www.authelia.com/integration/openid-connect/clients/linkwarden/
-      - client_id: 'linkwarden'
-        claims_policy: 'linkwarden'
-        client_name: 'linkwarden'
+      # https://www.authelia.com/integration/openid-connect/clients/linkding/
+      - client_id: 'linkding'
+        client_name: 'linkding'
         consent_mode: 'implicit'
-        client_secret: '{{ hostvars['console']['linkwarden']['oidc']['hash'] }}'
+        client_secret: '{{ hostvars['console']['linkding']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
         require_pkce: false
         pkce_challenge_method: ''
         redirect_uris:
-          - 'https://{{ services['linkwarden']['domain']['public'] }}.{{ domain['public'] }}/api/v1/auth/callback/oidc'
+          - 'https://{{ services['linkding']['domain']['public'] }}.{{ domain['public'] }}/oidc/callback/'
         scopes:
           - 'openid'
-          - 'groups'
           - 'email'
           - 'profile'
-        response_types:
-          - 'code'
-        grant_types:
-          - 'authorization_code'
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
-        token_endpoint_auth_method: 'client_secret_basic'
+        token_endpoint_auth_method: 'client_secret_post'
