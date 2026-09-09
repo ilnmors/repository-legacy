@@ -1,0 +1,90 @@
+---
+- name: Check model directory in data volume
+  ansible.builtin.find:
+    path: "{{ node['home_path'] }}/data/containers/llama/models"
+    file_type: "file"
+    patterns: "*.gguf"
+    hidden: true
+    recurse: true
+  register: llama_models
+
+- name: Failure when models directory in data volume
+  ansible.builtin.fail:
+    msg: "There are no models in data directory, please ensure download some model files for llama.cpp"
+  when: llama_models.matched == 0
+
+- name: Create llama directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "containers/llama"
+    - "containers/llama/models"
+    - "containers/llama/config"
+
+- name: Sync model data (--delete=true)
+  delegate_to: "{{ inventory_hostname }}"
+  ansible.posix.synchronize:
+    src: "{{ node['home_path'] }}/data/containers/llama/models/"
+    dest: "{{ node['home_path'] }}/containers/llama/models/"
+    owner: true
+    group: true
+    perms: true
+    delete: true
+  notify: "notification_restart_llama"
+
+- name: Deploy configuration file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/llama/config/models.ini.j2"
+    dest: "{{ node['home_path'] }}/containers/llama/config/models.ini"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  notify: "notification_restart_llama"
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "ghcr.io/ggml-org/llama.cpp"
+    tag: "{{ version['containers']['llama'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/llama/llama.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/llama.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_llama"
+
+- name: Enable llama.service
+  ansible.builtin.systemd:
+    name: "llama.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/ghcr.io_ggml-org_llama.cpp_{{ version['containers']['llama'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "ghcr.io/ggml-org/llama.cpp:{{ version['containers']['llama'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/ghcr.io_ggml-org_llama.cpp_{{ version['containers']['llama'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/ghcr.io_ggml-org_llama.cpp_{{ version['containers']['llama'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

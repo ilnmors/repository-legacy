@@ -1,0 +1,118 @@
+---
+- name: Create groupoffice directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['groupoffice']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/groupoffice"
+    - "data/containers/groupoffice/data"
+    - "containers/groupoffice"
+    - "containers/groupoffice/ssl"
+    - "containers/groupoffice/config"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/groupoffice/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['groupoffice']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_groupoffice"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "GROUPOFFICE_DB_PASSWORD"
+      value: "{{ hostvars['console']['mariadb']['password']['groupoffice'] }}"
+  notify: "notification_restart_groupoffice"
+  no_log: true
+
+- name: Deploy config files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/groupoffice/config/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/containers/groupoffice/config/{{ item }}"
+    owner: "{{ services['groupoffice']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  loop:
+    - "config.php"
+    - "groupoffice-ca.ini"
+    - "Connection.php"
+    - "Authenticator.php"
+    - "configfile.php"
+  become: true
+  notify: "notification_restart_groupoffice"
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/intermesh/groupoffice"
+    tag: "{{ version['containers']['groupoffice'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy groupoffice.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/groupoffice/groupoffice.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/groupoffice.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_groupoffice"
+
+- name: Deploy groupoffice-cron service
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/groupoffice/services/{{ item }}"
+    dest: "{{ node['home_path'] }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  loop:
+    - "groupoffice-cron.service"
+    - "groupoffice-cron.timer"
+
+- name: Enable groupoffice.service
+  ansible.builtin.systemd:
+    name: "groupoffice.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Enable groupoffice-cron.timer
+  ansible.builtin.systemd:
+    name: "groupoffice-cron.timer"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_intermesh_groupoffice_{{ version['containers']['groupoffice'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/intermesh/groupoffice:{{ version['containers']['groupoffice'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_intermesh_groupoffice_{{ version['containers']['groupoffice'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_intermesh_groupoffice_{{ version['containers']['groupoffice'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

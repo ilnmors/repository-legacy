@@ -16,7 +16,7 @@ vm:
     <vcpupin vcpu='1' cpuset='7'/>
     <emulatorpin cpuset='6-7'/>
   shares: 1024
-  memory: 2
+  memory: 1
   storage: 32
   lan_mac: "0a:49:6e:4d:02:00"
   lan_net: "lan-net"

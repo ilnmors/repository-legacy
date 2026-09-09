@@ -1,0 +1,84 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Open WebUI
+
+[Container]
+Image=ghcr.io/open-webui/open-webui:{{ version['containers']['openwebui'] }}
+ContainerName=openwebui
+HostName=openwebui
+PublishPort={{ services['openwebui']['ports']['http'] }}:8080/tcp
+
+Volume=%h/data/containers/openwebui/data:/app/backend/data:rw
+Volume=%h/containers/openwebui/ssl:/etc/ssl/openwebui:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="WEBUI_URL=https://{{ services['openwebui']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="CORS_ALLOW_ORIGIN=https://{{ services['openwebui']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="ENABLE_PERSISTENT_CONFIG=false"
+Environment="ENABLE_SIGNUP=false"
+Environment="ENABLE_LOGIN_FORM=false"
+Environment="ENABLE_PASSWORD_AUTH=false"
+Environment="ENABLE_PASSWORD_CHANGE_FORM=false"
+Secret=OPEN_WEBUI_SECRET_KEY,type=env,target=WEBUI_SECRET_KEY
+# We use OpenAI-compatible backends, not Ollama
+Environment="ENABLE_OLLAMA_API=false"
+
+# PostgreSQL
+Environment="DATABASE_TYPE=postgresql"
+Environment="DATABASE_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="DATABASE_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="DATABASE_NAME=openwebui_db"
+Environment="DATABASE_USER=openwebui"
+Environment="PGSSLMODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/openwebui/{{ root_cert_filename }}"
+Environment="PGSSLCERTMODE=disable"
+Secret=OPEN_WEBUI_POSTGRES_PASSWORD,type=env,target=DATABASE_PASSWORD
+
+# OIDC
+Environment="ENABLE_OAUTH_PERSISTENT_CONFIG=false"
+Environment="ENABLE_OAUTH_SIGNUP=true"
+Environment="OAUTH_AUTO_REDIRECT=false"
+Environment="OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true"
+Environment="OAUTH_CLIENT_ID=openwebui"
+Environment="OPENID_PROVIDER_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
+Environment="OAUTH_PROVIDER_NAME=Authelia"
+Environment="OAUTH_SCOPES=openid email profile groups"
+Environment="ENABLE_OAUTH_ROLE_MANAGEMENT=true"
+Environment="OAUTH_ALLOWED_ROLES=admins,users"
+Environment="OAUTH_ADMIN_ROLES=admins"
+Environment="OAUTH_ROLES_CLAIM=groups"
+Environment="OAUTH_CODE_CHALLENGE_METHOD=S256"
+Secret=OPEN_WEBUI_OAUTH_CLIENT_SECRET,type=env,target=OAUTH_CLIENT_SECRET
+
+# AI backend server
+# llama.cpp
+Environment="OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['llama']['ports']['http'] }}/v1"
+Environment="OPENAI_API_KEY=none"
+# stable-diffusion.cpp
+Environment="ENABLE_IMAGE_GENERATION=true"
+Environment="IMAGE_GENERATION_ENGINE=openai"
+Environment="IMAGES_OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['stablediffusion']['ports']['http'] }}/v1"
+Environment="IMAGES_OPENAI_API_KEY=none"
+Environment="IMAGE_GENERATION_MODEL=sd-cpp-local"
+Environment="IMAGE_SIZE=1024x1024"
+Environment="AIOHTTP_CLIENT_TIMEOUT=3600"
+# Disable background LLM tasks
+Environment="ENABLE_TITLE_GENERATION=false"
+Environment="ENABLE_TAGS_GENERATION=false"
+Environment="ENABLE_FOLLOW_UP_GENERATION=false"
+Environment="ENABLE_AUTOCOMPLETE_GENERATION=false"
+Environment="DEFAULT_MODEL_METADATA={\"builtinTools\":{\"user_input\":false}}"
+
+
+[Service]
+MemoryKSM=yes
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

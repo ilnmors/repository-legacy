@@ -1,0 +1,35 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=OpenVINO Model Server
+
+[Container]
+Image=docker.io/openvino/model_server:{{ version['containers']['ovms'] }}
+
+ContainerName=ovms
+HostName=ovms
+PublishPort={{ services['ovms']['ports']['http'] }}:8000/tcp
+
+# iGPU access for OpenVINO
+AddDevice=/dev/dri:/dev/dri
+PodmanArgs=--group-add keep-groups
+
+Volume=%h/containers/ovms/models:/models:ro
+Volume=%h/containers/ovms/config:/config:ro
+Volume=%h/containers/ovms/cache:/opt/cache:rw
+
+Environment="TZ={{ timezone }}"
+
+Exec=--rest_port 8000 \
+     --config_path /config/config.json \
+     --cache_dir /opt/cache \
+     --file_system_poll_wait_seconds 0
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=300
+
+[Install]
+WantedBy=default.target

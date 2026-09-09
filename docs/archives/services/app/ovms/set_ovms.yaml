@@ -1,0 +1,106 @@
+---
+- name: Add user in video, render group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    state: "present"
+    groups: "video, render"
+    append: true
+  become: true
+
+- name: Check model directory in data volume
+  ansible.builtin.find:
+    path: "{{ node['home_path'] }}/data/containers/ovms/models"
+    file_type: any
+    hidden: true
+  register: ovms_models
+
+- name: Check config directory in data volume
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/data/containers/ovms/config/config.json"
+  register: ovms_config
+
+- name: Failure when models directory or config file in data volume
+  ansible.builtin.fail:
+    msg: "There are no models or config file in data directory, please prepare the models and config before set the ovms"
+  when: (ovms_models.matched == 0) or (not ovms_config.stat.exists)
+
+- name: Create ovms directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['ovms']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "containers/ovms"
+    - "containers/ovms/models"
+    - "containers/ovms/config"
+    - "containers/ovms/cache"
+  become: true
+
+- name: Sync model data (--delete=true)
+  delegate_to: "{{ inventory_hostname }}"
+  ansible.posix.synchronize:
+    src: "{{ node['home_path'] }}/data/containers/ovms/models/"
+    dest: "{{ node['home_path'] }}/containers/ovms/models/"
+    owner: true
+    group: true
+    perms: true
+    delete: true
+  become: true
+  notify: "notification_restart_ovms"
+
+- name: Copy configuration file
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ node['home_path'] }}/data/containers/ovms/config/config.json"
+    dest: "{{ node['home_path'] }}/containers/ovms/config/config.json"
+    owner: "{{ services['ovms']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  become: true
+  notify: "notification_restart_ovms"
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/openvino/model_server"
+    tag: "{{ version['containers']['ovms'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/ovms/ovms.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/ovms.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_ovms"
+
+- name: Enable ovms.service
+  ansible.builtin.systemd:
+    name: "ovms.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_openvino_model_server_{{ version['containers']['ovms'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/openvino/model_server:{{ version['containers']['ovms'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_openvino_model_server_{{ version['containers']['ovms'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_openvino_model_server_{{ version['containers']['ovms'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

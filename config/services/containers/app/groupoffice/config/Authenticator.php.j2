@@ -1,0 +1,519 @@
+<?php
+
+namespace go\modules\community\imapauthenticator\model;
+
+use Exception;
+use go\core\auth\PrimaryAuthenticator;
+use go\core\imap\Connection;
+use go\core\model\User;
+use GO\Email\Model\Account;
+use function GO;
+
+class Authenticator extends PrimaryAuthenticator
+{
+	public static function id(): string
+	{
+		return "imap";
+	}
+
+	/**
+	 * Resolve a login name into a Group-Office username and e-mail address.
+	 *
+	 * Full e-mail:
+	 *   foo@example.com
+	 *   -> username = foo
+	 *   -> email    = foo@example.com
+	 *
+	 * Short username:
+	 *   foo
+	 *   -> allowed only when exactly one concrete IMAP domain is configured
+	 *   -> username = foo
+	 *   -> email    = foo@configured-domain
+	 *
+	 * Wildcard (*) domains are not used for short-name inference.
+	 *
+	 * @param string $login
+	 * @return array{username:string,email:string}|null
+	 */
+	private static function resolveIdentity(string $login): ?array
+	{
+		$login = trim($login);
+
+		if($login === '') {
+			return null;
+		}
+
+		$atPos = strpos($login, '@');
+
+		if($atPos !== false) {
+			if($atPos === 0 || $atPos === strlen($login) - 1) {
+				return null;
+			}
+
+			return [
+				'username' => substr($login, 0, $atPos),
+				'email' => $login
+			];
+		}
+
+		/*
+		 * For a short username, infer the mail domain from the
+		 * configured IMAP authenticator domains.
+		 *
+		 * This is only unambiguous when exactly one concrete
+		 * domain is configured.
+		 */
+		$stmt = go()->getDbConnection()->query(
+			"SELECT DISTINCT `name`
+			 FROM `imapauth_server_domain`
+			 WHERE `name` <> '*'
+			   AND `name` <> ''
+			 ORDER BY `name`"
+		);
+
+		$domains = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+		if(count($domains) !== 1) {
+			return null;
+		}
+
+		return [
+			'username' => $login,
+			'email' => $login . '@' . $domains[0]
+		];
+	}
+
+	public static function isAvailableFor(string $username): bool
+	{
+		$identity = static::resolveIdentity($username);
+
+		if(!$identity) {
+			return false;
+		}
+
+		/*
+		* Existing Group-Office users with a local password must be
+		* authenticated locally.
+		*
+		* This keeps local/break-glass administrator accounts such as
+		* "local_admin" out of the IMAP authentication flow.
+		*
+		* IMAP-managed users have their local password cleared after
+		* successful IMAP authentication, so they continue to use IMAP.
+		*/
+		$localUser = User::find()
+			->where([
+				'username' => $identity['username']
+			])
+			->single();
+
+		if($localUser && $localUser->hasPassword()) {
+			return false;
+		}
+
+		return static::findServer($identity['email']) !== false;
+	}
+
+	/**
+	 * Find the IMAP authentication server for an e-mail address.
+	 *
+	 * @param string $email
+	 * @return Server|boolean
+	 */
+	private static function findServer($email)
+	{
+		$atPos = strpos($email, '@');
+
+		if(!$atPos) {
+			return false;
+		}
+
+		$domain = substr($email, $atPos + 1);
+
+		return Server::find()
+			->join(
+				'imapauth_server_domain',
+				'd',
+				's.id = d.serverId'
+			)
+			->where([
+				'd.name' => $domain
+			])
+			->orWhere([
+				'd.name' => '*'
+			])
+			->single();
+	}
+
+	public function authenticate(
+		string $username,
+		string $password
+	): bool|User
+	{
+		$this->fireEvent(
+			'beforeauthenticate',
+			[$username]
+		);
+
+		$identity = static::resolveIdentity($username);
+
+		if(!$identity) {
+			return false;
+		}
+
+		$localUsername = $identity['username'];
+		$email = $identity['email'];
+
+		$server = static::findServer($email);
+
+		if(!$server) {
+			return false;
+		}
+
+		go()->debug(
+			"Attempting IMAP authentication on " .
+			$server->imapHostname
+		);
+
+		$connection = new Connection();
+
+		if(!$connection->connect(
+			$server->imapHostname,
+			$server->imapPort,
+			$server->imapEncryption == 'ssl',
+			10,
+			!$server->imapValidateCertificate
+		)) {
+			throw new Exception(
+				"Could not connect to IMAP server"
+			);
+		}
+
+		if($server->imapEncryption == 'tls') {
+			if(!$connection->startTLS()) {
+				throw new Exception(
+					"Could not enable TLS on " .
+					$server->imapHostname .
+					" at port " .
+					$server->imapPort
+				);
+			}
+		}
+
+		/*
+		 * Username sent to the IMAP server.
+		 *
+		 * Remove domain from username = No
+		 *   -> foo@example.com
+		 *
+		 * Remove domain from username = Yes
+		 *   -> foo
+		 */
+		$imapUsername = $server->removeDomainFromUsername
+			? $localUsername
+			: $email;
+
+		if(!$connection->authenticate(
+			$imapUsername,
+			$password
+		)) {
+			return false;
+		}
+
+		/*
+		 * Group-Office username is the local-part.
+		 */
+		$user = User::find()
+			->where([
+				'username' => $localUsername
+			])
+			->single();
+
+		/*
+		 * Prevent the same short username from being associated
+		 * with two different e-mail addresses.
+		 */
+		if(
+			$user &&
+			strcasecmp(
+				(string) $user->email,
+				$email
+			) !== 0
+		) {
+			throw new Exception(
+				"Username '" .
+				$localUsername .
+				"' already belongs to another e-mail address"
+			);
+		}
+
+		/*
+		 * Migrate an account previously created by the stock
+		 * IMAP authenticator:
+		 *
+		 * username = foo@example.com
+		 * email    = foo@example.com
+		 *
+		 * to:
+		 *
+		 * username = foo
+		 * email    = foo@example.com
+		 *
+		 * The existing User ID is preserved.
+		 */
+		if(!$user) {
+			$user = User::find()
+				->where([
+					'username' => $email
+				])
+				->single();
+
+			if(!$user) {
+				$user = User::find()
+					->where([
+						'email' => $email
+					])
+					->single();
+			}
+
+			if($user) {
+				$user->username = $localUsername;
+			}
+		}
+
+		if(!$user) {
+			$user = $this->createUser(
+				$localUsername,
+				$email
+			);
+		} elseif($user->hasPassword()) {
+			$user->clearPassword();
+		}
+
+		foreach($server->groups as $group) {
+			$user->addGroup($group->groupId);
+		}
+
+		if($user->isModified()) {
+			if(!$user->save()) {
+				throw new Exception(
+					"Could not save user"
+				);
+			}
+		}
+
+		/*
+		 * Synchronize the user's actual Email Account with the
+		 * global IMAP Authenticator server profile on every
+		 * successful login.
+		 */
+		$this->setEmailAccount(
+			$imapUsername,
+			$password,
+			$email,
+			$server,
+			$user
+		);
+
+		return $user;
+	}
+
+	/**
+	 * Create a new Group-Office user.
+	 *
+	 * @throws Exception
+	 */
+	private function createUser(
+		string $username,
+		string $email
+	): User
+	{
+		$user = new User();
+
+		$user->displayName = $username;
+		$user->username = $username;
+		$user->email = $email;
+		$user->recoveryEmail = $email;
+
+		if(!$user->save()) {
+			throw new Exception(
+				"Could not save user after successful IMAP login"
+			);
+		}
+
+		return $user;
+	}
+
+	/**
+	 * Synchronize the user's Email Account with the global
+	 * IMAP Authenticator server profile on every successful login.
+	 *
+	 * The following settings are authoritative:
+	 *
+	 * - IMAP host
+	 * - IMAP port
+	 * - IMAP encryption
+	 * - IMAP certificate validation
+	 * - IMAP username
+	 * - IMAP password
+	 * - SMTP host
+	 * - SMTP port
+	 * - SMTP encryption
+	 * - SMTP certificate validation
+	 * - SMTP authentication credentials
+	 *
+	 * User-specific mailbox, alias and other unrelated settings
+	 * are preserved.
+	 *
+	 * @throws Exception
+	 */
+	private function setEmailAccount(
+		$username,
+		$password,
+		$email,
+		Server $server,
+		User $user
+	) {
+		if(!$user->hasModule('legacy', 'email')) {
+			return;
+		}
+
+		/*
+		 * Find all existing e-mail accounts belonging to this user.
+		 *
+		 * Do not use the configured IMAP hostname as an identifier.
+		 * The administrator may change the global hostname later,
+		 * and in that case we want to update the existing account
+		 * instead of creating a duplicate.
+		 */
+		$accounts = Account::model()
+			->findByAttributes([
+				'user_id' => $user->id
+			])
+			->fetchAll();
+
+		$account = null;
+
+		/*
+		 * Prefer an account whose IMAP username matches either
+		 * the current IMAP login username or the full e-mail
+		 * address.
+		 */
+		foreach($accounts as $candidate) {
+			if(
+				$candidate->username === $username ||
+				$candidate->username === $email
+			) {
+				$account = $candidate;
+				break;
+			}
+		}
+
+		/*
+		 * If this user has exactly one e-mail account, treat that
+		 * account as the one managed by the IMAP authenticator.
+		 *
+		 * This allows changes to username/hostname configuration
+		 * without accidentally creating a duplicate account.
+		 */
+		if(!$account && count($accounts) === 1) {
+			$account = $accounts[0];
+		}
+
+		$wasNew = false;
+
+		if(!$account) {
+			$account = new Account();
+			$account->user_id = $user->id;
+			$account->mbroot = "";
+
+			$wasNew = true;
+		}
+
+		/*
+		 * IMAP Authenticator server profile is authoritative.
+		 *
+		 * Refresh IMAP configuration on every successful login.
+		 */
+		$account->host =
+			$server->imapHostname;
+
+		$account->port =
+			$server->imapPort;
+
+		$account->username =
+			$username;
+
+		$account->password =
+			$password;
+
+		$account->imap_encryption =
+			$server->imapEncryption ?? "";
+
+		$account->imap_allow_self_signed =
+			!$server->imapValidateCertificate;
+
+		/*
+		 * Refresh SMTP configuration from the same global
+		 * authentication server profile.
+		 */
+		$account->smtp_host =
+			$server->smtpHostname;
+
+		$account->smtp_port =
+			$server->smtpPort;
+
+		$account->smtp_encryption =
+			$server->smtpEncryption ?? "";
+
+		$account->smtp_allow_self_signed =
+			!$server->smtpValidateCertificate;
+
+		/*
+		 * SMTP authentication.
+		 */
+		if($server->smtpUseUserCredentials) {
+			/*
+			 * Use the same credentials that successfully
+			 * authenticated against IMAP.
+			 */
+			$account->smtp_username =
+				$username;
+
+			$account->smtp_password =
+				$password;
+		} else {
+			/*
+			 * Use static SMTP credentials configured in the
+			 * global IMAP Authenticator server profile.
+			 */
+			$account->smtp_username =
+				$server->smtpUsername;
+
+			$account->smtp_password =
+				$server->getSmtpPassword();
+		}
+
+		/*
+		 * Verify the resulting IMAP configuration while saving.
+		 */
+		$account->checkImapConnectionOnSave = true;
+
+		if(!$account->save(true)) {
+			throw new Exception(
+				"Could not save e-mail account: " .
+				implode(
+					"\n",
+					$account->getValidationErrors()
+				)
+			);
+		}
+
+		if($wasNew) {
+			$account->addAlias(
+				$email,
+				$user->displayName
+			);
+		}
+	}
+}

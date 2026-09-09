@@ -160,6 +160,84 @@ services:
       http: "3000" # app
     dependency:
       web: "app-public"
+  openwebui:
+    domain:
+      public: "openwebui"
+      internal: "openwebui.app"
+    ports:
+      http: "8002"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+  llama:
+    ports:
+      http: "10000"
+    dependency:
+      models:
+        default: |
+          n-gpu-layers = all
+          kv-unified = true
+          cache-prompt = true
+          cache-type-k = q8_0
+          cache-type-v = q8_0
+          flash-attn = auto
+          reasoning = off
+          jinja = true
+          lazy-mode = off
+        Nemotron3.5-Lightning-30B-A3B: |
+          model = /models/Nemotron3.5-Lightning-30B-A3B/Nemotron-3.5-Lightning-30B-A3B-Heretic-Uncensored-Q4_K_M-GGUF.gguf
+          c = 65536
+          parallel = 2
+          load-on-startup = true
+        # version: mradermacher/LFM2-24B-A2B-heretic-ara-GGUF
+        # LFM2-24B-A2B: |
+        #   model = /models/LFM2-24B-A2B/LFM2-24B-A2B-heretic-ara.Q4_K_M.gguf
+        #   c = 65536
+        #   parallel = 2
+        #   load-on-startup = true
+        # # version: SC117/LFM2.5-VL-3B-Uncensored-GGUF
+        # LFM2-VL-3B: |
+        #   model = /models/LFM2-VL-3B/LFM2.5-VL-3B-Uncensored-Q4_K_M.gguf
+        #   mmproj = /models/LFM2-VL-3B/mmproj-LFM2.5-VL-3B-BF16.gguf
+        #   c = 65536
+        #   parallel = 1
+        #   load-on-startup = true
+        # version: HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M
+        # Qwen3.6: |
+        #   model = /models/Qwen3.6-35B-A3B/Qwen3.6-35B-A3B-Q4_K_M.gguf
+        #   mmproj = /models/Qwen3.6-35B-A3B/mmproj-Qwen3.6-35B-BF16.gguf
+        #   c = 65536
+        #   parallel = 2
+        #   load-on-startup = true
+        #   image-min-tokens = 1024
+        # # version: HauhauCS/Qwen3.5-2B-Uncensored-HauhauCS-Aggressiv-Q8_0
+        # Qwen3.5-image: |
+        #   model = /models/Qwen3.5-2B/Qwen3.5-2B-Q8_0.gguf
+        #   c = 32768
+        #   parallel = 1
+        #   load-on-startup = true
+        # version: LiquidAI/LFM2.5-2.6B-GGUF
+        # LFM2.5: |
+        #   model = /models/LFM2.5-2.6B/LFM2.5-2.6B-Q8_0.gguf
+        #   c = 32768
+        #   parallel = 2
+        #   load-on-startup = true
+  stablediffusion:
+    ports:
+      http: "10001"
+    dependency:
+      models:
+        active: "zImage"
+        zImage: |
+          --diffusion-model /models/zImage/moodyRealMix_zitV7Global-Q8_0.gguf \
+          --llm /models/zImage/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
+          --vae /models/zImage/ae.safetensors \
+          --backend gpu \
+          --cfg-scale 1.0 \
+          --steps 9 \
+          --vae-tiling \
+          --vae-tile-size 32x32 \
+          --vae-tile-overlap 0.5
   snappymail:
     domain:
       public: "webmail"
@@ -209,6 +287,28 @@ services:
     subuid: "100990"
     route:
       api: "/api/v1/streaming*"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+  groupoffice:
+    domain:
+      public: "groupoffice"
+      internal: "groupoffice.app"
+    ports:
+      http: "8005"
+    subuid: "100032"
+    route:
+      dav: true
+    dependency:
+      web: "app-public"
+      db: "mariadb"
+  kaneo:
+    domain:
+      public: "kaneo"
+      internal: "kaneo.app"
+    ports:
+      http: "8006"
+    subuid: "101000"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -318,9 +418,9 @@ version:
     # infra
     ca: "0.30.2"
     ## Postgresql
-    postgresql: "18.4"
+    postgresql: "18.6"
     ## Mariadb
-    mariadb: "12.3.2"
+    mariadb: "12.3.3"
     ### For immich - https://github.com/immich-app/base-images/blob/main/postgres/versions.yaml
     vectorchord: "1.1.1"
     ## lldap
@@ -328,25 +428,34 @@ version:
     ## maddy
     maddy: "0.9.5"
     x509-exporter: "4.1.0"
-    prometheus: "v3.13.2"
-    loki: "3.7.4"
-    grafana: "13.1.1"
+    prometheus: "v3.14.0"
+    loki: "3.7.7"
+    grafana: "13.2.1"
     # Auth
     authelia: "4.39.20"
     # App
-    vaultwarden: "1.37.1"
-    gitea: "1.27.2"
-    redis: "8.10.0"
+    vaultwarden: "1.37.2"
+    gitea: "1.27.3"
+    redis: "8.10.1"
     immich: "v3.1.0"
     nextcloud: "34.0.3"
-    collabora: "26.04.3.1.1"
-    sure: "0.7.3"
-    outline: "1.9.2"
+    collabora: "26.04.3.2.1"
+    sure: "0.7.4"
+    outline: "1.10.0"
     homebox: "0.26.2"
     homepage: "v2.0.0"
     snappymail: "v2.38.2"
-    mastodon: "v4.6.6"
+    mastodon: "v4.6.7"
     papra: "26.6.1-rootless"
     tandoor: "2.6.13"
-    bookstack: "26.5.3"
+    bookstack: "26.5.4"
     linkding: "1.46.2"
+    openwebui: "v0.11.3"
+    # https://github.com/ggml-org/llama.cpp/pkgs/container/llama.cpp/versions
+    llama: "server-vulkan-b10830"
+    # https://github.com/leejet/stable-diffusion.cpp/pkgs/container/stable-diffusion.cpp
+    # master-sycl@sha256:f27ebe3fea7dcb5978241425d3a115ba6736cfc33c42e75233f22f7411449e9c has problem in it, it cannot get vRAM from UMA properly
+    # Pin due to a SYCL/UMA false-OOM regression in newer stable-diffusion.cpp ModelManager memory accounting.
+    stablediffusion: "master-sycl@sha256:67ccb5d11bf55578f7938daeb7c9fee1d0dd1344c089c090b9065714d7960fd5"
+    groupoffice: "26.0.43"
+    kaneo: "2.23.2"

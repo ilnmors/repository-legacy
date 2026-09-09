@@ -1,0 +1,48 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Kaneo
+
+[Container]
+Image=ghcr.io/usekaneo/kaneo:{{ version['containers']['kaneo'] }}
+
+ContainerName=kaneo
+HostName=kaneo
+
+PublishPort={{ services['kaneo']['ports']['http'] }}:5173/tcp
+
+Volume=%h/containers/kaneo/ssl:/etc/ssl/kaneo:ro
+
+Environment="TZ={{ timezone }}"
+Environment="DISABLE_PASSWORD_REGISTRATION=true"
+Environment="DISABLE_REGISTRATION=false"
+Environment="DISABLE_GUEST_ACCESS=true"
+Environment="KANEO_CLIENT_URL=https://{{ services['kaneo']['domain']['public'] }}.{{ domain['public'] }}"
+Secret=KANEO_AUTH_SECRET,type=env,target=AUTH_SECRET
+
+# PostgreSQL
+Environment="POSTGRES_HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="POSTGRES_PORT={{ services['postgresql']['ports']['tcp'] }}"
+Environment="POSTGRES_DB=kaneo_db"
+Environment="POSTGRES_USER=kaneo"
+Environment="PGSSLMODE=verify-full"
+Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/kaneo/{{ root_cert_filename }}"
+Secret=KANEO_DB_PASSWORD,type=env,target=POSTGRES_PASSWORD
+
+Environment="CUSTOM_OAUTH_CLIENT_ID=kaneo"
+Environment="CUSTOM_OAUTH_DISCOVERY_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
+Environment="CUSTOM_OAUTH_SCOPES=openid,profile,email"
+Environment="CUSTOM_AUTH_PKCE=true"
+Secret=KANEO_OIDC_CLIENT_SECRET,type=env,target=CUSTOM_OAUTH_CLIENT_SECRET
+
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

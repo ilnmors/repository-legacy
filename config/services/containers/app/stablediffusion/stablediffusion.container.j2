@@ -1,0 +1,36 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=stable-diffusion.cpp Image Generation Server
+
+[Container]
+Image=ghcr.io/leejet/stable-diffusion.cpp:{{ version['containers']['stablediffusion'] }}
+
+ContainerName=stablediffusion
+HostName=stablediffusion
+PublishPort={{ services['stablediffusion']['ports']['http'] }}:1234/tcp
+
+# iGPU access for container
+AddDevice=/dev/dri:/dev/dri
+PodmanArgs=--group-add keep-groups
+
+Volume=%h/containers/stablediffusion/models:/models:ro
+
+# General
+Environment="TZ={{ timezone }}"
+# Prevent Fence expiration time out f9r CYCL
+Environment="SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1"
+
+Entrypoint=/sd-server
+Exec=--listen-ip 0.0.0.0 \
+     --listen-port 1234 \
+     {{ services['stablediffusion']['dependency']['models'][stabeldiffusion_active_model] }}
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=300
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,34 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=llama.cpp Model Server
+
+[Container]
+Image=ghcr.io/ggml-org/llama.cpp:{{ version['containers']['llama'] }}
+
+ContainerName=llama
+HostName=llama
+PublishPort={{ services['llama']['ports']['http'] }}:9931/tcp
+
+# iGPU access for Vulkan
+AddDevice=/dev/dri:/dev/dri
+PodmanArgs=--group-add keep-groups
+
+Volume=%h/containers/llama/models:/models:ro
+Volume=%h/containers/llama/config:/config:ro
+
+Environment="TZ={{ timezone }}"
+
+Exec=--models-preset /config/models.ini \
+     --models-max 2 \
+     --host 0.0.0.0 \
+     --port 9931
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=300
+
+[Install]
+WantedBy=default.target

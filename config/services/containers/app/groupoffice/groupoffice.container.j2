@@ -1,0 +1,41 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=GroupOffice
+
+[Container]
+Image=docker.io/intermesh/groupoffice:{{ version['containers']['groupoffice'] }}
+
+ContainerName=groupoffice
+HostName=groupoffice
+
+PublishPort={{ services['groupoffice']['ports']['http'] }}:80/tcp
+
+Volume=%h/data/containers/groupoffice/data:/var/lib/groupoffice:rw
+Volume=%h/containers/groupoffice/ssl/{{ root_cert_filename }}:/etc/ssl/groupoffice/{{ root_cert_filename }}:ro
+# Keep the official image intact.
+Volume=%h/containers/groupoffice/config/config.php:/etc/groupoffice/config.php:ro
+Volume=%h/containers/groupoffice/config/groupoffice-ca.ini:/usr/local/etc/php/conf.d/99-groupoffice-ca.ini:ro
+Volume=%h/containers/groupoffice/config/Authenticator.php:/usr/local/share/groupoffice/go/modules/community/imapauthenticator/model/Authenticator.php:ro
+Volume=%h/containers/groupoffice/config/db_Connection.php:/usr/local/share/groupoffice/go/core/db/Connection.php:ro
+Volume=%h/containers/groupoffice/config/configfile.php:/usr/local/share/groupoffice/install/configfile.php:ro
+
+Environment="TZ={{ timezone }}"
+
+# GroupOffice official Docker DB configuration
+Environment="MYSQL_HOST={{ services['mariadb']['domain']['internal'] }}.{{ domain['internal'] }}"
+Environment="MYSQL_DATABASE=groupoffice_db"
+Environment="MYSQL_USER=groupoffice"
+Secret=GROUPOFFICE_DB_PASSWORD,type=env,target=MYSQL_PASSWORD
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['mariadb']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['mariadb']['ports']['tcp'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }} 993
+ExecStartPost=-/usr/bin/podman exec -u www-data groupoffice php /usr/local/share/groupoffice/cli.php core/System/upgrade
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

@@ -147,7 +147,7 @@ table inet filter {
                 oifname $IF_SERVER ip saddr $HOSTS4_CONSOLE ip daddr { $HOSTS4_BK, $HOSTS4_INFRA, $HOSTS4_APP } tcp dport $PORTS_WEB accept comment "allow ipv4 web connection: CONSOLE > FW > SERVER BK/INFRA/APP"
                 oifname $IF_SERVER ip6 saddr $HOSTS6_CONSOLE ip6 daddr { $HOSTS6_BK, $HOSTS6_INFRA, $HOSTS6_APP } tcp dport $PORTS_WEB accept comment "allow ipv6 web connection: CONSOLE > FW > SERVER BK/INFRA/APP"
                 # Printer
-                oifname $IF_CLIENT ip saddr $HOSTS4_CONSOLE ip daddr $HOSTS4_PRINTER accept comment "allow ipv4 printer connection: CONSOLE > FW > PRINTER"
+                ip saddr $HOSTS4_CONSOLE ip daddr $HOSTS4_PRINTER accept comment "allow ipv4 printer connection: CONSOLE > FW > PRINTER"
 
                 iifname $IF_WAN jump wan comment "set WAN interface rules"
                 iifname $IF_CLIENT jump client comment "set CLIENT interface rules"

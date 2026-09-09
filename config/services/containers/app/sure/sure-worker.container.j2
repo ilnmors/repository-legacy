@@ -33,6 +33,16 @@ Secret=SURE_POSTGRES_PASSWORD,type=env,target=POSTGRES_PASSWORD
 # Redis
 Environment="REDIS_URL=redis://host.containers.internal:{{ services['sure']['ports']['redis'] }}/1"
 
+# AI backend
+Environment="ASSISTANT_TYPE=builtin"
+Environment="OPENAI_URI_BASE=http://host.containers.internal:10000/v1"
+Environment="OPENAI_ACCESS_TOKEN=local"
+Environment="OPENAI_MODEL={{ services['llama']['dependency']['models'] | dict2items | rejectattr('key', 'equalto', 'default') | map(attribute='key') | last }}"
+Environment="LLM_CONTEXT_WINDOW=8192"
+Environment="OPENAI_REQUEST_TIMEOUT=600"
+Environment="ASSISTANT_MAX_TOOL_CALL_ITERATIONS=2"
+Environment="AI_RESPONSE_TIMEOUT=2400"
+
 # Provider
 ## Currency
 Environment="EXCHANGE_RATE_PROVIDER=yahoo_finance"

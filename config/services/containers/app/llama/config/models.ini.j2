@@ -1,0 +1,13 @@
+version = 1
+
+{% for models in (services['llama']['dependency']['models'] | dict2items | list) %}
+{% if models['key'] == 'default' %} 
+[*]
+{{ models['value'] }}
+
+{% else %}
+[{{ models['key'] }}]
+{{ models['value'] }}
+
+{% endif %}
+{% endfor %}{{ '' }}

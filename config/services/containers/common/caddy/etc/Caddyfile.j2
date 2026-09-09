@@ -60,6 +60,10 @@
         import crowdsec_log
         route {
                 crowdsec
+{% if service['route'] is defined and service['route']['dav'] is defined and service['route']['dav'] %}
+                redir /.well-known/caldav /dav 301
+                redir /.well-known/carddav /dav 301
+{% endif %}
 {% if web_type == 'auth-public' %}
                 reverse_proxy host.containers.internal:{{ service['ports']['http'] }}
 {% else %}

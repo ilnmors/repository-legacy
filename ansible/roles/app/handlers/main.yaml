@@ -183,3 +183,58 @@
   changed_when: false
   listen: "notification_restart_linkding"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart openwebui
+  ansible.builtin.systemd:
+    name: "openwebui.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_openwebui"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart llama
+  ansible.builtin.systemd:
+    name: "llama.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_llama"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart stablediffusion
+  ansible.builtin.systemd:
+    name: "stablediffusion.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_stablediffusion"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart groupoffice
+  ansible.builtin.systemd:
+    name: "groupoffice.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_groupoffice"
+  ignore_errors: true # noqa: ignore-errors
+
+- name: Restart kaneo
+  ansible.builtin.systemd:
+    name: "kaneo.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_kaneo"
+  ignore_errors: true # noqa: ignore-errors

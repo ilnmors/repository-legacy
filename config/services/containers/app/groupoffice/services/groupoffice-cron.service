@@ -1,0 +1,9 @@
+[Unit]
+Description=GroupOffice cron.php
+Requires=groupoffice.service
+After=groupoffice.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec -u www-data groupoffice \
+  php /usr/local/share/groupoffice/cron.php

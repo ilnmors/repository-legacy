@@ -103,6 +103,7 @@
           - "netcat-openbsd"
           - "dbus-user-session"
           - "ksmtuned"
+          - "rsync"
         state: "present"
       become: true
       tags: ["init", "site", "install-packages"]
@@ -216,16 +217,24 @@
         name: "app"
         tasks_from: "services/set_immich"
         apply:
-          tags: ["site", "immich"]
-      tags: ["site", "immich"]
+          tags: ["site", "immich", "redis"]
+      tags: ["site", "immich", "redis"]
 
     - name: Set nextcloud
       ansible.builtin.include_role:
         name: "app"
         tasks_from: "services/set_nextcloud"
         apply:
-          tags: ["site", "nextcloud"]
-      tags: ["site", "nextcloud"]
+          tags: ["site", "nextcloud", "redis"]
+      tags: ["site", "nextcloud", "redis"]
+
+    - name: Set groupoffice
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_groupoffice"
+        apply:
+          tags: ["site", "groupoffice"]
+      tags: ["site", "groupoffice"]
 
     - name: Set collabora
       ansible.builtin.include_role:
@@ -235,21 +244,29 @@
           tags: ["site", "collabora"]
       tags: ["site", "collabora"]
 
+    - name: Set kaneo
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_kaneo"
+        apply:
+          tags: ["site", "kaneo"]
+      tags: ["site", "kaneo"]
+
     - name: Set sure
       ansible.builtin.include_role:
         name: "app"
         tasks_from: "services/set_sure"
         apply:
-          tags: ["site", "sure"]
-      tags: ["site", "sure"]
+          tags: ["site", "sure", "redis"]
+      tags: ["site", "sure", "redis"]
 
     - name: Set outline
       ansible.builtin.include_role:
         name: "app"
         tasks_from: "services/set_outline"
         apply:
-          tags: ["site", "outline"]
-      tags: ["site", "outline"]
+          tags: ["site", "outline", "redis"]
+      tags: ["site", "outline", "redis"]
 
     - name: Set homebox
       ansible.builtin.include_role:
@@ -264,8 +281,8 @@
         name: "app"
         tasks_from: "services/set_mastodon"
         apply:
-          tags: ["site", "mastodon"]
-      tags: ["site", "mastodon"]
+          tags: ["site", "mastodon", "redis"]
+      tags: ["site", "mastodon", "redis"]
 
     - name: Set papra
       ansible.builtin.include_role:
@@ -299,6 +316,30 @@
           tags: ["site", "linkding"]
       tags: ["site", "linkding"]
 
+    - name: Set llama
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_llama"
+        apply:
+          tags: ["site", "llama"]
+      tags: ["site", "llama"]
+
+    - name: Set stablediffusion
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_stablediffusion"
+        apply:
+          tags: ["site", "stablediffusion"]
+      tags: ["site", "stablediffusion"]
+
+    - name: Set openwebui
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_openwebui"
+        apply:
+          tags: ["site", "openwebui"]
+      tags: ["site", "openwebui"]
+
     - name: Set homepage
       ansible.builtin.include_role:
         name: "app"
@@ -320,10 +361,19 @@
         state: "present"
       become: true
       notify:
+        - "notification_add_user_in_group"
         - "notification_update_initramfs"
         - "notification_reboot_app"
       tags: ["init"]
   handlers:
+    - name: Add user in video, render group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        state: "present"
+        groups: "video, render"
+        append: true
+      become: true
+      listen: "notification_add_user_in_group"
     - name: Update initramfs
       ansible.builtin.command:
         update-initramfs -u

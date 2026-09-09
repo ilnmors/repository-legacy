@@ -1,0 +1,36 @@
+<?php
+require "docker-config.php";
+
+$config['db_port'] = 3306;
+
+/*
+ * Database TLS
+ */
+$config['db_ssl_ca'] = "/etc/ssl/groupoffice/{{ root_cert_filename }}";
+$config['db_ssl_verify_server_cert'] = true;
+
+/*
+ * Connection.php is instantiated while the application is being initialized.
+ * Export DB TLS settings as constants to avoid calling App::get() recursively
+ * from the Connection constructor.
+ */
+if (!defined('GO_DB_SSL_CA')) {
+	define('GO_DB_SSL_CA', $config['db_ssl_ca']);
+}
+
+if (!defined('GO_DB_SSL_VERIFY_SERVER_CERT')) {
+	define(
+		'GO_DB_SSL_VERIFY_SERVER_CERT',
+		$config['db_ssl_verify_server_cert']
+	);
+}
+
+$config['file_storage_path'] = "/var/lib/groupoffice";
+$config['tmpdir'] = "/tmp/groupoffice";
+$config['debug'] = false;
+$config['business'] = array (
+	'studio' =>
+		array (
+			'package' => 'studio',
+		)
+);

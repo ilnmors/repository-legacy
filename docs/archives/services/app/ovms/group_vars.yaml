@@ -1,0 +1,8 @@
+services:  
+  ovms:
+    ports:
+      http: "5000"
+    subuid: "104999"
+version:
+  containers:
+    ovms: "2026.3-gpu"

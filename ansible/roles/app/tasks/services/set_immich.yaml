@@ -43,14 +43,6 @@
     scope: "user"
   when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
 
-- name: Add user in video, render group
-  ansible.builtin.user:
-    name: "{{ ansible_user }}"
-    state: "present"
-    groups: "video, render"
-    append: true
-  become: true
-
 - name: Create immich directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"

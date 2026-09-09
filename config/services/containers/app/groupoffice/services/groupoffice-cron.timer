@@ -1,0 +1,10 @@
+[Unit]
+Description=Run GroupOffice cron every 1 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=groupoffice-cron.service
+
+[Install]
+WantedBy=timers.target
