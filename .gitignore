@@ -7,4 +7,5 @@ data/vmm_init/*
 *.qcow2
 *.sql
 *.iso
+*.git_bak
 !.gitkeep

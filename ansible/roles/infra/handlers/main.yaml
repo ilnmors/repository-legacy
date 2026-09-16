@@ -1,4 +1,15 @@
 ---
+- name: Restart rustfs
+  ansible.builtin.systemd:
+    name: "rustfs.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_rustfs"
+  ignore_errors: true # noqa: ignore-errors
+
 - name: Restart ca
   ansible.builtin.systemd:
     name: "ca.service"

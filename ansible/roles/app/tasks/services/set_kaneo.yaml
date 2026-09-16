@@ -36,6 +36,8 @@
       value: "{{ hostvars['console']['postgresql']['password']['kaneo'] }}"
     - name: "KANEO_OIDC_CLIENT_SECRET"
       value: "{{ hostvars['console']['kaneo']['oidc']['secret'] }}"
+    - name: "KANEO_S3_SECRET_KEY"
+      value: "{{ hostvars['console']['rustfs']['password']['kaneo'] }}"
   notify: "notification_restart_kaneo"
   no_log: true
 

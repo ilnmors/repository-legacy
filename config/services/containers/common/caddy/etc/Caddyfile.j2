@@ -20,7 +20,7 @@
         }
 }
 {% endif %}
-{% if node['name'] == 'app' %}
+{% if node['name'] in ['infra', 'app'] %}
 {
         servers {
                 trusted_proxies static {{ hostvars['fw']['network']['auth']['ipv4']['server'] }} {{ hostvars['fw']['network']['auth']['ipv6']['server'] }}
@@ -80,7 +80,13 @@
         {% if service['ports']['https'] is defined %}
                 reverse_proxy https://{{ service['domain']['internal'] }}.{{ domain['internal'] }}:{{ service['ports']['https'] }}
         {% else %}
+                {% if 'public' in web_type %}
+                reverse_proxy host.containers.internal:{{ service['ports']['http'] }} {
+                        header_up Host {http.request.header.X-Forwarded-Host}
+                }
+                {% else %}
                 reverse_proxy host.containers.internal:{{ service['ports']['http'] }}
+                {% endif %}
         {% endif %}
         }
 }

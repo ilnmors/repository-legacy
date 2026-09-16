@@ -68,6 +68,15 @@ services:
     dependency:
       cert: true
   # infra
+  rustfs:
+    domain:
+      internal: "rustfs"
+      public: "rustfs"
+    ports:
+      http: "9001"
+    subuid: "110000"
+    dependency:
+      web: "infra-public"
   postgresql:
     domain:
       internal: "postgresql"
@@ -416,6 +425,7 @@ version:
     # common
     caddy: "2.11.4"
     # infra
+    rustfs: "1.0.0-rc.6"
     ca: "0.30.2"
     ## Postgresql
     postgresql: "18.6"
@@ -437,11 +447,11 @@ version:
     vaultwarden: "1.37.2"
     gitea: "1.27.3"
     redis: "8.10.1"
-    immich: "v3.1.0"
+    immich: "v3.2.2"
     nextcloud: "34.0.3"
     collabora: "26.04.3.2.1"
     sure: "0.7.4"
-    outline: "1.10.0"
+    outline: "1.10.1"
     homebox: "0.26.2"
     homepage: "v2.0.0"
     snappymail: "v2.38.2"

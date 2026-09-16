@@ -7,6 +7,8 @@ define NET4_SERVER = {{ hostvars['fw']['network']['subnet']['ipv4']['server'] }}
 define NET6_SERVER = {{ hostvars['fw']['network']['subnet']['ipv6']['server'] }}
 define HOSTS4_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv4'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
 define HOSTS6_CONSOLE = { {{ hostvars['fw']['network']['console']['ipv6'] | dict2items | rejectattr('key', 'equalto', 'reverse') | map(attribute='value') | join(', ')}} }
+define HOSTS4_AUTH = {{ hostvars['fw']['network']['auth']['ipv4']['server'] }}
+define HOSTS6_AUTH = {{ hostvars['fw']['network']['auth']['ipv6']['server'] }}
 define PORTS_SSH = 22
 define PORTS_DB = { 5432, 3306 }
 define PORTS_CA = {{ services['ca']['ports']['https'] }}
@@ -58,10 +60,10 @@ table inet filter {
         ip6 saddr $NET6_SERVER tcp dport $PORTS_CA accept comment "allow ipv6 ca connection: SERVER > INFRA"
         ip saddr $NET4_SERVER tcp dport $PORTS_DB accept comment "allow ipv4 db connection: SERVER > INFRA"
         ip6 saddr $NET6_SERVER tcp dport $PORTS_DB accept comment "allow ipv6 db connection: SERVER > INFRA"
-        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_HTTP_FORWARD ct original proto-dst $PORTS_HTTP accept comment "allow ipv4 http connection: CONSOLE > INFRA"
-        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_HTTP_FORWARD ct original proto-dst $PORTS_HTTP accept comment "allow ipv6 http connection: CONSOLE > INFRA"
-        ip saddr $HOSTS4_CONSOLE tcp dport $PORTS_HTTPS_FORWARD ct original proto-dst $PORTS_HTTPS accept comment "allow ipv4 https connection: CONSOLE > INFRA"
-        ip6 saddr $HOSTS6_CONSOLE tcp dport $PORTS_HTTPS_FORWARD ct original proto-dst $PORTS_HTTPS accept comment "allow ipv6 https connection: CONSOLE > INFRA"
+        ip saddr { $HOSTS4_CONSOLE, $HOSTS4_AUTH } tcp dport $PORTS_HTTP_FORWARD ct original proto-dst $PORTS_HTTP accept comment "allow ipv4 http connection: CONSOLE, AUTH > APP"
+        ip6 saddr { $HOSTS6_CONSOLE, $HOSTS6_AUTH } tcp dport $PORTS_HTTP_FORWARD ct original proto-dst $PORTS_HTTP accept comment "allow ipv6 http connection: CONSOLE, AUTH > APP"
+        ip saddr { $HOSTS4_CONSOLE, $HOSTS4_AUTH } tcp dport $PORTS_HTTPS_FORWARD ct original proto-dst $PORTS_HTTPS accept comment "allow ipv4 https connection: CONSOLE, AUTH > APP"
+        ip6 saddr { $HOSTS6_CONSOLE, $HOSTS6_AUTH } tcp dport $PORTS_HTTPS_FORWARD ct original proto-dst $PORTS_HTTPS accept comment "allow ipv6 https connection: CONSOLE, AUTH > APP"
         ip saddr $NET4_SERVER tcp dport $PORTS_LDAPS_FORWARD ct original proto-dst $PORTS_LDAPS accept comment "allow ipv4 ldaps connection: SERVER > INFRA"
         ip6 saddr $NET6_SERVER tcp dport $PORTS_LDAPS_FORWARD ct original proto-dst $PORTS_LDAPS accept comment "allow ipv6 ldaps connection: SERVER > INFRA"
         ip saddr $NET4_SERVER tcp dport $PORTS_PROMETHEUS accept comment "allow ipv4 prometheus connection: SERVER > INFRA"

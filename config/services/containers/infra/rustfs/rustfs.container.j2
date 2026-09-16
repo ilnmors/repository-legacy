@@ -1,0 +1,33 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=RustFS Object Storage
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/rustfs/rustfs:{{ version['containers']['rustfs'] }}
+ContainerName=rustfs
+HostName=rustfs
+
+PublishPort={{ services['rustfs']['ports']['http'] }}:9001/tcp
+
+Volume=%h/data/containers/rustfs/data:/data:rw
+
+Environment="TZ={{ timezone }}"
+Environment="RUSTFS_ADDRESS=:9001"
+Environment="RUSTFS_CONSOLE_ENABLE=false"
+Environment="RUSTFS_ACCESS_KEY=rustfs"
+Environment="RUSTFS_OBS_LOGGER_LEVEL=error"
+Environment="RUSTFS_CORS_ALLOWED_ORIGINS=https://kaneo.ilnmors.com"
+
+Secret=RUSTFS_SECRET_KEY,type=env,target=RUSTFS_SECRET_KEY
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

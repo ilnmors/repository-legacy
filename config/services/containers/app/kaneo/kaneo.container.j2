@@ -14,7 +14,9 @@ PublishPort={{ services['kaneo']['ports']['http'] }}:5173/tcp
 
 Volume=%h/containers/kaneo/ssl:/etc/ssl/kaneo:ro
 
+# General
 Environment="TZ={{ timezone }}"
+Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/kaneo/{{ root_cert_filename }}"
 Environment="DISABLE_PASSWORD_REGISTRATION=true"
 Environment="DISABLE_REGISTRATION=false"
 Environment="DISABLE_GUEST_ACCESS=true"
@@ -27,15 +29,22 @@ Environment="POSTGRES_PORT={{ services['postgresql']['ports']['tcp'] }}"
 Environment="POSTGRES_DB=kaneo_db"
 Environment="POSTGRES_USER=kaneo"
 Environment="PGSSLMODE=verify-full"
-Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/kaneo/{{ root_cert_filename }}"
 Secret=KANEO_DB_PASSWORD,type=env,target=POSTGRES_PASSWORD
 
+# OIDC
 Environment="CUSTOM_OAUTH_CLIENT_ID=kaneo"
 Environment="CUSTOM_OAUTH_DISCOVERY_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}/.well-known/openid-configuration"
 Environment="CUSTOM_OAUTH_SCOPES=openid,profile,email"
 Environment="CUSTOM_AUTH_PKCE=true"
 Secret=KANEO_OIDC_CLIENT_SECRET,type=env,target=CUSTOM_OAUTH_CLIENT_SECRET
 
+# S3 (RustFS)
+Environment="S3_ENDPOINT=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="S3_BUCKET=kaneo"
+Environment="S3_ACCESS_KEY_ID=kaneo"
+Environment="S3_REGION=us-east-1"
+Environment="S3_FORCE_PATH_STYLE=true"
+Secret=KANEO_S3_SECRET_KEY,type=env,target=S3_SECRET_ACCESS_KEY
 
 [Service]
 ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}

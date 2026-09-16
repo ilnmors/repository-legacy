@@ -154,6 +154,14 @@
           tags: ["site", "ca"]
       tags: ["site", "ca"]
 
+    - name: Set rustfs
+      ansible.builtin.include_role:
+        name: "infra"
+        tasks_from: "services/set_rustfs"
+        apply:
+          tags: ["site", "rustfs"]
+      tags: ["site", "rustfs"]
+
     - name: Set postgresql
       ansible.builtin.include_role:
         name: "infra"
