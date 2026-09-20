@@ -1,18 +1,19 @@
 ---
 - name: Create ca directory
   ansible.builtin.file:
-    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    path: "{{ node['home_path'] }}/{{ item }}"
     owner: "{{ services['ca']['subuid'] }}"
     group: "{{ node['group'] }}"
     state: "directory"
     mode: "0770"
   loop:
-    - "ca"
-    - "ca/certs"
-    - "ca/secrets"
-    - "ca/config"
-    - "ca/db"
-    - "ca/templates"
+    - "containers/ca"
+    - "containers/ca/certs"
+    - "containers/ca/secrets"
+    - "containers/ca/config"
+    - "containers/ca/templates"
+    - "data/containers/ca"
+    - "data/containers/ca/db"
   become: true
 
 - name: Register secret value to podman secret

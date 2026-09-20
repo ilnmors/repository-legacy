@@ -17,7 +17,7 @@ AddHost={{ services['prometheus']['domain']['internal'] }}.{{ domain['internal']
 
 PublishPort={{ services['prometheus']['ports']['https'] }}:9090/tcp
 
-Volume=%h/containers/prometheus/data:/prometheus:rw
+Volume=%h/data/containers/prometheus/data:/prometheus:rw
 Volume=%h/containers/prometheus/etc:/etc/prometheus:ro
 Volume=%h/containers/prometheus/ssl:/etc/ssl/prometheus:ro
 

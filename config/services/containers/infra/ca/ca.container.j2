@@ -18,8 +18,8 @@ PublishPort={{ services['ca']['ports']['https'] }}:9000/tcp
 Volume=%h/containers/ca/certs:/home/step/certs:ro
 Volume=%h/containers/ca/secrets:/home/step/secrets:ro
 Volume=%h/containers/ca/config:/home/step/config:rw
-Volume=%h/containers/ca/db:/home/step/db:rw
 Volume=%h/containers/ca/templates:/home/step/templates:rw
+Volume=%h/data/containers/ca/db:/home/step/db:rw
 
 Environment="TZ={{ timezone }}"
 # Since 0.30.0, Docker CMD no longer expands PWDPATH.

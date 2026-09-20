@@ -39,6 +39,8 @@
       value: "{{ hostvars['console']['mariadb']['password']['bookstack'] }}"
     - name: "BOOKSTACK_OIDC_CLIENT_SECRET"
       value: "{{ hostvars['console']['bookstack']['oidc']['secret'] }}"
+    - name: "BOOKSTACK_S3_SECRET_KEY"
+      value: "{{ hostvars['console']['rustfs']['password']['bookstack'] }}"
   notify: "notification_restart_bookstack"
   no_log: true
 

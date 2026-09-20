@@ -1,18 +1,19 @@
 ---
 - name: Create loki directory
   ansible.builtin.file:
-    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['loki']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0770"
   loop:
-    - "loki"
-    - "loki/etc"
-    - "loki/etc/rules"
-    - "loki/etc/rules/{{ domain['internal'] }}"
-    - "loki/data"
-    - "loki/ssl"
+    - "containers/loki"
+    - "containers/loki/etc"
+    - "containers/loki/etc/rules"
+    - "containers/loki/etc/rules/{{ domain['internal'] }}"
+    - "containers/loki/ssl"
+    - "data/containers/loki"
+    - "data/containers/loki/data"
   become: true
 
 - name: Deploy loki configuration file

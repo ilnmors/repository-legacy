@@ -13,8 +13,6 @@ HostName=bookstack
 PublishPort={{ services['bookstack']['ports']['http'] }}:8080/tcp
 
 # Volumes
-Volume=%h/data/containers/bookstack/public:/var/www/bookstack/public/uploads:rw
-Volume=%h/data/containers/bookstack/storage:/var/www/bookstack/storage/uploads:rw
 Volume=%h/containers/bookstack/ssl:/etc/ssl/bookstack:ro
 
 # General
@@ -49,6 +47,17 @@ Environment="OIDC_USER_TO_GROUPS=true"
 Environment="OIDC_REMOVE_FROM_GROUPS=true"
 Environment="OIDC_END_SESSION_ENDPOINT=false"
 Secret=BOOKSTACK_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+# S3
+Environment="STORAGE_TYPE=s3"
+Environment="STORAGE_IMAGE_TYPE=s3"
+Environment="STORAGE_ATTACHMENT_TYPE=s3"
+Environment="STORAGE_S3_KEY=bookstack"
+Environment="STORAGE_S3_BUCKET=bookstack"
+Environment="STORAGE_S3_REGION=us-east-1"
+Environment="STORAGE_S3_ENDPOINT=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="STORAGE_URL=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}/bookstack"
+Secret=BOOKSTACK_S3_SECRET_KEY,type=env,target=STORAGE_S3_SECRET
 
 [Service]
 ExecStartPre=/usr/bin/nc -zv {{ services['mariadb']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['mariadb']['ports']['tcp'] }}

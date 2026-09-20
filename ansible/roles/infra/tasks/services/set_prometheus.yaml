@@ -1,16 +1,17 @@
 ---
 - name: Create prometheus directory
   ansible.builtin.file:
-    path: "{{ node['home_path'] }}/containers/{{ item }}"
+    path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
     owner: "{{ services['prometheus']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0770"
   loop:
-    - "prometheus"
-    - "prometheus/etc"
-    - "prometheus/data"
-    - "prometheus/ssl"
+    - "containers/prometheus"
+    - "containers/prometheus/etc"
+    - "containers/prometheus/ssl"
+    - "data/containers/prometheus"
+    - "data/containers/prometheus/data"
   become: true
 
 - name: Deploy prometheus configuration file

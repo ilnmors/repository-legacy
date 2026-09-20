@@ -15,7 +15,7 @@ HostName=loki
 
 PublishPort={{ services['loki']['ports']['https'] }}:3100/tcp
 
-Volume=%h/containers/loki/data:/loki:rw
+Volume=%h/data/containers/loki/data:/loki:rw
 Volume=%h/containers/loki/etc:/etc/loki:ro
 Volume=%h/containers/loki/ssl:/etc/ssl/loki:ro
 

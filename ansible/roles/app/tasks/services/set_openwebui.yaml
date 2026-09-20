@@ -7,9 +7,8 @@
     group: "{{ node['group'] }}"
     mode: "0770"
   loop:
-    - "data/containers/openwebui"
-    - "data/containers/openwebui/data"
     - "containers/openwebui"
+    - "containers/openwebui/data"
     - "containers/openwebui/ssl"
 
 - name: Deploy root certificate
@@ -36,6 +35,8 @@
       value: "{{ hostvars['console']['postgresql']['password']['openwebui'] }}"
     - name: "OPEN_WEBUI_OAUTH_CLIENT_SECRET"
       value: "{{ hostvars['console']['openwebui']['oidc']['secret'] }}"
+    - name: "OPEN_WEBUI_S3_SECRET_KEY"
+      value: "{{ hostvars['console']['rustfs']['password']['open-webui'] }}"
   notify: "notification_restart_openwebui"
   no_log: true
 
