@@ -9,6 +9,7 @@
   loop:
     - "ldap"
     - "ldap/data"
+    - "ldap/style"
     - "ldap/ssl"
   become: true
 
@@ -106,6 +107,15 @@
   ansible.builtin.template:
     src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ldap/ldap.container.j2"
     dest: "{{ node['home_path'] }}/.config/containers/systemd/ldap.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_ldap"
+
+- name: Deploy the ldap style file
+  ansible.builtin.copy:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/ldap/style/style.css"
+    dest: "{{ node['home_path'] }}/containers/ldap/style/style.css"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0644"

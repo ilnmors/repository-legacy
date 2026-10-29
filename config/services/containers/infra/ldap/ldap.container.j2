@@ -21,6 +21,7 @@ PublishPort={{ services['ldap']['ports']['http'] }}:17170/tcp
 
 
 Volume=%h/containers/ldap/data:/data:rw
+Volume=%h/containers/ldap/style/style.css:/app/app/static/style.css:rw
 Volume=%h/containers/ldap/ssl:/etc/ssl/ldap:ro
 
 # Default
