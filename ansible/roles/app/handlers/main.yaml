@@ -238,3 +238,14 @@
   changed_when: false
   listen: "notification_restart_kaneo"
   ignore_errors: true # noqa: ignore-errors
+
+- name: Restart oxicloud
+  ansible.builtin.systemd:
+    name: "oxicloud.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_oxicloud"
+  ignore_errors: true # noqa: ignore-errors

@@ -1,0 +1,88 @@
+---
+- name: Create oxicloud directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ services['oxicloud']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "data/containers/oxicloud"
+    - "data/containers/oxicloud/storage"
+    - "containers/oxicloud"
+    - "containers/oxicloud/ssl"
+  become: true
+
+- name: Deploy root certificate
+  ansible.builtin.copy:
+    content: |
+      {{ hostvars['console']['ca']['root']['crt'] }}
+    dest: "{{ node['home_path'] }}/containers/oxicloud/ssl/{{ root_cert_filename }}"
+    owner: "{{ services['oxicloud']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0440"
+  become: true
+  notify: "notification_restart_oxicloud"
+  no_log: true
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "present"
+    force: true
+  loop:
+    - name: "OXICLOUD_JWT_SECRET"
+      value: "{{ hostvars['console']['oxicloud']['jwt_secret'] }}"
+    - name: "OXICLOUD_DB_CONNECTION_STRING"
+      value: "postgres://oxicloud:{{ hostvars['console']['postgresql']['password']['oxicloud'] | urlencode | replace('/', '%2F') }}@\
+        {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}/oxicloud_db\
+        ?sslmode=verify-full&sslrootcert=/etc/ssl/oxicloud/{{ root_cert_filename }}"
+    - name: "OXICLOUD_OIDC_CLIENT_SECRET"
+      value: "{{ hostvars['console']['oxicloud']['oidc']['secret'] }}"
+  notify: "notification_restart_oxicloud"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/diocrafts/oxicloud"
+    tag: "{{ version['containers']['oxicloud'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy oxicloud.container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/oxicloud/oxicloud.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/oxicloud.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_oxicloud"
+
+- name: Enable oxicloud.service
+  ansible.builtin.systemd:
+    name: "oxicloud.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+
+- name: Check container archive images
+  ansible.builtin.stat:
+    path: "{{ node['home_path'] }}/archives/containers/docker.io_diocrafts_oxicloud_{{ version['containers']['oxicloud'] }}.tar"
+  register: container_archive_images
+
+- name: Save container archive images
+  containers.podman.podman_save:
+    image:
+      - "docker.io/diocrafts/oxicloud:{{ version['containers']['oxicloud'] }}"
+    dest: "{{ node['home_path'] }}/archives/containers/docker.io_diocrafts_oxicloud_{{ version['containers']['oxicloud'] }}.tar"
+    format: "oci-archive"
+    force: false
+  when: not container_archive_images.stat.exists
+
+- name: Fetch container archive images
+  ansible.builtin.fetch:
+    src: "{{ node['home_path'] }}/archives/containers/docker.io_diocrafts_oxicloud_{{ version['containers']['oxicloud'] }}.tar"
+    dest: "{{ hostvars['console']['node']['data_path'] }}/images/containers/"
+    flat: true

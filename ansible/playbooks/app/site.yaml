@@ -252,6 +252,14 @@
           tags: ["site", "kaneo"]
       tags: ["site", "kaneo"]
 
+    - name: Set oxicloud
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_oxicloud"
+        apply:
+          tags: ["site", "oxicloud"]
+      tags: ["site", "oxicloud"]
+
     - name: Set sure
       ansible.builtin.include_role:
         name: "app"

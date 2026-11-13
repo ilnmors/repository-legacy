@@ -1,0 +1,57 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=OxiCloud
+
+[Container]
+Image=docker.io/diocrafts/oxicloud:{{ version['containers']['oxicloud'] }}
+ContainerName=oxicloud
+HostName=oxicloud
+
+PublishPort={{ services['oxicloud']['ports']['http'] }}:8086/tcp
+
+# Persistent data
+Volume=%h/data/containers/oxicloud/storage:/app/storage:rw
+Volume=%h/containers/oxicloud/ssl:/etc/ssl/oxicloud:ro
+
+# General
+Environment="TZ={{ timezone }}"
+# The image listens on 127.0.0.1 by default; PublishPort needs all interfaces.
+Environment="OXICLOUD_SERVER_HOST=0.0.0.0"
+Environment="OXICLOUD_BASE_URL=https://{{ services['oxicloud']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="OXICLOUD_TRUST_PROXY_CIDR={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }}/32,{{ hostvars['fw']['network']['auth']['ipv4']['server'] }}/32,{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}/128"
+Secret=OXICLOUD_JWT_SECRET,type=env,target=OXICLOUD_JWT_SECRET
+
+# PostgreSQL
+Secret=OXICLOUD_DB_CONNECTION_STRING,type=env,target=OXICLOUD_DB_CONNECTION_STRING
+
+# OIDC (DAV clients use the app passwords from Profile > App Passwords)
+Environment="OXICLOUD_AUTH_METHODS=oidc"
+Environment="OXICLOUD_OIDC_ENABLED=true"
+Environment="OXICLOUD_OIDC_ISSUER_URL=https://{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="OXICLOUD_OIDC_CLIENT_ID=oxicloud"
+Environment="OXICLOUD_OIDC_REDIRECT_URI=https://{{ services['oxicloud']['domain']['public'] }}.{{ domain['public'] }}/api/auth/oidc/callback"
+Environment="OXICLOUD_OIDC_FRONTEND_URL=https://{{ services['oxicloud']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="OXICLOUD_OIDC_SCOPES=openid profile email groups"
+Environment="OXICLOUD_OIDC_ADMIN_GROUPS=admins"
+# The first OIDC login creates the account, so no local admin setup is needed.
+# OIDC provisioning falls back to user_<sub> for usernames shorter than 3 characters;
+# rename such accounts to the LDAP id in auth.users.username after their first login.
+Environment="OXICLOUD_OIDC_AUTO_PROVISION=true"
+Environment="OXICLOUD_OIDC_PROVIDER_NAME=Authelia"
+Secret=OXICLOUD_OIDC_CLIENT_SECRET,type=env,target=OXICLOUD_OIDC_CLIENT_SECRET
+
+# WOPI (Collabora)
+Environment="OXICLOUD_WOPI_ENABLED=true"
+Environment="OXICLOUD_WOPI_DISCOVERY_URL=http://host.containers.internal:{{ services['collabora']['ports']['http'] }}/hosting/discovery"
+Environment="OXICLOUD_WOPI_PUBLIC_BASE_URL=https://{{ services['oxicloud']['domain']['public'] }}.{{ domain['public'] }}"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=60s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
