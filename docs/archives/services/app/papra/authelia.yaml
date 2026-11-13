@@ -1,0 +1,25 @@
+---
+identity_providers:
+  oidc:
+      # https://www.authelia.com/integration/openid-connect/clients/papra/
+      - client_id: 'papra'
+        client_name: 'papra'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['papra']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: false
+        pkce_challenge_method: ''
+        redirect_uris:
+          - 'https://{{ services['papra']['domain']['public'] }}.{{ domain['public'] }}/api/auth/oauth2/callback/authelia'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_post'

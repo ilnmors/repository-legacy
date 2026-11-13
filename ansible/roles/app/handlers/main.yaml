@@ -43,18 +43,6 @@
   listen: "notification_restart_immich-ml"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart nextcloud
-  ansible.builtin.systemd:
-    name: "nextcloud.service"
-    state: "restarted"
-    enabled: true
-    daemon_reload: true
-    scope: "user"
-  when: is_nextcloud_init.stat.exists
-  changed_when: false
-  listen: "notification_restart_nextcloud"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart collabora
   ansible.builtin.systemd:
     name: "collabora.service"
@@ -140,17 +128,6 @@
   listen: "notification_restart_mastodon"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart papra
-  ansible.builtin.systemd:
-    name: "papra.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_papra"
-  ignore_errors: true # noqa: ignore-errors
-
 - name: Restart readur
   ansible.builtin.systemd:
     name: "readur.service"
@@ -226,17 +203,6 @@
     daemon_reload: true
   changed_when: false
   listen: "notification_restart_stablediffusion"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart groupoffice
-  ansible.builtin.systemd:
-    name: "groupoffice.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_groupoffice"
   ignore_errors: true # noqa: ignore-errors
 
 - name: Restart kaneo

@@ -1,0 +1,16 @@
+services:
+  groupoffice:
+    domain:
+      public: "groupoffice"
+      internal: "groupoffice.app"
+    ports:
+      http: "8005"
+    subuid: "100032"
+    route:
+      dav: true
+    dependency:
+      web: "app-public"
+      db: "mariadb"
+version:
+  containers:
+    groupoffice: "26.1.1"

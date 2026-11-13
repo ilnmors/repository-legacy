@@ -1,0 +1,15 @@
+services:
+  nextcloud:
+    domain:
+      public: "nextcloud"
+      internal: "nextcloud.app"
+    ports:
+      http: "8001"
+      redis: "6380"
+    subuid: "100032"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+version:
+  containers:
+    nextcloud: "35.0.2"

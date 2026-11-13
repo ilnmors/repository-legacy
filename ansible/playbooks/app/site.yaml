@@ -220,22 +220,6 @@
           tags: ["site", "immich", "redis"]
       tags: ["site", "immich", "redis"]
 
-    - name: Set nextcloud
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_nextcloud"
-        apply:
-          tags: ["site", "nextcloud", "redis"]
-      tags: ["site", "nextcloud", "redis"]
-
-    - name: Set groupoffice
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_groupoffice"
-        apply:
-          tags: ["site", "groupoffice"]
-      tags: ["site", "groupoffice"]
-
     - name: Set collabora
       ansible.builtin.include_role:
         name: "app"
@@ -291,14 +275,6 @@
         apply:
           tags: ["site", "mastodon", "redis"]
       tags: ["site", "mastodon", "redis"]
-
-    - name: Set papra
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_papra"
-        apply:
-          tags: ["site", "papra"]
-      tags: ["site", "papra"]
 
     - name: Set readur
       ansible.builtin.include_role:

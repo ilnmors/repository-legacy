@@ -299,18 +299,6 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
-  groupoffice:
-    domain:
-      public: "groupoffice"
-      internal: "groupoffice.app"
-    ports:
-      http: "8005"
-    subuid: "100032"
-    route:
-      dav: true
-    dependency:
-      web: "app-public"
-      db: "mariadb"
   kaneo:
     domain:
       public: "kaneo"
@@ -318,17 +306,6 @@ services:
     ports:
       http: "8006"
     subuid: "101000"
-    dependency:
-      web: "app-public"
-      db: "postgresql"
-  nextcloud:
-    domain:
-      public: "nextcloud"
-      internal: "nextcloud.app"
-    ports:
-      http: "8001"
-      redis: "6380"
-    subuid: "100032"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -396,15 +373,6 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
-  papra:
-    domain:
-      public: "papra"
-      internal: "papra.app"
-    ports:
-      http: "1221"
-    subuid: "100998"
-    dependency:
-      web: "app-public"
   readur:
     domain:
       public: "readur"
@@ -467,7 +435,6 @@ version:
     gitea: "28.3.0"
     redis: "8.10.3"
     immich: "v3.4.1"
-    nextcloud: "35.0.2"
     collabora: "26.04.6.1.1"
     sure: "0.7.6"
     outline: "1.12.0"
@@ -475,7 +442,6 @@ version:
     homepage: "v2.8.0"
     snappymail: "v3.0.1.2"
     mastodon: "v4.6.7"
-    papra: "26.7.1-rootless"
     readur: "3.1.2"
     tandoor: "2.7.2"
     bookstack: "26.9.3"
@@ -487,6 +453,5 @@ version:
     # master-sycl@sha256:f27ebe3fea7dcb5978241425d3a115ba6736cfc33c42e75233f22f7411449e9c has problem in it, it cannot get vRAM from UMA properly
     # Pin due to a SYCL/UMA false-OOM regression in newer stable-diffusion.cpp ModelManager memory accounting.
     stablediffusion: "master-sycl@sha256:67ccb5d11bf55578f7938daeb7c9fee1d0dd1344c089c090b9065714d7960fd5"
-    groupoffice: "26.1.1"
     kaneo: "2.49.0"
     oxicloud: "0.10.0"

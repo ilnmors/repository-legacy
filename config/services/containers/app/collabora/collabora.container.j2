@@ -12,9 +12,7 @@ HostName=collabora
 PublishPort={{ services['collabora']['ports']['http'] }}:9980/tcp
 
 Environment="TZ={{ timezone }}"
-Environment="aliasgroup1=https://{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}"
-Environment="aliasgroup2=https://{{ services['groupoffice']['domain']['public'] }}.{{ domain['public'] }}"
-Environment="aliasgroup3=https://{{ services['oxicloud']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="aliasgroup1=https://{{ services['oxicloud']['domain']['public'] }}.{{ domain['public'] }}"
 # Environment="aliasgroup2=other_server_FQDN"
 Environment="extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:server_name={{ services['collabora']['domain']['public'] }}.{{ domain['public'] }} --o:admin_console.enable=false"
 

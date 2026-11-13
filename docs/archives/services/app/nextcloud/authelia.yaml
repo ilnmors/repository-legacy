@@ -1,0 +1,26 @@
+---
+identity_providers:
+  oidc:
+      # https://www.authelia.com/integration/openid-connect/clients/nextcloud/#openid-connect-user-backend-app
+      - client_id: 'nextcloud'
+        client_name: 'nextcloud'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['nextcloud']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['nextcloud']['domain']['public'] }}.{{ domain['public'] }}/apps/user_oidc/code'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_post'

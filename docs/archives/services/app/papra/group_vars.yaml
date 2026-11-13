@@ -1,0 +1,13 @@
+services:
+  papra:
+    domain:
+      public: "papra"
+      internal: "papra.app"
+    ports:
+      http: "1221"
+    subuid: "100998"
+    dependency:
+      web: "app-public"
+version:
+  containers:
+    papra: "26.7.1-rootless"
