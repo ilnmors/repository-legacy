@@ -151,6 +151,17 @@
   listen: "notification_restart_papra"
   ignore_errors: true # noqa: ignore-errors
 
+- name: Restart readur
+  ansible.builtin.systemd:
+    name: "readur.service"
+    state: "restarted"
+    enabled: true
+    scope: "user"
+    daemon_reload: true
+  changed_when: false
+  listen: "notification_restart_readur"
+  ignore_errors: true # noqa: ignore-errors
+
 - name: Restart tandoor
   ansible.builtin.systemd:
     name: "tandoor.service"

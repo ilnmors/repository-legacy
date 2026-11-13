@@ -299,6 +299,28 @@ identity_providers:
         access_token_signed_response_alg: 'none'
         userinfo_signed_response_alg: 'none'
         token_endpoint_auth_method: 'client_secret_post'
+      # readur: every login uses PKCE (S256) and HTTP Basic client authentication
+      - client_id: 'readur'
+        client_name: 'readur'
+        consent_mode: 'implicit'
+        client_secret: '{{ hostvars['console']['readur']['oidc']['hash'] }}'
+        public: false
+        authorization_policy: 'one_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://{{ services['readur']['domain']['public'] }}.{{ domain['public'] }}/api/auth/oidc/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        response_types:
+          - 'code'
+        grant_types:
+          - 'authorization_code'
+        access_token_signed_response_alg: 'none'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'
       # https://www.authelia.com/integration/openid-connect/clients/tandoor/
       - client_id: 'tandoor'
         client_name: 'tandoor'

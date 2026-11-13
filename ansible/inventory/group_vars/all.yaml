@@ -405,6 +405,15 @@ services:
     subuid: "100998"
     dependency:
       web: "app-public"
+  readur:
+    domain:
+      public: "readur"
+      internal: "readur.app"
+    ports:
+      http: "8011"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
   tandoor:
     domain:
       public: "tandoor"
@@ -467,6 +476,7 @@ version:
     snappymail: "v3.0.1.2"
     mastodon: "v4.6.7"
     papra: "26.7.1-rootless"
+    readur: "3.1.2"
     tandoor: "2.7.2"
     bookstack: "26.9.3"
     linkding: "1.47.0"

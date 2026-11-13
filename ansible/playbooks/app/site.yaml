@@ -300,6 +300,14 @@
           tags: ["site", "papra"]
       tags: ["site", "papra"]
 
+    - name: Set readur
+      ansible.builtin.include_role:
+        name: "app"
+        tasks_from: "services/set_readur"
+        apply:
+          tags: ["site", "readur"]
+      tags: ["site", "readur"]
+
     - name: Set tandoor
       ansible.builtin.include_role:
         name: "app"
