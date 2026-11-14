@@ -1,0 +1,37 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Postfix
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image={{ domain['internal'] }}/{{ node['name'] }}/postfix:{{ version['containers']['postfix'] }}
+
+ContainerName=postfix
+HostName={{ services['postfix']['domain']['internal'] }}.{{ domain['internal'] }}
+AddHost={{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+
+PublishPort={{ services['postfix']['ports']['smtp'] }}:587/tcp
+
+Volume=%h/containers/postfix/config/main.cf:/etc/postfix/main.cf:ro
+Volume=%h/containers/postfix/config/master.cf:/etc/postfix/master.cf:ro
+Volume=%h/containers/postfix/config/maps:/etc/postfix/maps-src:ro
+Volume=%h/containers/postfix/ssl:/etc/ssl/postfix:ro
+Volume=%h/data/containers/postfix/spool:/var/spool/postfix:rw
+Volume=%h/containers/mail/sockets:/run/mail:rw
+Volume=/var/log/postfix:/var/log/postfix:rw
+
+Environment="TZ={{ timezone }}"
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv -w 5 {{ services['dovecot']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['dovecot']['ports']['imaps'] }}
+ExecStartPre=/usr/bin/nc -zv {{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['ldap']['ports']['ldaps'] }}
+Restart=always
+RestartSec=60s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

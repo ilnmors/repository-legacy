@@ -21,7 +21,7 @@ Volume=%h/containers/llama/config:/config:ro
 Environment="TZ={{ timezone }}"
 
 Exec=--models-preset /config/models.ini \
-     --models-max 2 \
+     --models-max 3 \
      --host 0.0.0.0 \
      --port 9931
 

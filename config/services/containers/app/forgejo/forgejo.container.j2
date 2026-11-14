@@ -1,0 +1,60 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Forgejo
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=codeberg.org/forgejo/forgejo:{{ version['containers']['forgejo'] }}
+
+ContainerName=forgejo
+HostName=forgejo
+
+PublishPort={{ services['forgejo']['ports']['http'] }}:3000/tcp
+
+Volume=%h/data/containers/forgejo/data:/data:rw
+Volume=%h/containers/forgejo/ssl:/etc/ssl/forgejo:ro
+
+# General
+Environment="TZ={{ timezone }}"
+Environment="FORGEJO__security__INSTALL_LOCK=true"
+Environment="FORGEJO__server__DOMAIN={{ services['forgejo']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="FORGEJO__server__ROOT_URL=https://{{ services['forgejo']['domain']['public'] }}.{{ domain['public'] }}/"
+Environment="FORGEJO__server__DISABLE_SSH=true"
+Environment="FORGEJO__server__REVERSE_PROXY_LIMIT=2"
+Environment="FORGEJO__server__REVERSE_PROXY_TRUSTED_PROXIES={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }},{{ hostvars['fw']['network']['auth']['ipv4']['server'] }},{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
+# Database
+Environment="FORGEJO__database__DB_TYPE=postgres"
+Environment="FORGEJO__database__HOST={{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }}:{{ services['postgresql']['ports']['tcp'] }}"
+Environment="FORGEJO__database__NAME=forgejo_db"
+Environment="FORGEJO__database__USER=forgejo"
+Secret=FORGEJO__database__PASSWD,type=env
+Environment="FORGEJO__database__SSL_MODE=verify-full"
+Environment="PGSSLROOTCERT=/etc/ssl/forgejo/{{ root_cert_filename }}"
+# OAuth2 client
+# ACCOUNT_LINKING only applies with auto registration; otherwise Forgejo shows the link/sign-up page.
+Environment="FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION=true"
+Environment="FORGEJO__oauth2_client__ACCOUNT_LINKING=auto"
+# OIDC configuration
+Environment="FORGEJO__openid__ENABLE_OPENID_SIGNIN=false"
+Environment="FORGEJO__openid__ENABLE_OPENID_SIGNUP=true"
+Environment="FORGEJO__openid__WHITELISTED_URIS={{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}"
+# automatic create user via authelia
+Environment="FORGEJO__service__ENABLE_INTERNAL_SIGNIN=false"
+Environment="FORGEJO__service__ENABLE_BASIC_AUTHENTICATION=false"
+Environment="FORGEJO__service__DISABLE_REGISTRATION=false"
+Environment="FORGEJO__service__ALLOW_ONLY_EXTERNAL_REGISTRATION=true"
+Environment="FORGEJO__service__SHOW_REGISTRATION_BUTTON=false"
+
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
+Restart=always
+RestartSec=60s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

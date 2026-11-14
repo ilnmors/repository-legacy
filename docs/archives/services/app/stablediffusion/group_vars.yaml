@@ -1,0 +1,20 @@
+services:
+  stablediffusion:
+    ports:
+      http: "10001"
+    dependency:
+      models:
+        active: "zImage"
+        zImage: |
+          --diffusion-model /models/zImage/moodyRealMix_zitV7Global-Q8_0.gguf \
+          --llm /models/zImage/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
+          --vae /models/zImage/ae.safetensors \
+          --backend gpu \
+          --cfg-scale 1.0 \
+          --steps 9 \
+          --vae-tiling \
+          --vae-tile-size 32x32 \
+          --vae-tile-overlap 0.5
+version:
+  containers:
+    stablediffusion: "master-sycl@sha256:67ccb5d11bf55578f7938daeb7c9fee1d0dd1344c089c090b9065714d7960fd5"

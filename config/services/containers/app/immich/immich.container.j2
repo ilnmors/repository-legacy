@@ -4,8 +4,8 @@ DefaultDependencies=false
 [Unit]
 Description=Immich
 
-After=redis_immich.service
-Wants=redis_immich.service
+After=valkey_immich.service
+Wants=valkey_immich.service
 
 [Container]
 Image=ghcr.io/immich-app/immich-server:{{ version['containers']['immich'] }}
@@ -29,9 +29,9 @@ Environment="TZ={{ timezone }}"
 Environment="IMMICH_HELMET_FILE=true"
 Environment="IMMICH_TRUSTED_PROXIES={{ hostvars['fw']['network']['podman']['ipv4']['lla'] }},{{ hostvars['fw']['network']['auth']['ipv4']['server'] }},{{ hostvars['fw']['network']['auth']['ipv6']['server'] }}"
 
-# Redis
+# Valkey
 Environment="REDIS_HOSTNAME=host.containers.internal"
-Environment="REDIS_PORT={{ services['immich']['ports']['redis'] }}"
+Environment="REDIS_PORT={{ services['immich']['ports']['valkey'] }}"
 Environment="REDIS_DBINDEX=0"
 
 # Database

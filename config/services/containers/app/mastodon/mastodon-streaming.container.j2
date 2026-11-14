@@ -4,8 +4,8 @@ DefaultDependencies=false
 [Unit]
 Description=Mastodon Streaming
 
-After=network-online.target redis_mastodon.service
-Wants=network-online.target redis_mastodon.service
+After=network-online.target valkey_mastodon.service
+Wants=network-online.target valkey_mastodon.service
 
 [Container]
 Image=ghcr.io/mastodon/mastodon-streaming:{{ version['containers']['mastodon'] }}
@@ -31,8 +31,8 @@ Environment="DB_SSLMODE=verify-full"
 Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/mastodon/{{ root_cert_filename }}"
 Secret=MASTODON_POSTGRES_PASSWORD,type=env,target=DB_PASS
 
-# Redis
-Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon']['ports']['redis'] }}"
+# Valkey
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon']['ports']['valkey'] }}"
 
 # Process
 Exec=node ./streaming/index.js

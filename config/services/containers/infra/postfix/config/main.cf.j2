@@ -1,0 +1,66 @@
+{% set postfix = services['postfix'] %}
+{% set ldap = services['ldap'] %}
+# --- main.cf ---
+compatibility_level = 3.6
+
+myhostname = {{ postfix['domain']['internal'] }}.{{ domain['internal'] }}
+mydomain = {{ domain['internal'] }}
+myorigin = $mydomain
+mydestination =
+mynetworks = 127.0.0.0/8
+inet_interfaces = all
+inet_protocols = all
+biff = no
+alias_maps =
+alias_database =
+smtputf8_enable = yes
+message_size_limit = 33554432
+
+# postlogd writes syslog-formatted lines (crowdsec type: syslog).
+maillog_file = /var/log/postfix/postfix.log
+
+# Local mailboxes live in dovecot; LDAP decides which addresses exist.
+virtual_mailbox_domains = {{ postfix['mail']['domains'] | join(', ') }}
+# proxy: one shared LDAP connection through proxymap (maps are root:postfix 0640 in the container).
+virtual_mailbox_maps = proxy:ldap:/etc/postfix/maps/mailboxes.cf
+virtual_transport = lmtp:unix:/run/mail/lmtp
+virtual_alias_maps = inline:{ {% for domain in postfix['mail']['domains'] %}postmaster@{{ domain }}={{ postfix['mail']['postmaster'] }}@{{ postfix['mail']['domains'] | first }}{{ ', ' if not loop.last }}{% endfor %} }
+
+# Submission (TLS + SASL through the local dovecot auth socket).
+smtpd_tls_chain_files =
+    /etc/ssl/postfix/{{ postfix['domain']['internal'] }}.key,
+    /etc/ssl/postfix/{{ postfix['domain']['internal'] }}.crt
+smtpd_tls_security_level = encrypt
+smtpd_tls_auth_only = yes
+smtpd_tls_protocols = >=TLSv1.2
+smtpd_tls_mandatory_protocols = >=TLSv1.2
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = /run/mail/auth
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sender_login_maps = proxy:ldap:/etc/postfix/maps/senders.cf
+smtpd_sender_restrictions = reject_authenticated_sender_login_mismatch
+smtpd_relay_restrictions = permit_sasl_authenticated, reject
+smtpd_recipient_restrictions =
+    reject_non_fqdn_recipient,
+    reject_unlisted_recipient,
+{% if postfix['mail']['relay']['status'] %}
+    permit_sasl_authenticated,
+{% else %}
+    check_recipient_access inline:{ {% for domain in postfix['mail']['domains'] %}{{ domain }}=permit_sasl_authenticated{{ ', ' if not loop.last }}{% endfor %} },
+{% endif %}
+    reject
+
+{% if postfix['mail']['relay']['status'] %}
+# Outbound relay (smarthost).
+relayhost = [{{ postfix['mail']['relay']['host'] }}]:{{ postfix['mail']['relay']['port'] }}
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = texthash:/etc/postfix/maps/relay
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+smtp_tls_security_level = secure
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+{% else %}
+# No outbound relay: external recipients are rejected at submission.
+default_transport = error:External delivery is disabled
+{% endif %}

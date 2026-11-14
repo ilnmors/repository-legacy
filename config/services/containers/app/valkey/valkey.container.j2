@@ -1,0 +1,31 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Valkey - {{ valkey_service }}
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/valkey/valkey:{{ version['containers']['valkey'] }}
+
+ContainerName=valkey_{{ valkey_service }}
+HostName=valkey_{{ valkey_service }}
+
+PublishPort={{ services[valkey_service]['ports']['valkey'] }}:6379/tcp
+
+Volume=%h/containers/valkey/{{ valkey_service }}/data:/data:rw
+Volume=%h/containers/valkey/{{ valkey_service }}/valkey.conf:/usr/local/etc/valkey/valkey.conf:ro
+
+Exec=valkey-server /usr/local/etc/valkey/valkey.conf
+
+Environment="TZ={{ timezone }}"
+
+[Service]
+Restart=always
+RestartSec=60s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

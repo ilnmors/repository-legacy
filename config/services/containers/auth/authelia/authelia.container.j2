@@ -62,7 +62,7 @@ Exec=--config /config/authelia.yaml
 ExecStartPre=/usr/bin/nc -zv {{ services['postgresql']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['postgresql']['ports']['tcp'] }}
 # services['ldap']['ports']['ldaps'] is 6360, but nftables works on 636 the original port
 ExecStartPre=/usr/bin/nc -zv {{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }} 636
-ExecStartPre=/usr/bin/nc -zv {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }} 587
+ExecStartPre=/usr/bin/nc -zv {{ services['postfix']['domain']['internal'] }}.{{ domain['internal'] }} 587
 ExecStartPre=sleep 5
 Restart=always
 RestartSec=10s

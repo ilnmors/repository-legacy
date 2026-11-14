@@ -10,7 +10,7 @@ ContainerName=openwebui
 HostName=openwebui
 PublishPort={{ services['openwebui']['ports']['http'] }}:8080/tcp
 
-Volume=%h/data/containers/openwebui/data:/app/backend/data:rw
+Volume=%h/containers/openwebui/data:/app/backend/data:rw
 Volume=%h/containers/openwebui/ssl:/etc/ssl/openwebui:ro
 
 # General
@@ -37,6 +37,12 @@ Environment="PGSSLROOTCERT=/etc/ssl/openwebui/{{ root_cert_filename }}"
 Environment="PGSSLCERTMODE=disable"
 Secret=OPEN_WEBUI_POSTGRES_PASSWORD,type=env,target=DATABASE_PASSWORD
 
+# vector DB
+Environment="VECTOR_DB=pgvector"
+Environment="PGVECTOR_CREATE_EXTENSION=false"
+# Qwen dimension is 1024
+Environment="PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH=1024" 
+
 # OIDC
 Environment="ENABLE_OAUTH_PERSISTENT_CONFIG=false"
 Environment="ENABLE_OAUTH_SIGNUP=true"
@@ -54,15 +60,14 @@ Environment="OAUTH_CODE_CHALLENGE_METHOD=S256"
 Secret=OPEN_WEBUI_OAUTH_CLIENT_SECRET,type=env,target=OAUTH_CLIENT_SECRET
 
 # AI backend server
-# llama.cpp
-Environment="OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['llama']['ports']['http'] }}/v1"
+# Quartermaster (llama.cpp and stable-diffusion.cpp)
+Environment="OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['quartermaster']['ports']['http'] }}/v1"
 Environment="OPENAI_API_KEY=none"
-# stable-diffusion.cpp
 Environment="ENABLE_IMAGE_GENERATION=true"
 Environment="IMAGE_GENERATION_ENGINE=openai"
-Environment="IMAGES_OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['stablediffusion']['ports']['http'] }}/v1"
+Environment="IMAGES_OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['quartermaster']['ports']['http'] }}/v1"
 Environment="IMAGES_OPENAI_API_KEY=none"
-Environment="IMAGE_GENERATION_MODEL=sd-cpp-local"
+Environment="IMAGE_GENERATION_MODEL=zImage-moodyRealMix"
 Environment="IMAGE_SIZE=1024x1024"
 Environment="AIOHTTP_CLIENT_TIMEOUT=3600"
 # Disable background LLM tasks
@@ -72,6 +77,29 @@ Environment="ENABLE_FOLLOW_UP_GENERATION=false"
 Environment="ENABLE_AUTOCOMPLETE_GENERATION=false"
 Environment="DEFAULT_MODEL_METADATA={\"builtinTools\":{\"user_input\":false}}"
 
+# RAG Embedding
+Environment="RAG_EMBEDDING_ENGINE=openai"
+Environment="RAG_EMBEDDING_MODEL=LFM2.5-Embedding-350M"
+Environment="RAG_OPENAI_API_BASE_URL=http://host.containers.internal:{{ services['quartermaster']['ports']['http'] }}/v1"
+Environment="RAG_OPENAI_API_KEY=none"
+# Asymmetric embedding
+Environment="RAG_EMBEDDING_QUERY_PREFIX=query: "
+Environment="RAG_EMBEDDING_CONTENT_PREFIX=document: "
+# Chunking
+Environment="RAG_TEXT_SPLITTER=token"
+Environment="CHUNK_SIZE=350"
+Environment="CHUNK_OVERLAP=50"
+
+# S3
+Environment="STORAGE_PROVIDER=s3"
+Environment="S3_ACCESS_KEY_ID=open-webui"
+Environment="S3_BUCKET_NAME=open-webui"
+Environment="S3_REGION_NAME=us-east-1"
+Environment="S3_ENDPOINT_URL=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="S3_ADDRESSING_STYLE=path"
+Environment="S3_ENABLE_TAGGING=false"
+Environment="STORAGE_LOCAL_CACHE=false"
+Secret=OPEN_WEBUI_S3_SECRET_KEY,type=env,target=S3_SECRET_ACCESS_KEY
 
 [Service]
 MemoryKSM=yes

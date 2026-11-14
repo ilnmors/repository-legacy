@@ -21,9 +21,9 @@ define PORTS_HTTPS_FORWARD = {{ services['caddy']['ports']['https'] }}
 define PORTS_PROMETHEUS = {{ services['prometheus']['ports']['https'] }}
 define PORTS_LOKI = {{ services['loki']['ports']['https'] }}
 define PORTS_SMTP = 587
-define PORTS_SMTP_FORWARD = {{ services['maddy']['ports']['smtp'] }}
+define PORTS_SMTP_FORWARD = {{ services['postfix']['ports']['smtp'] }}
 define PORTS_IMAPS = 993
-define PORTS_IMAPS_FORWARD = {{ services['maddy']['ports']['imaps'] }}
+define PORTS_IMAPS_FORWARD = {{ services['dovecot']['ports']['imaps'] }}
 
 table inet nat {
     chain prerouting {

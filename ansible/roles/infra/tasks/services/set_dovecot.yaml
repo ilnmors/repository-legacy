@@ -1,0 +1,107 @@
+---
+- name: Create dovecot directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item.path }}"
+    state: "directory"
+    owner: "{{ services['dovecot']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "containers/dovecot", mode: "0770" }
+    - { path: "containers/dovecot/conf.d", mode: "0770" }
+    - { path: "containers/dovecot/ssl", mode: "0770" }
+    - { path: "data/containers/dovecot", mode: "0770" }
+    - { path: "data/containers/dovecot/vmail", mode: "0700" }
+    - { path: "containers/mail", mode: "0755" }
+    - { path: "containers/mail/sockets", mode: "0755" }
+  become: true
+
+- name: Create dovecot log directory
+  ansible.builtin.file:
+    path: "/var/log/dovecot"
+    state: "directory"
+    owner: "{{ services['dovecot']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0755"
+  become: true
+
+- name: Deploy dovecot logrotate configuration
+  vars:
+    mail_service: "dovecot"
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/mail/logrotate.j2"
+    dest: "/etc/logrotate.d/dovecot"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+
+- name: Deploy dovecot certificate and key
+  ansible.builtin.copy:
+    content: "{{ item.value }}"
+    dest: "{{ node['home_path'] }}/containers/dovecot/ssl/{{ item.name }}"
+    owner: "{{ services['dovecot']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "{{ root_cert_filename }}"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      mode: "0440"
+    - name: "{{ services['dovecot']['domain']['internal'] }}.crt"
+      value: |
+        {{ hostvars['console']['dovecot']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "{{ services['dovecot']['domain']['internal'] }}.key"
+      value: "{{ hostvars['console']['dovecot']['key'] }}"
+      mode: "0400"
+  become: true
+  notify: "notification_restart_dovecot"
+  no_log: true
+
+- name: Deploy dovecot configuration files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/dovecot/conf.d/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/containers/dovecot/conf.d/{{ item }}"
+    owner: "{{ services['dovecot']['subuid'] }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  loop:
+    - "auth.conf"
+    - "ssl.conf"
+    - "zz-local.conf"
+  become: true
+  notify: "notification_restart_dovecot"
+
+- name: Register secret value to podman secret
+  containers.podman.podman_secret:
+    name: "DOVECOT_LDAP_PASSWORD"
+    data: "{{ hostvars['console']['ldap']['password']['services']['mail'] }}"
+    state: "present"
+    force: true
+  notify: "notification_restart_dovecot"
+  no_log: true
+
+- name: Pull image
+  containers.podman.podman_image:
+    name: "docker.io/dovecot/dovecot"
+    tag: "{{ version['containers']['dovecot'] }}"
+    state: "present"
+    pull: true
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/dovecot/dovecot.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/dovecot.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_dovecot"
+
+- name: Enable dovecot
+  ansible.builtin.systemd:
+    name: "dovecot.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

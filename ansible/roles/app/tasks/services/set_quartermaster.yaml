@@ -1,0 +1,83 @@
+---
+- name: Check model directory in data volume
+  ansible.builtin.find:
+    path: "{{ node['home_path'] }}/data/containers/quartermaster/models"
+    file_type: "file"
+    patterns: "*.gguf"
+    hidden: true
+    recurse: true
+  register: quartermaster_models
+
+- name: Failure when models directory in data volume
+  ansible.builtin.fail:
+    msg: "There are no models in the data directory; download the model files for quartermaster first"
+  when: quartermaster_models.matched == 0
+
+- name: Create quartermaster directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0770"
+  loop:
+    - "containers/quartermaster"
+    - "containers/quartermaster/build"
+    - "containers/quartermaster/config"
+    - "containers/quartermaster/data"
+    - "containers/quartermaster/models"
+
+- name: Sync model data (--delete=true)
+  delegate_to: "{{ inventory_hostname }}"
+  ansible.posix.synchronize:
+    src: "{{ node['home_path'] }}/data/containers/quartermaster/models/"
+    dest: "{{ node['home_path'] }}/containers/quartermaster/models/"
+    owner: true
+    group: true
+    perms: true
+    delete: true
+  notify: "notification_restart_quartermaster"
+
+- name: Deploy configuration file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/quartermaster/config/config.yaml.j2"
+    dest: "{{ node['home_path'] }}/containers/quartermaster/config/config.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  notify: "notification_restart_quartermaster"
+
+- name: Deploy containerfile for build
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/quartermaster/build/Containerfile.j2"
+    dest: "{{ node['home_path'] }}/containers/quartermaster/build/Containerfile"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  register: "is_quartermaster_containerfile"
+  notify: "notification_restart_quartermaster"
+
+- name: Build quartermaster container image
+  containers.podman.podman_image:
+    name: "{{ domain['internal'] }}/{{ node['name'] }}/quartermaster"
+    tag: "{{ version['containers']['quartermaster'] }}"
+    state: "build"
+    path: "{{ node['home_path'] }}/containers/quartermaster/build"
+    force: "{{ is_quartermaster_containerfile.changed }}"
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/quartermaster/quartermaster.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/quartermaster.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_quartermaster"
+
+- name: Enable quartermaster.service
+  ansible.builtin.systemd:
+    name: "quartermaster.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

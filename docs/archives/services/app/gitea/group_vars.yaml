@@ -1,0 +1,14 @@
+services:
+  gitea:
+    domain:
+      public: "gitea"
+      internal: "gitea.app"
+    ports:
+      http: "3001"
+    subuid: "100999"
+    dependency:
+      web: "app-public"
+      db: "postgresql"
+version:
+  containers:
+    gitea: "28.3.0"

@@ -4,8 +4,8 @@ DefaultDependencies=false
 [Unit]
 Description=Outline
 
-After=redis_outline.service
-Wants=redis_outline.service
+After=valkey_outline.service
+Wants=valkey_outline.service
 
 [Container]
 Image=docker.io/outlinewiki/outline:{{ version['containers']['outline'] }}
@@ -14,7 +14,6 @@ HostName=outline
 PublishPort={{ services['outline']['ports']['http'] }}:3000/tcp
 
 # Volumes
-Volume=%h/data/containers/outline/data:/var/lib/outline/data:rw
 Volume=%h/containers/outline/ssl:/etc/ssl/outline:ro
 
 # General
@@ -37,13 +36,22 @@ Environment="PGSSLMODE=verify-full"
 Environment="NODE_EXTRA_CA_CERTS=/etc/ssl/outline/{{ root_cert_filename }}"
 Secret=OUTLINE_DATABASE_PASSWORD,type=env,target=DATABASE_PASSWORD
 
-# Redis
-Environment="REDIS_URL=redis://host.containers.internal:{{ services['outline']['ports']['redis'] }}"
+# Valkey
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['outline']['ports']['valkey'] }}"
 
 # Storage
-Environment="FILE_STORAGE=local"
-Environment="FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data"
+# Environment="FILE_STORAGE=local"
+# Environment="FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data"
+# Environment="FILE_STORAGE_UPLOAD_MAX_SIZE=262144000"
+Environment="FILE_STORAGE=s3"
 Environment="FILE_STORAGE_UPLOAD_MAX_SIZE=262144000"
+# S3 configuration
+Environment="AWS_REGION=us-east-1"
+Environment="AWS_S3_UPLOAD_BUCKET_NAME=outline"
+Environment="AWS_ACCESS_KEY_ID=outline"
+Environment="AWS_S3_UPLOAD_BUCKET_URL=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="AWS_S3_FORCE_PATH_STYLE=true"
+Secret=OUTLINE_S3_SECRET_KEY,type=env,target=AWS_SECRET_ACCESS_KEY
 
 # OIDC
 Environment="OIDC_CLIENT_ID=outline"

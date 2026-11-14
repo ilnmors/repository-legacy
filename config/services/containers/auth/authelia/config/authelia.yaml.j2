@@ -88,19 +88,20 @@ storage:
 # Notification provider
 notifier:
   smtp:
-    address: 'submission://{{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}:587'
+    address: 'submission://{{ services['postfix']['domain']['internal'] }}.{{ domain['internal'] }}:587'
     timeout: '5 seconds'
     username: 'authelia'
     password: '' # $AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE option is designated in container file
     sender: 'Authelia <authelia@{{ domain['internal'] }}>'
     identifier: '{{ services['authelia']['domain']['public'] }}.{{ domain['public'] }}'
     subject: '[Authelia] {title}'
-    startup_check_address: 'authelia@{{ domain['internal'] }}'
+    # Must be a deliverable address: service accounts have no mailbox, postmaster is an alias.
+    startup_check_address: 'postmaster@{{ domain['internal'] }}'
     disable_require_tls: false
     disable_starttls: false
     disable_html_emails: false
     tls:
-      server_name: '{{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }}'
+      server_name: '{{ services['postfix']['domain']['internal'] }}.{{ domain['internal'] }}'
       skip_verify: false
 
 # This part needs the clients to integrate with Authelia in order for it to activate.
@@ -119,17 +120,17 @@ identity_providers:
       id_token: '1h'
       refresh_token: '720h'
     clients:
-      # https://www.authelia.com/integration/openid-connect/clients/gitea/
-      - client_id: 'gitea'
-        client_name: 'gitea'
+      # https://www.authelia.com/integration/openid-connect/clients/forgejo/
+      - client_id: 'forgejo'
+        client_name: 'forgejo'
         consent_mode: 'implicit'
-        client_secret: '{{ hostvars['console']['gitea']['oidc']['hash'] }}'
+        client_secret: '{{ hostvars['console']['forgejo']['oidc']['hash'] }}'
         public: false
         authorization_policy: 'one_factor'
         require_pkce: false
         pkce_challenge_method: ''
         redirect_uris:
-          - 'https://{{ services['gitea']['domain']['public'] }}.{{ domain['public'] }}/user/oauth2/authelia/callback'
+          - 'https://{{ services['forgejo']['domain']['public'] }}.{{ domain['public'] }}/user/oauth2/authelia/callback'
         scopes:
           - 'openid'
           - 'email'

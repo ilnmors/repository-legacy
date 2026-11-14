@@ -1,0 +1,94 @@
+services:
+  llama:
+    ports:
+      http: "10000"
+    dependency:
+      models:
+        default: |
+          n-gpu-layers = all
+          kv-unified = true
+          cache-prompt = true
+          cache-type-k = q8_0
+          cache-type-v = q8_0
+          flash-attn = auto
+          reasoning = off
+          jinja = true
+          lazy-mode = off
+        LFM2.5-24B-A2B-Heretic: |
+          model = /models/LFM2.5-24B-A2B-Heretic/model.gguf
+          c = 65536
+          parallel = 2
+          reasoning = on
+          load-on-startup = true
+        LFM2.5-VL-3B-Heretic: |
+          model = /models/LFM2.5-VL-3B-Heretic/model.gguf
+          mmproj = /models/LFM2.5-VL-3B-Heretic/mmproj.gguf
+          c = 32768
+          parallel = 1
+          load-on-startup = true
+        LFM2.5-Embedding-350M: |
+          model = /models/LFM2.5-Embedding-350M/model.gguf
+          embedding = true
+          pooling = cls
+          c = 1024
+          parallel = 1
+          load-on-startup = true
+      # models:
+      #   default: |
+      #     n-gpu-layers = all
+      #     kv-unified = true
+      #     cache-prompt = true
+      #     cache-type-k = q8_0
+      #     cache-type-v = q8_0
+      #     flash-attn = auto
+      #     reasoning = off
+      #     jinja = true
+      #     lazy-mode = off
+      #   Nemotron3.5-Lightning-30B-A3B: |
+      #     model = /models/Nemotron3.5-Lightning-30B-A3B/Nemotron-3.5-Lightning-30B-A3B-Heretic-Uncensored-Q4_K_M-GGUF.gguf
+      #     c = 65536
+      #     parallel = 2
+      #     load-on-startup = true
+      #   Qwen3-Embedding-0.6B:
+      #     model = /models/Qwen3-Embedding-0.6B/Qwen3-Embedding-0.6B-Q8_0.gguf
+      #     embedding = true
+      #     pooling = last
+      #     c = 8192
+      #     parallel = 1
+      #     load-on-startup = true
+        # version: mradermacher/LFM2-24B-A2B-heretic-ara-GGUF
+        # LFM2-24B-A2B: |
+        #   model = /models/LFM2-24B-A2B/LFM2-24B-A2B-heretic-ara.Q4_K_M.gguf
+        #   c = 65536
+        #   parallel = 2
+        #   load-on-startup = true
+        # # version: SC117/LFM2.5-VL-3B-Uncensored-GGUF
+        # LFM2-VL-3B: |
+        #   model = /models/LFM2-VL-3B/LFM2.5-VL-3B-Uncensored-Q4_K_M.gguf
+        #   mmproj = /models/LFM2-VL-3B/mmproj-LFM2.5-VL-3B-BF16.gguf
+        #   c = 65536
+        #   parallel = 1
+        #   load-on-startup = true
+        # version: HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M
+        # Qwen3.6: |
+        #   model = /models/Qwen3.6-35B-A3B/Qwen3.6-35B-A3B-Q4_K_M.gguf
+        #   mmproj = /models/Qwen3.6-35B-A3B/mmproj-Qwen3.6-35B-BF16.gguf
+        #   c = 65536
+        #   parallel = 2
+        #   load-on-startup = true
+        #   image-min-tokens = 1024
+        # # version: HauhauCS/Qwen3.5-2B-Uncensored-HauhauCS-Aggressiv-Q8_0
+        # Qwen3.5-image: |
+        #   model = /models/Qwen3.5-2B/Qwen3.5-2B-Q8_0.gguf
+        #   c = 32768
+        #   parallel = 1
+        #   load-on-startup = true
+        # version: LiquidAI/LFM2.5-2.6B-GGUF
+        # LFM2.5: |
+        #   model = /models/LFM2.5-2.6B/LFM2.5-2.6B-Q8_0.gguf
+        #   c = 32768
+        #   parallel = 2
+        #   load-on-startup = true
+version:
+  containers:
+    llama: "server-vulkan-b12316"

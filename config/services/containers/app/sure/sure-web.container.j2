@@ -4,8 +4,8 @@ DefaultDependencies=false
 [Unit]
 Description=Sure Web
 
-After=network-online.target redis_sure.service
-Wants=network-online.target redis_sure.service
+After=network-online.target valkey_sure.service
+Wants=network-online.target valkey_sure.service
 
 [Container]
 Image=ghcr.io/we-promise/sure:{{ version['containers']['sure'] }}
@@ -14,7 +14,6 @@ HostName=sure-web
 
 PublishPort={{ services['sure']['ports']['http'] }}:3000/tcp
 
-Volume=%h/data/containers/sure/storage:/rails/storage:rw
 Volume=%h/containers/sure/ssl:/etc/ssl/sure:ro
 
 # General
@@ -35,8 +34,8 @@ Environment="PGSSLMODE=verify-full"
 Environment="PGSSLROOTCERT=/etc/ssl/sure/{{ root_cert_filename }}"
 Secret=SURE_POSTGRES_PASSWORD,type=env,target=POSTGRES_PASSWORD
 
-# Redis
-Environment="REDIS_URL=redis://host.containers.internal:{{ services['sure']['ports']['redis'] }}/1"
+# Valkey
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['sure']['ports']['valkey'] }}/1"
 
 # OIDC - Authelia
 Environment="OIDC_CLIENT_ID=sure"
@@ -59,14 +58,16 @@ Environment="SECURITIES_PROVIDER=yahoo_finance"
 
 # AI backend
 Environment="ASSISTANT_TYPE=builtin"
-Environment="OPENAI_URI_BASE=http://host.containers.internal:10000/v1"
-Environment="OPENAI_ACCESS_TOKEN=local"
-Environment="OPENAI_MODEL={{ services['llama']['dependency']['models'] | dict2items | rejectattr('key', 'equalto', 'default') | map(attribute='key') | last }}"
-Environment="LLM_CONTEXT_WINDOW=8192"
-Environment="OPENAI_REQUEST_TIMEOUT=600"
 Environment="ASSISTANT_MAX_TOOL_CALL_ITERATIONS=2"
-Environment="AI_RESPONSE_TIMEOUT=2400"
 
+# S3
+Environment="ACTIVE_STORAGE_SERVICE=generic_s3"
+Environment="GENERIC_S3_ACCESS_KEY_ID=sure"
+Environment="GENERIC_S3_REGION=us-east-1"
+Environment="GENERIC_S3_BUCKET=sure"
+Environment="GENERIC_S3_ENDPOINT=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="GENERIC_S3_FORCE_PATH_STYLE=true"
+Secret=SURE_S3_SECRET_KEY,type=env,target=GENERIC_S3_SECRET_ACCESS_KEY
 
 [Service]
 MemoryKSM=yes

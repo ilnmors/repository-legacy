@@ -1,47 +1,47 @@
 ---
-- name: Set redis service name
+- name: Set valkey service name
   ansible.builtin.set_fact:
-    redis_service: "sure"
+    valkey_service: "sure"
 
-- name: Create redis_sure directory
+- name: Create valkey_sure directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ services['redis']['subuid'] }}"
+    owner: "{{ services['valkey']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0770"
   loop:
-    - "containers/redis"
-    - "containers/redis/{{ redis_service }}"
-    - "containers/redis/{{ redis_service }}/data"
+    - "containers/valkey"
+    - "containers/valkey/{{ valkey_service }}"
+    - "containers/valkey/{{ valkey_service }}/data"
   become: true
 
-- name: Deploy redis config file
+- name: Deploy valkey config file
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
-    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/valkey/valkey.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/valkey/{{ valkey_service }}/valkey.conf"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0644"
-  register: "is_redis_conf"
+  register: "is_valkey_conf"
 
-- name: Deploy redis container file
+- name: Deploy valkey container file
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
-    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/valkey/valkey.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/valkey_{{ valkey_service }}.container"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0644"
-  register: "is_redis_containerfile"
+  register: "is_valkey_containerfile"
 
-- name: Enable (Restart) redis service
+- name: Enable (Restart) valkey service
   ansible.builtin.systemd:
-    name: "redis_{{ redis_service }}.service"
+    name: "valkey_{{ valkey_service }}.service"
     state: "restarted"
     enabled: true
     daemon_reload: true
     scope: "user"
-  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
+  when: is_valkey_conf.changed or is_valkey_containerfile.changed # noqa: no-handler
 
 - name: Create sure directory
   ansible.builtin.file:
@@ -83,6 +83,8 @@
       value: "{{ hostvars['console']['postgresql']['password']['sure'] }}"
     - name: "SURE_OIDC_CLIENT_SECRET"
       value: "{{ hostvars['console']['sure']['oidc']['secret'] }}"
+    - name: "SURE_S3_SECRET_KEY"
+      value: "{{ hostvars['console']['rustfs']['password']['sure'] }}"
   notify: "notification_restart_sure"
   no_log: true
 
@@ -120,9 +122,9 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - name: "redis"
-      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
-      file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
+    - name: "valkey"
+      image: "docker.io/valkey/valkey:{{ version['containers']['valkey'] }}"
+      file: "docker.io_valkey_valkey_{{ version['containers']['valkey'] }}"
     - name: "sure"
       image: "ghcr.io/we-promise/sure:{{ version['containers']['sure'] }}"
       file: "ghcr.io_we-promise_sure_{{ version['containers']['sure'] }}"

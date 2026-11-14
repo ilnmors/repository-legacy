@@ -24,8 +24,8 @@ Environment="TZ={{ timezone }}"
 
 [Service]
 # 587: SMTP submission, 993: imaps
-ExecStartPre=/usr/bin/nc -zv {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }} 587
-ExecStartPre=/usr/bin/nc -zv {{ services['maddy']['domain']['internal'] }}.{{ domain['internal'] }} 993
+ExecStartPre=/usr/bin/nc -zv {{ services['postfix']['domain']['internal'] }}.{{ domain['internal'] }} 587
+ExecStartPre=/usr/bin/nc -zv {{ services['dovecot']['domain']['internal'] }}.{{ domain['internal'] }} 993
 Restart=always
 RestartSec=10s
 TimeoutStopSec=120

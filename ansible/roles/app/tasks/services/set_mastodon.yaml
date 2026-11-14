@@ -1,47 +1,47 @@
 ---
-- name: Set redis service name
+- name: Set valkey service name
   ansible.builtin.set_fact:
-    redis_service: "mastodon"
+    valkey_service: "mastodon"
 
-- name: Create redis_mastodon directory
+- name: Create valkey_mastodon directory
   ansible.builtin.file:
     path: "{{ node['home_path'] }}/{{ item }}"
     state: "directory"
-    owner: "{{ services['redis']['subuid'] }}"
+    owner: "{{ services['valkey']['subuid'] }}"
     group: "{{ node['group'] }}"
     mode: "0770"
   loop:
-    - "containers/redis"
-    - "containers/redis/{{ redis_service }}"
-    - "containers/redis/{{ redis_service }}/data"
+    - "containers/valkey"
+    - "containers/valkey/{{ valkey_service }}"
+    - "containers/valkey/{{ valkey_service }}/data"
   become: true
 
-- name: Deploy redis config file
+- name: Deploy valkey config file
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.conf.j2"
-    dest: "{{ node['home_path'] }}/containers/redis/{{ redis_service }}/redis.conf"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/valkey/valkey.conf.j2"
+    dest: "{{ node['home_path'] }}/containers/valkey/{{ valkey_service }}/valkey.conf"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0644"
-  register: "is_redis_conf"
+  register: "is_valkey_conf"
 
-- name: Deploy redis container file
+- name: Deploy valkey container file
   ansible.builtin.template:
-    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/redis/redis.container.j2"
-    dest: "{{ node['home_path'] }}/.config/containers/systemd/redis_{{ redis_service }}.container"
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/app/valkey/valkey.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/valkey_{{ valkey_service }}.container"
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0644"
-  register: "is_redis_containerfile"
+  register: "is_valkey_containerfile"
 
-- name: Enable (Restart) redis service
+- name: Enable (Restart) valkey service
   ansible.builtin.systemd:
-    name: "redis_{{ redis_service }}.service"
+    name: "valkey_{{ valkey_service }}.service"
     state: "restarted"
     enabled: true
     daemon_reload: true
     scope: "user"
-  when: is_redis_conf.changed or is_redis_containerfile.changed # noqa: no-handler
+  when: is_valkey_conf.changed or is_valkey_containerfile.changed # noqa: no-handler
 
 - name: Create mastodon directory
   ansible.builtin.file:
@@ -102,6 +102,8 @@
       value: "{{ hostvars['console']['mastodon']['vapid']['private_key'] }}"
     - name: "MASTODON_VAPID_PUBLIC_KEY"
       value: "{{ hostvars['console']['mastodon']['vapid']['public_key'] }}"
+    - name: "MASTODON_S3_SECRET_KEY"
+      value: "{{ hostvars['console']['rustfs']['password']['mastodon'] }}"
   notify: "notification_restart_mastodon"
   no_log: true
 
@@ -136,14 +138,13 @@
           DB_PASS: "{{ hostvars['console']['postgresql']['password']['mastodon'] }}"
           DB_SSLMODE: "verify-full"
           PGSSLROOTCERT: "/etc/ssl/mastodon/{{ root_cert_filename }}"
-          REDIS_URL: "redis://host.containers.internal:{{ services['mastodon']['ports']['redis'] }}"
+          REDIS_URL: "redis://host.containers.internal:{{ services['mastodon']['ports']['valkey'] }}"
           SECRET_KEY_BASE: "{{ hostvars['console']['mastodon']['secret_key'] }}"
           ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: "{{ hostvars['console']['mastodon']['encryption']['primary_key'] }}"
           ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: "{{ hostvars['console']['mastodon']['encryption']['deterministic_key'] }}"
           ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: "{{ hostvars['console']['mastodon']['encryption']['salt'] }}"
         volume:
           - "{{ node['home_path'] }}/containers/mastodon/ssl:/etc/ssl/mastodon:ro"
-          - "{{ node['home_path'] }}/data/containers/mastodon/system:/mastodon/public/system:rw"
       no_log: true
 
     - name: Create .init file
@@ -194,7 +195,7 @@
           DB_PASS: "{{ hostvars['console']['postgresql']['password']['mastodon'] }}"
           DB_SSLMODE: "verify-full"
           PGSSLROOTCERT: "/etc/ssl/mastodon/{{ root_cert_filename }}"
-          REDIS_URL: "redis://host.containers.internal:{{ services['mastodon']['ports']['redis'] }}"
+          REDIS_URL: "redis://host.containers.internal:{{ services['mastodon']['ports']['valkey'] }}"
           SECRET_KEY_BASE: "{{ hostvars['console']['mastodon']['secret_key'] }}"
           ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: "{{ hostvars['console']['mastodon']['encryption']['primary_key'] }}"
           ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: "{{ hostvars['console']['mastodon']['encryption']['deterministic_key'] }}"
@@ -241,9 +242,9 @@
   ansible.builtin.stat:
     path: "{{ node['home_path'] }}/archives/containers/{{ item.file }}.tar"
   loop:
-    - name: "redis"
-      image: "docker.io/library/redis:{{ version['containers']['redis'] }}"
-      file: "docker.io_library_redis_{{ version['containers']['redis'] }}"
+    - name: "valkey"
+      image: "docker.io/valkey/valkey:{{ version['containers']['valkey'] }}"
+      file: "docker.io_valkey_valkey_{{ version['containers']['valkey'] }}"
     - name: "mastodon"
       image: "ghcr.io/mastodon/mastodon:{{ version['containers']['mastodon'] }}"
       file: "ghcr.io_mastodon_mastodon_{{ version['containers']['mastodon'] }}"

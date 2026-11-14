@@ -108,13 +108,23 @@
   listen: "notification_restart_x509-exporter"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart maddy
+- name: Restart dovecot
   ansible.builtin.systemd:
-    name: "maddy.service"
+    name: "dovecot.service"
     state: "restarted"
     enabled: true
     daemon_reload: true
     scope: "user"
   changed_when: false
-  listen: "notification_restart_maddy"
+  listen: "notification_restart_dovecot"
+  ignore_errors: true # noqa: ignore-errors
+- name: Restart postfix
+  ansible.builtin.systemd:
+    name: "postfix.service"
+    state: "restarted"
+    enabled: true
+    daemon_reload: true
+    scope: "user"
+  changed_when: false
+  listen: "notification_restart_postfix"
   ignore_errors: true # noqa: ignore-errors

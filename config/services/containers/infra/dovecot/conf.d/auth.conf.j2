@@ -1,0 +1,29 @@
+{% set ldap = services['ldap'] %}
+{% set base_dn = domain['dc'] %}
+{% set member = '(memberOf=cn=%s,ou=groups,' ~ base_dn ~ ')' %}
+# Replaces the image auth.conf (static passdb that accepts any user).
+# $ENV values must be imported so that the auth processes can see them.
+import_environment {
+  DOVECOT_LDAP_PASSWORD = %{env:DOVECOT_LDAP_PASSWORD}
+}
+
+auth_mechanisms = plain login
+# "user" and "user@domain" are the same account; LMTP recipients arrive as user@domain.
+auth_username_format = %{user | username | lower}
+
+ldap_uris = ldaps://{{ ldap['domain']['internal'] }}.{{ domain['internal'] }}:{{ ldap['ports']['ldaps'] }}
+ldap_auth_dn = uid=mail,ou=people,{{ base_dn }}
+ldap_auth_dn_password = $ENV:DOVECOT_LDAP_PASSWORD
+ldap_base = ou=people,{{ base_dn }}
+ssl_client_ca_file = /etc/dovecot/ssl/{{ root_cert_filename }}
+
+# Password check (IMAP logins and postfix SASL): every group allowed to use IMAP or submission.
+passdb ldap {
+  bind = yes
+  filter = (&(objectClass=person)(uid=%{user})(|{% for group in (services['dovecot']['mail']['groups'] + services['postfix']['mail']['groups']) | unique %}{{ member | format(group) }}{% endfor %}))
+}
+
+# Mailbox owners (IMAP and LMTP): postfix SASL does not look up the userdb, so submission-only groups stop here.
+userdb ldap {
+  filter = (&(objectClass=person)(uid=%{user})(|{% for group in services['dovecot']['mail']['groups'] %}{{ member | format(group) }}{% endfor %}))
+}

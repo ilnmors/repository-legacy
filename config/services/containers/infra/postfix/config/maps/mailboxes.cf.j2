@@ -1,0 +1,15 @@
+{% set ldap = services['ldap'] %}
+{% set postfix = services['postfix'] %}
+server_host = ldaps://{{ ldap['domain']['internal'] }}.{{ domain['internal'] }}:{{ ldap['ports']['ldaps'] }}
+version = 3
+tls_ca_cert_file = /etc/ssl/postfix/{{ root_cert_filename }}
+tls_require_cert = yes
+bind = yes
+bind_dn = uid=mail,ou=people,{{ domain['dc'] }}
+bind_pw = {{ hostvars['console']['ldap']['password']['services']['mail'] }}
+search_base = ou=people,{{ domain['dc'] }}
+domain = {{ postfix['mail']['domains'] | join(', ') }}
+query_filter = (&(objectClass=person)(uid=%u)(|{% for group in services['dovecot']['mail']['groups'] %}(memberOf=cn={{ group }},ou=groups,{{ domain['dc'] }}){% endfor %}))
+result_attribute = uid
+# Any result means the mailbox exists; dovecot delivers by login name.
+result_format = %s

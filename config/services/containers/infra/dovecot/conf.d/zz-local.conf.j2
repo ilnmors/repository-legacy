@@ -1,0 +1,28 @@
+# Loaded after the image defaults (dovecot.conf, vendor.d/rootless.conf, conf.d/*).
+protocols = imap lmtp
+
+# crowdsec reads this file with labels type: dovecot.
+log_path = /var/log/dovecot/dovecot.log
+
+# postfix (same host) uses these sockets for SASL and delivery.
+service auth {
+  unix_listener /run/mail/auth {
+    mode = 0666
+  }
+}
+
+service lmtp {
+  unix_listener /run/mail/lmtp {
+    mode = 0666
+  }
+  inet_listener lmtps {
+    port = 0
+  }
+}
+
+# Only implicit TLS (imaps) is published.
+service imap-login {
+  inet_listener imap {
+    port = 0
+  }
+}

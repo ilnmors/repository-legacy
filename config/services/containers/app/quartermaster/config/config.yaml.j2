@@ -1,0 +1,17 @@
+{% set qm = services['quartermaster'] %}
+startPort: 5800
+globalTTL: 0
+macros: {{ qm['macros'] | default({}) | to_json }}
+models: {{ qm['models'] | to_json }}
+{% if qm['groups'] | default({}) | length > 0 %}
+routing:
+  router:
+    use: group
+    settings:
+      groups: {{ qm['groups'] | to_json }}
+{% endif %}
+{% if qm['preload'] | default([]) | length > 0 %}
+hooks:
+  on_startup:
+    preload: {{ qm['preload'] | to_json }}
+{% endif %}

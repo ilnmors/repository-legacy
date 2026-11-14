@@ -4,8 +4,8 @@ DefaultDependencies=false
 [Unit]
 Description=Mastodon Web
 
-After=network-online.target redis_mastodon.service
-Wants=network-online.target redis_mastodon.service
+After=network-online.target valkey_mastodon.service
+Wants=network-online.target valkey_mastodon.service
 
 [Container]
 Image=ghcr.io/mastodon/mastodon:{{ version['containers']['mastodon'] }}
@@ -14,7 +14,6 @@ HostName=mastodon-web
 
 PublishPort={{ services['mastodon']['ports']['http'] }}:3000/tcp
 
-Volume=%h/data/containers/mastodon/system:/mastodon/public/system:rw
 Volume=%h/containers/mastodon/ssl:/etc/ssl/mastodon:ro
 
 
@@ -36,8 +35,8 @@ Environment="DB_SSLMODE=verify-full"
 Environment="PGSSLROOTCERT=/etc/ssl/mastodon/{{ root_cert_filename }}"
 Secret=MASTODON_POSTGRES_PASSWORD,type=env,target=DB_PASS
 
-# Redis
-Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon']['ports']['redis'] }}"
+# Valkey
+Environment="REDIS_URL=redis://host.containers.internal:{{ services['mastodon']['ports']['valkey'] }}"
 
 # Rails secrets
 Secret=MASTODON_SECRET_KEY_BASE,type=env,target=SECRET_KEY_BASE
@@ -61,6 +60,18 @@ Environment="OMNIAUTH_ONLY=true"
 Environment="ONE_CLICK_SSO_LOGIN=true"
 Environment="OIDC_USE_PKCE=true"
 Secret=MASTODON_OIDC_CLIENT_SECRET,type=env,target=OIDC_CLIENT_SECRET
+
+# S3
+Environment="S3_ENABLED=true"
+Environment="S3_BUCKET=mastodon"
+Environment="S3_REGION=us-east-1"
+Environment="S3_ENDPOINT=https://{{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="S3_OVERRIDE_PATH_STYLE=false"
+Environment="S3_PROTOCOL=https"
+Environment="S3_HOSTNAME={{ services['rustfs']['domain']['public'] }}.{{ domain['public'] }}"
+Environment="S3_PERMISSION="
+Environment="AWS_ACCESS_KEY_ID=mastodon"
+Secret=MASTODON_S3_SECRET_KEY,type=env,target=AWS_SECRET_ACCESS_KEY
 
 # Process
 Exec=bundle exec puma -C config/puma.rb

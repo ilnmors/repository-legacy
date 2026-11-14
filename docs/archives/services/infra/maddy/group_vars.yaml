@@ -1,0 +1,13 @@
+services:
+  maddy:
+    domain:
+      internal: "maddy"
+    ports:
+      smtp: "2587"
+      imaps: "2993"
+    dependency:
+      cert: true
+      db: "postgresql"
+version:
+  containers:
+    maddy: "0.9.7"

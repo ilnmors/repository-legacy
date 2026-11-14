@@ -1,0 +1,10 @@
+# {{ mail_service }} logs written from the container (crowdsec acquisition).
+/var/log/{{ mail_service }}/*.log {
+    daily
+    rotate 7
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}

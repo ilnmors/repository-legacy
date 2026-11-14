@@ -194,13 +194,21 @@
           tags: ["site", "ldap"]
       tags: ["site", "ldap"]
 
-    - name: Set maddy
+    - name: Set dovecot
       ansible.builtin.include_role:
         name: "infra"
-        tasks_from: "services/set_maddy"
+        tasks_from: "services/set_dovecot"
         apply:
-          tags: ["site", "maddy"]
-      tags: ["site", "maddy"]
+          tags: ["site", "dovecot", "mail"]
+      tags: ["site", "dovecot", "mail"]
+
+    - name: Set postfix
+      ansible.builtin.include_role:
+        name: "infra"
+        tasks_from: "services/set_postfix"
+        apply:
+          tags: ["site", "postfix", "mail"]
+      tags: ["site", "postfix", "mail"]
 
     - name: Set x509 exporter
       ansible.builtin.include_role:

@@ -204,21 +204,21 @@
           tags: ["site", "snappymail"]
       tags: ["site", "snappymail"]
 
-    - name: Set gitea
+    - name: Set forgejo
       ansible.builtin.include_role:
         name: "app"
-        tasks_from: "services/set_gitea"
+        tasks_from: "services/set_forgejo"
         apply:
-          tags: ["site", "gitea"]
-      tags: ["site", "gitea"]
+          tags: ["site", "forgejo"]
+      tags: ["site", "forgejo"]
 
     - name: Set immich
       ansible.builtin.include_role:
         name: "app"
         tasks_from: "services/set_immich"
         apply:
-          tags: ["site", "immich", "redis"]
-      tags: ["site", "immich", "redis"]
+          tags: ["site", "immich", "valkey"]
+      tags: ["site", "immich", "valkey"]
 
     - name: Set collabora
       ansible.builtin.include_role:
@@ -249,16 +249,16 @@
         name: "app"
         tasks_from: "services/set_sure"
         apply:
-          tags: ["site", "sure", "redis"]
-      tags: ["site", "sure", "redis"]
+          tags: ["site", "sure", "valkey"]
+      tags: ["site", "sure", "valkey"]
 
     - name: Set outline
       ansible.builtin.include_role:
         name: "app"
         tasks_from: "services/set_outline"
         apply:
-          tags: ["site", "outline", "redis"]
-      tags: ["site", "outline", "redis"]
+          tags: ["site", "outline", "valkey"]
+      tags: ["site", "outline", "valkey"]
 
     - name: Set homebox
       ansible.builtin.include_role:
@@ -273,8 +273,8 @@
         name: "app"
         tasks_from: "services/set_mastodon"
         apply:
-          tags: ["site", "mastodon", "redis"]
-      tags: ["site", "mastodon", "redis"]
+          tags: ["site", "mastodon", "valkey"]
+      tags: ["site", "mastodon", "valkey"]
 
     - name: Set readur
       ansible.builtin.include_role:
@@ -308,21 +308,13 @@
           tags: ["site", "linkding"]
       tags: ["site", "linkding"]
 
-    - name: Set llama
+    - name: Set quartermaster
       ansible.builtin.include_role:
         name: "app"
-        tasks_from: "services/set_llama"
+        tasks_from: "services/set_quartermaster"
         apply:
-          tags: ["site", "llama"]
-      tags: ["site", "llama"]
-
-    - name: Set stablediffusion
-      ansible.builtin.include_role:
-        name: "app"
-        tasks_from: "services/set_stablediffusion"
-        apply:
-          tags: ["site", "stablediffusion"]
-      tags: ["site", "stablediffusion"]
+          tags: ["site", "quartermaster"]
+      tags: ["site", "quartermaster"]
 
     - name: Set openwebui
       ansible.builtin.include_role:

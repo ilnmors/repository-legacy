@@ -1,0 +1,110 @@
+---
+- name: Create postfix directory
+  ansible.builtin.file:
+    path: "{{ node['home_path'] }}/{{ item }}"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0755"
+  loop:
+    - "containers/postfix"
+    - "containers/postfix/build"
+    - "containers/postfix/config"
+    - "containers/postfix/config/maps"
+    - "containers/postfix/ssl"
+    - "data/containers/postfix"
+    - "data/containers/postfix/spool"
+  become: true
+
+- name: Create postfix log directory
+  ansible.builtin.file:
+    path: "/var/log/postfix"
+    state: "directory"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0755"
+  become: true
+
+- name: Deploy postfix logrotate configuration
+  vars:
+    mail_service: "postfix"
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/mail/logrotate.j2"
+    dest: "/etc/logrotate.d/postfix"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+
+- name: Deploy postfix certificate and key
+  ansible.builtin.copy:
+    content: "{{ item.value }}"
+    dest: "{{ node['home_path'] }}/containers/postfix/ssl/{{ item.name }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - name: "{{ root_cert_filename }}"
+      value: "{{ hostvars['console']['ca']['root']['crt'] }}"
+      # Public; the LDAP client in proxymap reads it as the postfix user.
+      mode: "0644"
+    - name: "{{ services['postfix']['domain']['internal'] }}.crt"
+      value: |
+        {{ hostvars['console']['postfix']['crt'] | trim }}
+        {{ hostvars['console']['ca']['intermediate']['crt'] }}
+      mode: "0440"
+    - name: "{{ services['postfix']['domain']['internal'] }}.key"
+      value: "{{ hostvars['console']['postfix']['key'] }}"
+      mode: "0400"
+  notify: "notification_restart_postfix"
+  no_log: true
+
+- name: Deploy postfix configuration files
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postfix/config/{{ item }}.j2"
+    dest: "{{ node['home_path'] }}/containers/postfix/config/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "{{ '0600' if item.startswith('maps/') else '0644' }}"
+  loop:
+    - "main.cf"
+    - "master.cf"
+    - "maps/mailboxes.cf"
+    - "maps/senders.cf"
+  notify: "notification_restart_postfix"
+  no_log: true
+
+- name: Deploy containerfile for build
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postfix/build/Containerfile.j2"
+    dest: "{{ node['home_path'] }}/containers/postfix/build/Containerfile"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0640"
+  register: "is_postfix_containerfile"
+  notify: "notification_restart_postfix"
+
+- name: Build postfix container image
+  containers.podman.podman_image:
+    name: "{{ domain['internal'] }}/{{ node['name'] }}/postfix"
+    tag: "{{ version['containers']['postfix'] }}"
+    state: "build"
+    path: "{{ node['home_path'] }}/containers/postfix/build"
+    force: "{{ is_postfix_containerfile.changed }}"
+
+- name: Deploy container file
+  ansible.builtin.template:
+    src: "{{ hostvars['console']['node']['config_path'] }}/services/containers/infra/postfix/postfix.container.j2"
+    dest: "{{ node['home_path'] }}/.config/containers/systemd/postfix.container"
+    owner: "{{ ansible_user }}"
+    group: "{{ node['group'] }}"
+    mode: "0644"
+  notify: "notification_restart_postfix"
+
+- name: Enable postfix
+  ansible.builtin.systemd:
+    name: "postfix.service"
+    state: "started"
+    enabled: true
+    daemon_reload: true
+    scope: "user"

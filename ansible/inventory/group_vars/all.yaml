@@ -104,15 +104,31 @@ services:
       cert: true
       web: "infra-internal"
       db: "postgresql"
-  maddy:
+  postfix:
     domain:
-      internal: "maddy"
+      internal: "smtp"
     ports:
       smtp: "2587"
-      imaps: "2993"
+    mail:
+      domains: ["ilnmors.internal"]
+      groups: ["admins", "users", "services"]
+      postmaster: "il"
+      relay:
+        status: false
+        host: ""
+        port: 587
     dependency:
       cert: true
-      db: "postgresql"
+  dovecot:
+    domain:
+      internal: "imap"
+    ports:
+      imaps: "2993"
+    subuid: "100999"
+    mail:
+      groups: ["admins", "users"]
+    dependency:
+      cert: true
   ca:
     domain:
       internal: "ca"
@@ -159,7 +175,7 @@ services:
       web: "auth-public"
       db: "postgresql"
   # app
-  redis:
+  valkey:
     subuid: "100998"
   homepage:
     domain:
@@ -169,6 +185,51 @@ services:
       http: "3000" # app
     dependency:
       web: "app-public"
+  quartermaster:
+    domain:
+      internal: "quartermaster.app"
+    ports:
+      http: "10000"
+    dependency:
+      # internal only: the dashboard runs with -admin-open
+      web: "app-internal"
+    # llama-swap style config; llama-server and sd-server are bundled under /opt/quartermaster/backends
+    macros:
+      llama: >-
+        /opt/quartermaster/backends/bin/llama-server/b10796-vulkan/llama-b10796/llama-server
+        --host 127.0.0.1 --port ${PORT} --n-gpu-layers 999 --kv-unified
+        --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn auto --jinja
+      sd: >-
+        /opt/quartermaster/backends/bin/sd-server/master-841-6b3edaa-vulkan/sd-server
+        --listen-ip 127.0.0.1 --listen-port ${PORT}
+    models:
+      LFM2.5-24B-A2B-Heretic:
+        cmd: >-
+          ${llama} --model /data/models/LFM2.5-24B-A2B-Heretic/model.gguf
+          --ctx-size 65536 --parallel 2
+      LFM2.5-VL-3B-Heretic:
+        cmd: >-
+          ${llama} --model /data/models/LFM2.5-VL-3B-Heretic/model.gguf
+          --mmproj /data/models/LFM2.5-VL-3B-Heretic/mmproj.gguf
+          --ctx-size 32768 --parallel 1 --reasoning-budget 0
+      LFM2.5-Embedding-350M:
+        cmd: >-
+          ${llama} --model /data/models/LFM2.5-Embedding-350M/model.gguf
+          --embedding --pooling cls --ctx-size 1024 --parallel 1
+      zImage-moodyRealMix:
+        cmd: >-
+          ${sd} --diffusion-model /data/models/zImage/moodyRealMix_zitV7Global-Q8_0.gguf
+          --llm /data/models/zImage/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+          --vae /data/models/zImage/ae.safetensors
+          --cfg-scale 1.0 --steps 9 --vae-tiling --vae-tile-size 32x32 --vae-tile-overlap 0.5
+        checkEndpoint: "/v1/models"
+    groups:
+      resident:
+        swap: false
+        exclusive: false
+        persistent: true
+        members: ["LFM2.5-24B-A2B-Heretic", "LFM2.5-VL-3B-Heretic", "LFM2.5-Embedding-350M", "zImage-moodyRealMix"]
+    preload: ["LFM2.5-24B-A2B-Heretic", "LFM2.5-VL-3B-Heretic", "LFM2.5-Embedding-350M", "zImage-moodyRealMix"]
   openwebui:
     domain:
       public: "openwebui"
@@ -178,75 +239,6 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
-  llama:
-    ports:
-      http: "10000"
-    dependency:
-      models:
-        default: |
-          n-gpu-layers = all
-          kv-unified = true
-          cache-prompt = true
-          cache-type-k = q8_0
-          cache-type-v = q8_0
-          flash-attn = auto
-          reasoning = off
-          jinja = true
-          lazy-mode = off
-        Nemotron3.5-Lightning-30B-A3B: |
-          model = /models/Nemotron3.5-Lightning-30B-A3B/Nemotron-3.5-Lightning-30B-A3B-Heretic-Uncensored-Q4_K_M-GGUF.gguf
-          c = 65536
-          parallel = 2
-          load-on-startup = true
-        # version: mradermacher/LFM2-24B-A2B-heretic-ara-GGUF
-        # LFM2-24B-A2B: |
-        #   model = /models/LFM2-24B-A2B/LFM2-24B-A2B-heretic-ara.Q4_K_M.gguf
-        #   c = 65536
-        #   parallel = 2
-        #   load-on-startup = true
-        # # version: SC117/LFM2.5-VL-3B-Uncensored-GGUF
-        # LFM2-VL-3B: |
-        #   model = /models/LFM2-VL-3B/LFM2.5-VL-3B-Uncensored-Q4_K_M.gguf
-        #   mmproj = /models/LFM2-VL-3B/mmproj-LFM2.5-VL-3B-BF16.gguf
-        #   c = 65536
-        #   parallel = 1
-        #   load-on-startup = true
-        # version: HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M
-        # Qwen3.6: |
-        #   model = /models/Qwen3.6-35B-A3B/Qwen3.6-35B-A3B-Q4_K_M.gguf
-        #   mmproj = /models/Qwen3.6-35B-A3B/mmproj-Qwen3.6-35B-BF16.gguf
-        #   c = 65536
-        #   parallel = 2
-        #   load-on-startup = true
-        #   image-min-tokens = 1024
-        # # version: HauhauCS/Qwen3.5-2B-Uncensored-HauhauCS-Aggressiv-Q8_0
-        # Qwen3.5-image: |
-        #   model = /models/Qwen3.5-2B/Qwen3.5-2B-Q8_0.gguf
-        #   c = 32768
-        #   parallel = 1
-        #   load-on-startup = true
-        # version: LiquidAI/LFM2.5-2.6B-GGUF
-        # LFM2.5: |
-        #   model = /models/LFM2.5-2.6B/LFM2.5-2.6B-Q8_0.gguf
-        #   c = 32768
-        #   parallel = 2
-        #   load-on-startup = true
-  stablediffusion:
-    ports:
-      http: "10001"
-    dependency:
-      models:
-        active: "zImage"
-        zImage: |
-          --diffusion-model /models/zImage/moodyRealMix_zitV7Global-Q8_0.gguf \
-          --llm /models/zImage/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
-          --vae /models/zImage/ae.safetensors \
-          --backend gpu \
-          --cfg-scale 1.0 \
-          --steps 9 \
-          --vae-tiling \
-          --vae-tile-size 32x32 \
-          --vae-tile-overlap 0.5
   snappymail:
     domain:
       public: "webmail"
@@ -275,10 +267,10 @@ services:
     dependency:
       web: "app-public"
       db: "postgresql"
-  gitea:
+  forgejo:
     domain:
-      public: "gitea"
-      internal: "gitea.app"
+      public: "forgejo"
+      internal: "forgejo.app"
     ports:
       http: "3001"
     subuid: "100999"
@@ -292,7 +284,7 @@ services:
     ports:
       http: "3002"
       api: "4000"
-      redis: "6379"
+      valkey: "6379"
     subuid: "100990"
     route:
       api: "/api/v1/streaming*"
@@ -334,7 +326,7 @@ services:
       internal: "immich.app"
     ports:
       http: "2283"
-      redis: "6381"
+      valkey: "6381"
     dependency:
       web: "app-public"
       db: "postgresql"
@@ -347,7 +339,7 @@ services:
       internal: "outline.app"
     ports:
       http: "3004"
-      redis: "6382"
+      valkey: "6382"
     subuid: "101000"
     dependency:
       web: "app-public"
@@ -368,7 +360,7 @@ services:
       internal: "sure.app"
     ports:
       http: "3006"
-      redis: "6383"
+      valkey: "6383"
     subuid: "100999"
     dependency:
       web: "app-public"
@@ -402,6 +394,10 @@ services:
       db: "postgresql"
 
 version:
+  build:
+    postfix:
+      base: "13-slim"
+      package: "3.10.13-0+deb13u1"
   packages:
     sops: "3.13.2"
     step: "0.30.2"
@@ -422,8 +418,9 @@ version:
     vectorchord: "1.1.1"
     ## lldap
     ldap: "v0.6.3"
-    ## maddy
-    maddy: "0.9.7"
+    ## mail
+    postfix: "3.10.13"
+    dovecot: "2.4.5"
     x509-exporter: "4.2.4"
     prometheus: "v3.16.0"
     loki: "3.7.9"
@@ -432,8 +429,8 @@ version:
     authelia: "4.39.28"
     # App
     vaultwarden: "1.37.5"
-    gitea: "28.3.0"
-    redis: "8.10.3"
+    forgejo: "17.0.1"
+    valkey: "9.1.3"
     immich: "v3.4.1"
     collabora: "26.04.6.1.1"
     sure: "0.7.6"
@@ -441,17 +438,15 @@ version:
     homebox: "0.27.1"
     homepage: "v2.8.0"
     snappymail: "v3.0.1.2"
-    mastodon: "v4.6.7"
+    mastodon: "v4.7.5"
     readur: "3.1.2"
+    quartermaster: "v1.9.1"
     tandoor: "2.7.2"
     bookstack: "26.9.3"
     linkding: "1.47.0"
     openwebui: "v0.13.3"
-    # https://github.com/ggml-org/llama.cpp/pkgs/container/llama.cpp/versions
-    llama: "server-vulkan-b12316"
     # https://github.com/leejet/stable-diffusion.cpp/pkgs/container/stable-diffusion.cpp
     # master-sycl@sha256:f27ebe3fea7dcb5978241425d3a115ba6736cfc33c42e75233f22f7411449e9c has problem in it, it cannot get vRAM from UMA properly
     # Pin due to a SYCL/UMA false-OOM regression in newer stable-diffusion.cpp ModelManager memory accounting.
-    stablediffusion: "master-sycl@sha256:67ccb5d11bf55578f7938daeb7c9fee1d0dd1344c089c090b9065714d7960fd5"
     kaneo: "2.49.0"
     oxicloud: "0.10.0"

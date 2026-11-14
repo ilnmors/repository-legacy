@@ -10,15 +10,15 @@
   listen: "notification_restart_vaultwarden"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart gitea
+- name: Restart forgejo
   ansible.builtin.systemd:
-    name: "gitea.service"
+    name: "forgejo.service"
     state: "restarted"
     enabled: true
     scope: "user"
     daemon_reload: true
   changed_when: false
-  listen: "notification_restart_gitea"
+  listen: "notification_restart_forgejo"
   ignore_errors: true # noqa: ignore-errors
 
 - name: Restart immich
@@ -183,26 +183,15 @@
   listen: "notification_restart_openwebui"
   ignore_errors: true # noqa: ignore-errors
 
-- name: Restart llama
+- name: Restart quartermaster
   ansible.builtin.systemd:
-    name: "llama.service"
+    name: "quartermaster.service"
     state: "restarted"
     enabled: true
     scope: "user"
     daemon_reload: true
   changed_when: false
-  listen: "notification_restart_llama"
-  ignore_errors: true # noqa: ignore-errors
-
-- name: Restart stablediffusion
-  ansible.builtin.systemd:
-    name: "stablediffusion.service"
-    state: "restarted"
-    enabled: true
-    scope: "user"
-    daemon_reload: true
-  changed_when: false
-  listen: "notification_restart_stablediffusion"
+  listen: "notification_restart_quartermaster"
   ignore_errors: true # noqa: ignore-errors
 
 - name: Restart kaneo

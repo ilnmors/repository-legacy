@@ -1,0 +1,36 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Quartermaster
+
+[Container]
+Image=ilnmors.internal/app/quartermaster:{{ version['containers']['quartermaster'] }}
+
+ContainerName=quartermaster
+HostName=quartermaster
+
+PublishPort={{ services['quartermaster']['ports']['http'] }}:8080/tcp
+
+# GPU access for Vulkan
+AddDevice=/dev/dri:/dev/dri
+PodmanArgs=--group-add keep-groups
+
+Volume=%h/containers/quartermaster/data:/data:rw
+Volume=%h/containers/quartermaster/config:/data/config:ro
+Volume=%h/containers/quartermaster/models:/data/models:ro
+
+Environment="TZ={{ timezone }}"
+# The image entrypoint seeds its autogen file on first start; keep it out of the read-only config mount.
+Environment="QM_GENERATE_FILE=/data/quartermaster-generate.yaml"
+
+# Without -generate the config is loaded as written and never regenerated.
+Exec=-config /data/config/config.yaml -listen 0.0.0.0:8080 -admin-open
+
+[Service]
+Restart=always
+RestartSec=60s
+TimeoutStopSec=300
+
+[Install]
+WantedBy=default.target

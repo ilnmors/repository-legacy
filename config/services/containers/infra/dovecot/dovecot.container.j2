@@ -1,0 +1,37 @@
+[Quadlet]
+DefaultDependencies=false
+
+[Unit]
+Description=Dovecot
+
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/dovecot/dovecot:{{ version['containers']['dovecot'] }}
+
+ContainerName=dovecot
+HostName={{ services['dovecot']['domain']['internal'] }}.{{ domain['internal'] }}
+AddHost={{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }}:host-gateway
+
+PublishPort={{ services['dovecot']['ports']['imaps'] }}:31993/tcp
+
+Volume=%h/containers/dovecot/conf.d/auth.conf:/etc/dovecot/conf.d/auth.conf:ro
+Volume=%h/containers/dovecot/conf.d/ssl.conf:/etc/dovecot/conf.d/ssl.conf:ro
+Volume=%h/containers/dovecot/conf.d/zz-local.conf:/etc/dovecot/conf.d/zz-local.conf:ro
+Volume=%h/containers/dovecot/ssl:/etc/dovecot/ssl:ro
+Volume=%h/data/containers/dovecot/vmail:/srv/vmail:rw
+Volume=%h/containers/mail/sockets:/run/mail:rw
+Volume=/var/log/dovecot:/var/log/dovecot:rw
+
+Environment="TZ={{ timezone }}"
+Secret=DOVECOT_LDAP_PASSWORD,type=env
+
+[Service]
+ExecStartPre=/usr/bin/nc -zv {{ services['ldap']['domain']['internal'] }}.{{ domain['internal'] }} {{ services['ldap']['ports']['ldaps'] }}
+Restart=always
+RestartSec=60s
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
