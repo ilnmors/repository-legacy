@@ -193,43 +193,7 @@ services:
     dependency:
       # internal only: the dashboard runs with -admin-open
       web: "app-internal"
-    # llama-swap style config; llama-server and sd-server are bundled under /opt/quartermaster/backends
-    macros:
-      llama: >-
-        /opt/quartermaster/backends/bin/llama-server/b10796-vulkan/llama-b10796/llama-server
-        --host 127.0.0.1 --port ${PORT} --n-gpu-layers 999 --kv-unified
-        --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn auto --jinja
-      sd: >-
-        /opt/quartermaster/backends/bin/sd-server/master-841-6b3edaa-vulkan/sd-server
-        --listen-ip 127.0.0.1 --listen-port ${PORT}
-    models:
-      LFM2.5-24B-A2B-Heretic:
-        cmd: >-
-          ${llama} --model /data/models/LFM2.5-24B-A2B-Heretic/model.gguf
-          --ctx-size 65536 --parallel 2
-      LFM2.5-VL-3B-Heretic:
-        cmd: >-
-          ${llama} --model /data/models/LFM2.5-VL-3B-Heretic/model.gguf
-          --mmproj /data/models/LFM2.5-VL-3B-Heretic/mmproj.gguf
-          --ctx-size 32768 --parallel 1 --reasoning-budget 0
-      LFM2.5-Embedding-350M:
-        cmd: >-
-          ${llama} --model /data/models/LFM2.5-Embedding-350M/model.gguf
-          --embedding --pooling cls --ctx-size 1024 --parallel 1
-      zImage-moodyRealMix:
-        cmd: >-
-          ${sd} --diffusion-model /data/models/zImage/moodyRealMix_zitV7Global-Q8_0.gguf
-          --llm /data/models/zImage/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
-          --vae /data/models/zImage/ae.safetensors
-          --cfg-scale 1.0 --steps 9 --vae-tiling --vae-tile-size 32x32 --vae-tile-overlap 0.5
-        checkEndpoint: "/v1/models"
-    groups:
-      resident:
-        swap: false
-        exclusive: false
-        persistent: true
-        members: ["LFM2.5-24B-A2B-Heretic", "LFM2.5-VL-3B-Heretic", "LFM2.5-Embedding-350M", "zImage-moodyRealMix"]
-    preload: ["LFM2.5-24B-A2B-Heretic", "LFM2.5-VL-3B-Heretic", "LFM2.5-Embedding-350M", "zImage-moodyRealMix"]
+    # Models, backends and routing groups: config/services/containers/app/quartermaster/config/config.yaml.j2.
   openwebui:
     domain:
       public: "openwebui"

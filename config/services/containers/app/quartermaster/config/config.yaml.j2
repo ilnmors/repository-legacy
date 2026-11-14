@@ -1,17 +1,63 @@
-{% set qm = services['quartermaster'] %}
+# Quartermaster (llama-swap style) config.
+# llama-server and sd-server are bundled in the image under /opt/quartermaster/backends;
+# their paths follow the image version in all.yaml.
+# Models live in HOME/containers/quartermaster/models (synced from DATA), mounted at /data/models.
+# Open WebUI refers to these model ids in its container file.
 startPort: 5800
 globalTTL: 0
-macros: {{ qm['macros'] | default({}) | to_json }}
-models: {{ qm['models'] | to_json }}
-{% if qm['groups'] | default({}) | length > 0 %}
+
+macros:
+  llama: >-
+    /opt/quartermaster/backends/bin/llama-server/b10796-vulkan/llama-b10796/llama-server
+    --host 127.0.0.1 --port ${PORT} --n-gpu-layers 999 --kv-unified
+    --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn auto --jinja
+  sd: >-
+    /opt/quartermaster/backends/bin/sd-server/master-841-6b3edaa-vulkan/sd-server
+    --listen-ip 127.0.0.1 --listen-port ${PORT}
+
+models:
+  LFM2.5-24B-A2B-Heretic:
+    cmd: >-
+      ${llama} --model /data/models/LFM2.5-24B-A2B-Heretic/model.gguf
+      --ctx-size 65536 --parallel 2
+  LFM2.5-VL-3B-Heretic:
+    cmd: >-
+      ${llama} --model /data/models/LFM2.5-VL-3B-Heretic/model.gguf
+      --mmproj /data/models/LFM2.5-VL-3B-Heretic/mmproj.gguf
+      --ctx-size 32768 --parallel 1 --reasoning-budget 0
+  LFM2.5-Embedding-350M:
+    cmd: >-
+      ${llama} --model /data/models/LFM2.5-Embedding-350M/model.gguf
+      --embedding --pooling cls --ctx-size 1024 --parallel 1
+  zImage-moodyRealMix:
+    cmd: >-
+      ${sd} --diffusion-model /data/models/zImage/moodyRealMix_zitV7Global-Q8_0.gguf
+      --llm /data/models/zImage/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+      --vae /data/models/zImage/ae.safetensors
+      --cfg-scale 1.0 --steps 9 --vae-tiling --vae-tile-size 32x32 --vae-tile-overlap 0.5
+    # sd-server has no /health; /v1/models answers once the weights are loaded.
+    checkEndpoint: "/v1/models"
+
+# All models stay loaded together, as the separate llama.cpp and sd.cpp servers did.
 routing:
   router:
     use: group
     settings:
-      groups: {{ qm['groups'] | to_json }}
-{% endif %}
-{% if qm['preload'] | default([]) | length > 0 %}
+      groups:
+        resident:
+          swap: false
+          exclusive: false
+          persistent: true
+          members:
+            - "LFM2.5-24B-A2B-Heretic"
+            - "LFM2.5-VL-3B-Heretic"
+            - "LFM2.5-Embedding-350M"
+            - "zImage-moodyRealMix"
+
 hooks:
   on_startup:
-    preload: {{ qm['preload'] | to_json }}
-{% endif %}
+    preload:
+      - "LFM2.5-24B-A2B-Heretic"
+      - "LFM2.5-VL-3B-Heretic"
+      - "LFM2.5-Embedding-350M"
+      - "zImage-moodyRealMix"
