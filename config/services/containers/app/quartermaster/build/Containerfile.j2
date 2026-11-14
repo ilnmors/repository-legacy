@@ -1,7 +1,29 @@
-FROM ghcr.io/quartermaster-labs/quartermaster:{{ version['containers']['quartermaster'] }}
+{% set qm = version['build']['quartermaster'] %}
+{% set sd_tag = qm['sd_server'] %}
+FROM ghcr.io/quartermaster-labs/quartermaster:{{ version['containers']['quartermaster'] }} AS upstream
 
-# The upstream image ships the Vulkan loader but no GPU driver, so llama-server and
-# sd-server silently fall back to the CPU. Mesa provides the Intel and AMD Vulkan ICDs.
+# sd-server release zip: sd-master-<commit>-bin-Linux-Ubuntu-<base>-x86_64-vulkan.zip, extracted flat.
+FROM docker.io/library/ubuntu:{{ qm['base'] }} AS sd-server
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends mesa-vulkan-drivers && \
+    apt-get install -y --no-install-recommends ca-certificates curl unzip && \
     rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL -o /tmp/sd-server.zip \
+      https://github.com/leejet/stable-diffusion.cpp/releases/download/{{ sd_tag }}/sd-master-{{ sd_tag.split('-') | last }}-bin-Linux-Ubuntu-{{ qm['base'] }}-x86_64-vulkan.zip && \
+    unzip -q /tmp/sd-server.zip -d /out && \
+    chmod 0755 /out/sd-server /out/sd-cli
+
+# Same runtime as upstream (Ubuntu, ca-certificates, libgomp1, libvulkan1) plus the Mesa Vulkan drivers.
+FROM docker.io/library/ubuntu:{{ qm['base'] }}
+ENV DEBIAN_FRONTEND=noninteractive
+ENV QM_BACKENDS_DIR=/opt/quartermaster/backends
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates libgomp1 libvulkan1 mesa-vulkan-drivers && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=upstream /usr/local/bin/quartermaster /usr/local/bin/entrypoint.sh /usr/local/bin/
+COPY --from=upstream /opt/quartermaster/backends/bin/llama-server /opt/quartermaster/backends/bin/llama-server
+# The binaries carry RUNPATH $ORIGIN, so the bundled ggml libraries next to them are found.
+COPY --from=sd-server /out /opt/quartermaster/backends/bin/sd-server/{{ sd_tag }}-vulkan
+RUN mkdir -p /data/config /data/models
+WORKDIR /data
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["-generate", "/data/config/quartermaster-generate.yaml", "-config", "/data/config/config.yaml", "-listen", "0.0.0.0:8080", "-admin-open"]

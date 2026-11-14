@@ -362,6 +362,11 @@ version:
     postfix:
       base: "13-slim"
       package: "3.10.13-0+deb13u1"
+    # quartermaster is rebuilt on a newer Ubuntu with a newer sd-server: the bundled master-841
+    # renders noise on the Iris Xe Vulkan backend, and newer releases need glibc 2.43.
+    quartermaster:
+      base: "26.04"
+      sd_server: "master-1098-b521db4"
   packages:
     sops: "3.13.2"
     step: "0.30.2"
