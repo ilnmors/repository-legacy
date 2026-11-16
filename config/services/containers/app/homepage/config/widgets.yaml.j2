@@ -1,18 +1,20 @@
-#- resources:
-#    cpu: true
-#    memory: true
-#    disk: /
-
 - greeting:
-    text_size: xl
-    text: ilnmors
+    text_size: 4xl
+    text: {{ domain['org'] | to_json }}
+
+- datetime:
+    text_size: lg
+    locale: en-GB
+    format:
+      weekday: short
+      day: 2-digit
+      month: short
+      hour: 2-digit
+      minute: 2-digit
+      hourCycle: h23
 
 - search:
     provider: google
     target: _blank
-
-- datetime:
-    text_size: xl
-    format:
-      dateStyle: short
-      timeStyle: short
+    focus: false
+    showSearchSuggestions: false

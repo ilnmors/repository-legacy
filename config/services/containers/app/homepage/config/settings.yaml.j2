@@ -1,12 +1,58 @@
-title: {{ domain['org'] }}
+title: {{ (domain['org'] ~ ' / home') | to_json }}
+description: A personal home for apps, work and the everyday.
+favicon: /images/mark.svg
+
+theme: dark
+color: zinc
+font: plexData
+background:
+  image: /images/background.svg
+  opacity: 100
+cardStyle: hairline
+iconStyle: theme
+headerStyle: clean
+statusStyle: dot
+useEqualHeights: true
+fullWidth: true
+disableCollapse: true
 
 target: _blank
 hideVersion: true
 disableUpdateCheck: true
 disableIndexing: true
 
-layout:
-  Services:
+quicklaunch:
+  searchDescriptions: true
+  hideVisitURL: true
 
-  Admin:
-    initiallyCollapsed: true
+layout:
+  Everyday:
+    tab: Home
+    style: row
+    columns: 5
+  Workspace:
+    tab: Home
+    style: row
+    columns: 4
+  Library:
+    tab: Home
+    style: row
+    columns: 4
+  Household:
+    tab: Home
+    style: row
+    columns: 4
+  Observability:
+    tab: System
+    style: row
+    columns: 4
+  Administration:
+    tab: System
+    style: row
+    columns: 4
+  Developer:
+    tab: Links
+  School:
+    tab: Links
+  Entertainment:
+    tab: Links

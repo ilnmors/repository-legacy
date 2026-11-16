@@ -1,0 +1,204 @@
+:root {
+  --home-text: #edf0e9;
+  --home-muted: #9ba7a1;
+  --home-accent: #c5d6ac;
+  --home-line: rgb(206 225 208 / 12%);
+}
+
+body { background: #101716; color: var(--home-text); }
+#inner_wrapper > div { max-width: 1240px; padding: 52px 36px 24px; }
+#information-widgets { margin: 0 0 28px; padding: 0; }
+#widgets-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 390px);
+  align-items: end;
+  gap: 24px;
+}
+
+.information-widget-greeting { display: block; margin: 0; padding: 0; }
+.information-widget-greeting::before {
+  content: "PERSONAL WORKSPACE";
+  display: block;
+  margin-bottom: 12px;
+  color: var(--home-accent);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+.information-widget-greeting span {
+  display: block;
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(38px, 5vw, 60px);
+  font-weight: 600;
+  letter-spacing: -0.065em;
+  line-height: 1.15;
+}
+.information-widget-greeting::after {
+  content: {{ domain['public'] | to_json }};
+  display: block;
+  margin-top: 12px;
+  color: var(--home-muted);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+#information-widgets-right {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  margin: 0;
+}
+.information-widget-datetime { align-self: flex-end; margin: 0; padding: 0; }
+.information-widget-datetime span { color: var(--home-muted); font-size: 11px; letter-spacing: 0.04em; }
+.information-widget-search { width: 100%; margin: 0; padding: 0; }
+.information-widget-search > div > div { height: 46px; margin: 0; }
+.information-widget-search input[type="text"] {
+  height: 46px;
+  border: 1px solid var(--home-line);
+  border-radius: 12px;
+  background: rgb(22 31 29 / 85%);
+  color: var(--home-text);
+  font-size: 12px;
+  box-shadow: none;
+}
+.information-widget-search input + div { position: static; }
+.information-widget-search button {
+  top: 4px;
+  right: 4px;
+  bottom: auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 9px;
+  background: rgb(197 214 172 / 8%);
+}
+.information-widget-search input::placeholder { color: var(--home-muted); }
+.information-widget-search input:focus { outline: 2px solid rgb(197 214 172 / 60%); outline-offset: 2px; }
+
+#tabs { margin: 0 0 4px; border-bottom: 1px solid var(--home-line); }
+#myTab { display: flex; gap: 28px; width: fit-content; border-radius: 0; background: transparent; }
+#myTab > li { width: auto; height: 49px; }
+#myTab button {
+  margin: 0;
+  padding: 0 2px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--home-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+#myTab button[aria-selected="true"] { border-bottom-color: var(--home-accent); color: var(--home-accent); }
+#myTab button:hover { color: var(--home-text); }
+#myTab button::before { margin-right: 9px; font-size: 9px; opacity: 0.6; }
+#Home-tab::before { content: "01"; }
+#System-tab::before { content: "02"; }
+#Links-tab::before { content: "03"; }
+
+#layout-groups, #services, #bookmarks { gap: 0 24px; margin: 0; }
+.services-group, .bookmark-group { min-width: 0; margin-top: 30px; padding: 0; }
+.service-group-name, .bookmark-group-name {
+  color: var(--home-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.services-list { gap: 12px; margin-top: 14px; }
+.service-card {
+  height: calc(100% - 2px);
+  min-height: 142px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--home-line);
+  border-radius: 15px;
+  background: rgb(23 32 29 / 86%);
+  box-shadow: none;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+.service-card:hover, .service-card:focus-within {
+  transform: translateY(-3px);
+  border-color: rgb(197 214 172 / 42%);
+  background: #1d2a24;
+}
+.service-card:focus-within { outline: 2px solid var(--home-accent); outline-offset: 3px; }
+.service-card::after {
+  content: "";
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  width: 7px;
+  height: 7px;
+  border-top: 1px solid #74877a;
+  border-right: 1px solid #74877a;
+}
+.service-card::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 21px;
+  width: 10px;
+  height: 1px;
+  background: #74877a;
+  transform: rotate(-45deg);
+}
+.service-title { flex-direction: column; align-items: flex-start; }
+.service-card .service-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 4%);
+}
+.service-card .service-icon img, .service-card .service-icon svg { width: 27px; height: 27px; color: var(--home-accent); }
+.service-title-text { width: 100%; margin-top: 14px; }
+.service-name { padding: 0; color: var(--home-text); font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+.service-description { margin-top: 5px; padding-right: 14px; color: var(--home-muted); font-size: 11px; font-weight: 400; letter-spacing: 0; line-height: 1.6; }
+.service-tags { top: 7px; right: 7px; bottom: auto; }
+.service-site-monitor .site-monitor-status { padding: 10px; }
+.service-site-monitor .site-monitor-status > div { width: 7px; height: 7px; }
+#oxicloud .service-card { border-color: rgb(197 214 172 / 25%); background: linear-gradient(135deg, #23352b, #18251f); }
+
+.bookmark-group { flex: 1 1 260px; }
+.bookmark > a > div { min-height: 56px; align-items: stretch; }
+.bookmark > a {
+  min-height: 56px;
+  border: 1px solid var(--home-line);
+  border-radius: 12px;
+  background: rgb(23 32 29 / 86%);
+  box-shadow: none;
+}
+.bookmark > a:hover { border-color: rgb(197 214 172 / 42%); background: #1d2a24; }
+.bookmark-icon { min-width: 46px; border-radius: 12px 0 0 12px; background: rgb(197 214 172 / 6%); color: var(--home-accent); font-size: 10px; }
+.bookmark-name { color: var(--home-text); font-size: 12px; }
+.bookmark-description { max-width: 150px; color: var(--home-muted); font-size: 10px; }
+#footer { margin-top: auto; padding: 32px 0 0; opacity: 0.55; }
+
+@media (max-width: 900px) {
+  #inner_wrapper > div { padding: 36px 24px 24px; }
+  #widgets-wrap { grid-template-columns: 1fr 300px; }
+  .services-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  #inner_wrapper > div { padding: 30px 20px 20px; }
+  #widgets-wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  #information-widgets { margin-bottom: 20px; }
+  #information-widgets-right { gap: 12px; }
+  .information-widget-datetime { align-self: flex-start; }
+  #myTab { gap: 28px; }
+  .services-group, .bookmark-group { margin-top: 26px; }
+  .services-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .service-card { min-height: 142px; padding: 15px; }
+  .service-card::after { bottom: 15px; right: 15px; }
+  .service-card::before { bottom: 18px; right: 15px; }
+  .service-name { font-size: 13px; }
+  .service-description { font-size: 10px; }
+  .bookmark-group { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .service-card { transition: none; }
+  .service-card:hover, .service-card:focus-within { transform: none; }
+}

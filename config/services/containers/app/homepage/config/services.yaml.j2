@@ -1,18 +1,58 @@
-{% set icon_map = {
-  'ldap': 'lldap',
-  'tandoor': 'tandoor-recipes',
-  'openwebui': 'open-webui'
+{#
+  Each card: [service key, display name, icon, description, scope].
+  scope "public" links to <domain.public>.{{ domain['public'] }} and monitors the app port on the app host.
+  scope "internal" links to <domain.internal>.{{ domain['internal'] }} without a monitor (other hosts).
+#}
+{% set groups = {
+  'Everyday': [
+    ['snappymail', 'SnappyMail', 'mdi-email-outline', 'Email & inbox', 'public'],
+    ['vaultwarden', 'Vaultwarden', 'mdi-shield-key-outline', 'Passwords & secure notes', 'public'],
+    ['kaneo', 'Kaneo', 'mdi-view-column-outline', 'Projects & things to do', 'public'],
+    ['sure', 'Sure', 'mdi-finance', 'Money & personal finance', 'public'],
+    ['mastodon', 'Mastodon', 'mastodon', 'People & conversations', 'public'],
+  ],
+  'Workspace': [
+    ['forgejo', 'Forgejo', 'forgejo', 'Code & repositories', 'public'],
+    ['openwebui', 'Open WebUI', 'open-webui', 'AI chat & models', 'public'],
+    ['outline', 'Outline', 'outline', 'Notes & shared knowledge', 'public'],
+    ['bookstack', 'BookStack', 'bookstack', 'Books, guides & reference', 'public'],
+  ],
+  'Library': [
+    ['oxicloud', 'OxiCloud', 'mdi-cloud-outline', 'Files, calendars & contacts', 'public'],
+    ['immich', 'Immich', 'immich', 'Photos & videos', 'public'],
+    ['readur', 'Readur', 'mdi-file-document-outline', 'Documents & archives', 'public'],
+    ['linkding', 'linkding', 'linkding', 'Bookmarks & saved pages', 'public'],
+  ],
+  'Household': [
+    ['tandoor', 'Tandoor', 'tandoor-recipes', 'Recipes & meal plans', 'public'],
+    ['homebox', 'Homebox', 'homebox', 'Belongings & inventory', 'public'],
+  ],
+  'Observability': [
+    ['grafana', 'Grafana', 'grafana', 'Dashboards & service health', 'internal'],
+    ['prometheus', 'Prometheus', 'prometheus', 'Metrics & alert rules', 'internal'],
+  ],
+  'Administration': [
+    ['authelia', 'Authelia', 'mdi-fingerprint', 'Sign-in & account security', 'public'],
+    ['ldap', 'LDAP', 'mdi-account-group-outline', 'People, groups & access', 'internal'],
+    ['rustfs', 'RustFS', 'mdi-database-outline', 'Object storage', 'public'],
+    ['quartermaster', 'Quartermaster', 'mdi-chip', 'Local models & runtimes', 'internal'],
+  ],
 } %}
-
-- Services:
-{% for item in (homepage_public_services | reject('in', ['homepage', 'collabora'])) %}
-    - {{ item }}:
-        icon: {{ icon_map.get(item, item) }}
-        href: https://{{ services[item]['domain']['public'] }}.{{ domain['public'] }}
+{% for group, cards in groups.items() %}
+- {{ group }}:
+{% for key, name, icon, description, scope in cards %}
+    - {{ name }}:
+        id: {{ key }}
+        icon: {{ icon }}
+        description: {{ description }}
+{% if scope == 'public' %}
+        href: https://{{ services[key]['domain']['public'] }}.{{ domain['public'] }}
+{% else %}
+        href: https://{{ services[key]['domain']['internal'] }}.{{ domain['internal'] }}
+{% endif %}
+{% if scope == 'public' and key in homepage_app_services %}
+        siteMonitor: http://host.containers.internal:{{ services[key]['ports']['http'] }}
+{% endif %}
 {% endfor %}
-- Admin:
-{% for item in homepage_internal_services %}
-    - {{ item }}:
-        icon: {{ icon_map.get(item, item) }}
-        href: https://{{ services[item]['domain']['internal'] }}.{{ domain['internal'] }}
+
 {% endfor %}

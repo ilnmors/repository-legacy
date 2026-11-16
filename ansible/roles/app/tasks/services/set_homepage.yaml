@@ -1,21 +1,12 @@
 ---
 - name: Set homepage services list
   ansible.builtin.set_fact:
-    homepage_public_services: >-
+    homepage_app_services: >-
       {{
         services
         | dict2items
         | selectattr('value.dependency.web', 'defined')
-        | selectattr('value.dependency.web', 'in', ['infra-public', 'auth-public', 'app-public'])
-        | map(attribute='key')
-        | list
-      }}
-    homepage_internal_services: >-
-      {{
-        services
-        | dict2items
-        | selectattr('value.dependency.web', 'defined')
-        | selectattr('value.dependency.web', 'in', ['infra-internal', 'auth-internal', 'app-internal'])
+        | selectattr('value.dependency.web', 'equalto', 'app-public')
         | map(attribute='key')
         | list
       }}
@@ -51,6 +42,7 @@
     - "widgets.yaml"
     - "services.yaml"
     - "bookmarks.yaml"
+    - "custom.css"
   notify: "notification_restart_homepage"
 
 - name: Deploy image directory
@@ -60,6 +52,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ node['group'] }}"
     mode: "0644"
+  notify: "notification_restart_homepage"
 
 - name: Deploy container file
   ansible.builtin.template:
