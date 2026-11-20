@@ -1,0 +1,102 @@
+Home Server Build Plan
+
+1. Goals
+	a) Build a multipurpose home server that I actually use at home, run its services in a distributed way (as if they were separate physical servers), and apply what I know about information security while using it.
+	b) Turn my vague ideas about a tech stack, a portfolio and the Information Security Engineer certificate into concrete preparation, and get familiar with operational services such as Git.
+	c) Starting with this plan, document and organize every step and build up my stack.
+
+2. Prepared hardware and setup
+	a) WTR PRO N150 (N150, 2.5 GbE LAN port x2, RAM slot x1, M.2 NVMe x1, SATA x4)
+	b) 16GB DDR4 3200 x1
+	c) NVMe SSD 256 GB x1, SATA SSD 250 GB (for cold backups)
+	d) sata 3.5" HDD 500GB x4
+	e) Planning to buy a domain name (considering registration through Cloudflare, DDNS automation through its API, automatic issuing and renewal of SSL certificates, and, to fend off DDoS and automated port scans, handling only requests that arrive through DNS rather than at the public IP)
+	f) An extra router (ipTIME A1004V)
+	g) Current home network layout
+		WAN - easy mesh(192.168.0.x/24)
+					{
+					Main Gateway(Main router) - PC1(static IP)
+					                                        - PC2(static IP)
+					                                        - Sub router(static IP) - DS124(Main NAS server) (static IP)
+										                              - printer (static IP)
+					                                                                      - wireless mobile devices(dynamic IP)
+					}
+		Main router: country blocking (only Korean and Canadian IPs allowed), open port (443: HTTPS)
+		NAS: all well-known ports such as SMB, SSH and SFTP blocked; only HTTP/HTTPS access allowed
+
+3. Considerations
+	a) Once built, can the server be used from both the internal and external networks?
+	b) Is it secure?
+	c) Can it be built within the performance of the prepared hardware?
+	d) Will it help my skills and knowledge grow?
+
+5. Base options (three)
+	a) Prepare separate server hardware for everything and build it all
+	b) Run every service on one operating system (Linux, planned), isolated in Docker containers (file server, web server, WAS, proxy server, media server, photo server and other features through Docker).
+	c) Run every service in its own VM on a hypervisor, isolated per OS (since the current router cannot do VLANs, use MACVLAN to give the ipTIME A1004V a public IP and build a separate LAN behind it, which allows practicing firewalls and similar features).
+
+6. Pros and cons of each option
+	a) Option 1
+		Not possible: no budget for it
+	b) Option 2
+		1) Pros
+			A) Easy to manage: every service runs on one OS, so permissions through separate accounts and file management are simple (to share files between servers there is no need to use the network; a symbolic link mounted into a Docker service is enough). This also helps with security settings.
+			B) Existing home network: the home network already runs on a single public IP, so once the OS has its IP set, services work without any separate internal network (Docker's bridge feature).
+			C) Saves hardware: services run as containers, lighter than full OSes, on a single OS, so no stronger hardware is needed.
+			D) Easy data backups: all data can live under /home on the OS. Server settings can live in /home/docker and each user's settings in /home/usr, so everything to back up is unified under /home. Even the Docker setup can be backed up simply through docker-compose.yml.
+		2) Cons
+			A) Room to grow: every Docker image is already ready to run, so I only install what exists without building anything myself. It is easy to fall into copying and pasting from guides instead of understanding.
+			B) Worse for learning security: having built the home network, I already learned to some extent what to consider when the internal servers are attacked from outside, but this option does little for attacks from the "internal network". As mentioned above, the servers talk over Docker's internal bridge network instead of a real network, so internal network security never needs attention.
+	c) Option 3
+		1) Pros
+			A) Every device can be separated logically, just as equipment is separated when running real servers (firewall, etc.).
+			B) With MACVLAN a new public IP can be used to form an isolated network, separate from the existing home network, until the home server is properly built and stable (experiments can run in an environment isolated from the home network in use).
+			C) An OS for real hacking practice such as Kali Linux can be installed to practice attack and defense
+			D) Allows an in-depth understanding of firewalls
+			E) Option 2 can be practiced at the same time: instead of giving every server its own OS, one server can be a multipurpose server with several roles (e.g. media server: Immich, Vaultwarden, Jellyfin and others on one server through Docker; web server: a blog such as WordPress or a wiki through Docker).
+			F) The servers I build and run one by one can be containerized with Docker, so I can make my own custom servers as add-ons.
+		2) Cons
+			A) Hardware: I am not sure the current PC can handle all of this. Still, the Linux systems underneath every server will be CLI only, so the specs may not fall far short.
+			B) Harder data backups: unlike option 2, where backing up /home covers everything, each operating system and its data must be backed up separately. With one data server, the data can be backed up as data and only the OS layer of the rest, which should keep it as simple as possible.
+
+7. Final choice and direction
+	a) Final choice: option 3
+	b) Network: give the new router a new public IP through MACVLAN, then build a new "network just for the home server", separate from the existing one, and check these points
+		1) Can the hypervisor itself act as an L2 switch...?
+		2) Can the isolated OSes inside the hypervisor each get their own private IP from the router?
+		3) How to set up attack/defense practice from the external network? (e.g. open every port only to the IP of the practice device outside and port-forward only to Kali Linux... VLANs would make this easier, but they cannot be used right now)
+		4) VLANs cannot be applied, but find out how to study their concept, how they work and how to apply them
+		5) Troubleshoot other problems by running into them
+		6) Target network layout for now
+			WAN - easy mesh(192.168.0.x/24)
+					{
+					Main Gateway1(Main router) - PC1(static IP)
+					                                        - PC2(static IP)
+					                                        - Sub router(static IP) - DS124(Main NAS server) (static IP)
+										                              - printer (static IP)
+					                                                                      - wireless mobile devices(dynamic IP)
+					}
+			WAN - (sub router / public IP through MACVLAN) - Main Gateway2 (192.168.0.x/24) - hypervisor
+																	   - management console
+		7) DMZ vs Twin IP vs MACVLAN: DMZ forwards every packet and port to the configured device; Twin IP lets an internal client use the router's public IP; MACVLAN assigns the client a new public IP based on its MAC address instead of the router's public IP
+	c) Choosing and setting up the hypervisor OS
+		1) The server is not powerful and paying for licenses is hard, so choose an OS that is as light as possible, open source and easy to troubleshoot
+			A) TrueNAS: ZFS support and an already convenient GUI, but heavy and not suited to learning
+			B) Proxmox: light, open source, with a large existing community.
+			C) Windows Server: GUI based and familiar, but heavy, not open source and licensed.
+			D) Final choice: Proxmox
+		2) Storage
+			A) The OSes are small, so install them on space carved from the 256 GB SSD (OS SSD)
+			B) Try the data server space as the four HDDs in RAID 0+1, RAID 1+0 (study the difference in detail) or RAID 5 and write it up (availability matters for the file server; I would also like RAID 1 for availability at the OS level, but the hardware supports only one SSD, so backups replace it; availability is not important for now.)
+			C) Each server uses the data it needs from the data server (considering a WebDAV mount, reads over SMB and uploads over SFTP; whether this works still has to be checked)
+	d) Other servers needed for the home server: bring up the basic servers needed (firewall, data server, DB server, web server, media server and so on) one at a time, in order of importance
+	e) Containerize the servers I build with Docker and try distributing them through Git (e.g. a Docker image of my firewall setup)
+	f) Backups
+		1) The servers and OSes (VMs) without data are small, so only hot backups through snapshots and an external SSD (after practice/build, incremental backups whenever real data changes; the HDD part will hold only examples until real use, so no separate backup)
+		2) Keep using the existing NAS for important data until the home server is reasonably complete and stable
+		3) Once the home server is stable, use the NAS for backups and bring the home server into the existing home network as the household server (then bring another mini PC onto the separate MACVLAN network for study)
+		4) Learn about the kinds of backups (full, incremental, cold, hot and so on)
+	g) Documentation
+		1) Use Notion or similar until a wiki and web server run on the home server and the documents can move there
+		2) I know nothing about management/distribution services such as Git, so study them and document that too
+		3) Once the home server serves a wiki and web server, move the documents from Notion to the home server
